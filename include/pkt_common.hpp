@@ -59,7 +59,7 @@ template <> struct hash<FiveTuple> {
 template<typename Message>
 struct ThreadCommunication {
     std::queue<Message> mqueue;     // the queue of messages
-    std::condition_variable mcond;  // the var iable communicating events
+    std::condition_variable mcond;  // the variable communicating events
     std::mutex mmutex;              // the locking mechanism
 };
 #endif // __PKT_COMMON__
