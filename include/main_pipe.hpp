@@ -66,14 +66,17 @@ class MainPipe {
                     pkt_size = ipv4_layer->getIPv4Header()->totalLength;
                 }
             }
-            return { five_tuple, pkt_size };
+            return std::make_pair(five_tuple, pkt_size);
         }
 
         void process_packet (CommPacket& comm_pkt) {
 
             while (true) {
                 std::unique_lock<std::mutex> lck{comm_pkt.mmutex}; // acquire mmutex
-                while (comm_pkt.mcond.wait(lck)) /* do nothing */; // release lck and wait;
+                comm_pkt.mcond.wait(lck);
+                /* do nothing */
+                // release lck and wait;
+                
                 // re-acquire lck upon wakeup
                 auto [packet, timestamp] = comm_pkt.mqueue.front(); // get the message
                 comm_pkt.mqueue.pop();

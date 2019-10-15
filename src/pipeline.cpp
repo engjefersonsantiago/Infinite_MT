@@ -11,7 +11,7 @@ int main() {
     in2main_comm_t in2main_comm; 
     MainPipe<1024, int, in2main_comm_t> main_pipe;
 
-    std::thread main_pipe_thread(&main_pipe.process_packet, std::ref(in2main_comm)); 
+    std::thread main_pipe_thread(&MainPipe<1024, int, in2main_comm_t>::process_packet, main_pipe, std::ref(in2main_comm)); 
 
     main_pipe_thread.join();
 
