@@ -12,8 +12,11 @@ int main () {
     auto a = hash_map.find(f1);
     std::cout << ((a != std::end(hash_map)) ? "Found\n" : "Not Found\n");
 
-    for (const auto& [key, value]: hash_map)
-        std::cout << "Key: " << key << " Value: " << value << '\n';
+        for (const auto& [key, value]: hash_map) {
+    if constexpr (false) {
+            std::cout << "Key: " << key << " Value: " << value << '\n';
+        }
+    }
 
 }
 
