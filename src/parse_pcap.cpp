@@ -48,7 +48,7 @@ void ParsePackets::from_pcap_file(){
 
 void ParsePackets::push_message(){
 
-    unique_lock<mutex> lock {thread_comm.mmutex};
+    std::unique_lock<std::mutex> lock {thread_comm.mmutex};
     thread_comm.mqueue.push(message);
     thread_comm.mcond.notify_one();
 

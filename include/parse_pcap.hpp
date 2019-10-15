@@ -22,7 +22,7 @@ class ParsePackets{
     public: 
     // Type Declaration
 
-    using packet_timestamp_pair_t = std::pair<pcpp::Packet,double>;
+    using packet_timestamp_pair_t = std::pair<pcpp::Packet&,double>;
     using inter_thread_comm_t = ThreadCommunication<packet_timestamp_pair_t>;
 
 
