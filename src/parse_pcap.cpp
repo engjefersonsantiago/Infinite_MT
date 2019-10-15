@@ -3,11 +3,13 @@
 
 
 
-/*
+/* * 
 *   Class to read a pcap trace. 
 *   Returns a pair packet,timestamp.
 *
-*/
+*   Method Definition.
+*
+* */
 
 
 void ParsePackets::from_pcap_file(){
@@ -36,12 +38,19 @@ void ParsePackets::from_pcap_file(){
         pcpp::Packet parsedPacket(&rawPacket);        
         double timestamp;
         timestamp_reader >> timestamp;
+        message = std::make_pair(rawPacket,timestamp);
 
-        auto packet_timestamp_pair = std::make_pair(rawPacket,timestamp);
+        // Push  Packet Timestamp Pair
+        push_message();
 
-        
-
-        // Send time
     }
 }
 
+void ParsePackets::push_message(){
+
+    unique_lock<mutex> lock {thread_comm.mmutex};
+    thread_comm.mqueue.push(message);
+    thread_comm.mcond.notify_one();
+
+
+}

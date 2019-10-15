@@ -16,19 +16,30 @@
 #include "pkt_common.hpp"
 
 
+
+
 class ParsePackets{
+    public: 
+    // Type Declaration
+
+    using packet_timestamp_pair_t = std::pair<pcpp::Packet,double>;
+    using inter_thread_comm_t = ThreadCommunication<packet_timestamp_pair_t>;
 
 
     private:
     const std::string& pcap_file;
     const std::string& timestamp_file;
-    // thread producer related members
     int64_t num_packets_parsed;
+    inter_thread_comm_t  thread_comm;
+    packet_timestamp_pair_t message;
 
+    // thread producer related members
 
     public:
 
     void from_pcap_file();
+
+    void push_message();
 
 }
 
