@@ -5,6 +5,10 @@
 // STL libs
 #include <iostream>
 #include <cstdint>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <queue>
 
 #ifndef __PKT_COMMON__
 #define __PKT_COMMON__
@@ -52,4 +56,10 @@ template <> struct hash<FiveTuple> {
 
 } // std
 
+template<typename Message>
+struct ThreadCommunication {
+    std::queue<Message> mqueue;     // the queue of messages
+    std::condition_variable mcond;  // the var iable communicating events
+    std::mutex mmutex;              // the locking mechanism
+};
 #endif // __PKT_COMMON__
