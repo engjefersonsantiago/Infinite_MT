@@ -9,9 +9,19 @@
 #include <mutex>
 #include <condition_variable>
 #include <queue>
+#include <tuple>
+#include <memory>
 
 #ifndef __PKT_COMMON__
 #define __PKT_COMMON__
+
+// Pcap++
+#include <PcapFileDevice.h>
+#include <IPv4Layer.h>
+#include <IPv6Layer.h>
+#include <TcpLayer.h>
+#include <UdpLayer.h>
+#include <Packet.h>
 
 // FiveTuple struct
 struct FiveTuple {
@@ -32,14 +42,7 @@ struct FiveTuple {
     friend std::ostream& operator<<(std::ostream& os, const FiveTuple& five_tuple);
 }; // FiveTuple
 
-std::ostream& operator<<(std::ostream& os, const FiveTuple& five_tuple) {
-    os << "{ " << five_tuple.src_addr << ", "
-        << five_tuple.dst_addr << ", "
-        << (int)five_tuple.protocol << ", "
-        << five_tuple.src_port << ", "
-        << five_tuple.dst_port << " }\n";
-    return os;
-}
+std::ostream& operator<<(std::ostream& os, const FiveTuple& five_tuple);
 
 // Custom FiveTuple hash inserted into STD
 namespace std {
@@ -61,5 +64,42 @@ struct ThreadCommunication {
     std::queue<Message> mqueue;     // the queue of messages
     std::condition_variable mcond;  // the variable communicating events
     std::mutex mmutex;              // the locking mechanism
+    bool done = false;
+
+    void set_done() {
+        std::unique_lock<std::mutex> lck {mmutex};
+        done = true;
+    }
+    
+    bool get_done() {
+        std::unique_lock<std::mutex> lck {mmutex};
+        return done/* && mqueue.empty()*/;
+    }
+
+    void push_message (const Message& message) {
+        std::unique_lock<std::mutex> lck {mmutex};
+        mqueue.push(message);
+        mcond.notify_one();
+        lck.unlock();
+    }
+    void pull_message (Message& message){ 
+        std::unique_lock<std::mutex> lck {mmutex};
+        mcond.wait(lck);
+        message = mqueue.front();
+        mqueue.pop();
+        lck.unlock();
+    }
 };
+
+// Types 
+using packet_timestamp_pair_t = std::pair<pcpp::Packet, double>;
+using tuple_pkt_size_pair_t = std::pair<FiveTuple, size_t>;
+using inter_thread_comm_t = ThreadCommunication<packet_timestamp_pair_t>;
+using nano_second_t = std::chrono::duration<long double, std::nano>;
+
+// Helper functions
+tuple_pkt_size_pair_t create_five_tuple_from_packet (pcpp::Packet& parsedPacket);
+
+
+
 #endif // __PKT_COMMON__
