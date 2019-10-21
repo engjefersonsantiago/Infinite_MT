@@ -24,12 +24,12 @@
 #include "pkt_common.hpp"
 #include "static_hash_map.hpp"
 
-
+// TODO: Remove CommPacket
 template<size_t Lookup_Size, typename Lookup_Value, typename CommPacket>
 class MainPipe {
 
     public: 
-
+        // TODO: Move to pkt_common as a standalone function
         auto create_five_tuple_from_packet (pcpp::Packet& parsedPacket) {
             // 5 tuple
             FiveTuple five_tuple {};
