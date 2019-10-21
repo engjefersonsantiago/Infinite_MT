@@ -15,34 +15,36 @@
 
 
 #include "pkt_common.hpp"
-
+#include "packet_processing.hpp"
 
 template<size_t Lookup_Size, typename Lookup_Value, size_t Sleep_Time = 0>
 class Controller{
 
 
     public:
-
     // Types
     using inter_thread_digest_cpu = ThreadCommunication<tuple_pkt_size_pair_t>;
-    using inter_thread_write_from_controller_t = ThreadCommunication< >;
-
+    using tuple_value_pair_t = std::pair<FiveTuple,Lookup_Value>;
 
 
     // Constructor 
-    Controller(): {}
+    Controller(LookupTable<Lookup_Size, Lookup_Value>& lookup_table_L1, LookupTable<Lookup_Size, Lookup_Value>& lookup_table_L2): 
+    lookup_table_L1_(lookup_table_L1) , lookup_table_L2_(lookup_table_L2_) {}
+
+
+
     // Messages echanges entre L1 et controller
-
-
+    
     // Interface to/from L1
         // To
-    void remove_entry_L1_cache(){
-
-
+    bool remove_entry_L1_cache(){
+        auto& [tuple,value] = entry_to_remove;
+        return lookup_table_L1_.delete_key(tuple);    
     }
 
-    void add_entry_L1_cache(){
-        // Qui donne la reference vers la lookup table
+    bool add_entry_L1_cache(){
+        auto& [tuple,value] = entry_to_add;
+        return lookup_table_L1_.add_key(tuple, value);
 
     }
 
@@ -67,18 +69,13 @@ class Controller{
     // Interface to/from Main Memory
 
 
-    protected:
-    std::unordered_map<FiveTuple, Lookup_Value> full_lookup_table_;
-    std::unordered_map<FiveTuple, Lookup_Value> lookup_table_L1_; // Which keys are held in the L1 cache?
-
-    inter_thread_comm_t write_to_l1_;
-    inter_thread_comm_t read_stats_from_l1_;
-    inter_thread_comm_t write_to_main_mem_;
-    inter_thread_comm_t read_stats_from_main_mem_;
-    tuple_pkt_size_pair_t tuple_size_pair_;
-    tuple_pkt_size_pair_t entry_to_add_;
-
-
+    private:
+        std::unordered_map<FiveTuple, Lookup_Value> full_lookup_table_;
+        LookupTable<Lookup_Size, Lookup_Value>& lookup_table_L1_; 
+        LookupTable<Lookup_Size, Lookup_Value>& lookup_table_L2;
+        tuple_value_pair_t entry_to_add;
+        tuple_value_pair_t entry_to_remove;
+        
 }
 // Interface vers L1
 // from
