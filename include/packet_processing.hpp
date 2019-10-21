@@ -25,7 +25,7 @@ class PacketProcessing {
         // Constants
         static constexpr auto LOOKUP_MEM_SIZE = Lookup_Size;
 
-        void process_packet (inter_thread_comm_t& in_comm_pkt, [[maybe_unused]] inter_thread_comm_t& out_comm_pkt) {
+        void process_packet (inter_thread_comm_t& in_comm_pkt, inter_thread_comm_t& out_comm_pkt) {
 
             while (!in_comm_pkt.get_done()) {
                 // Wait until a message is pushed to the queue
@@ -47,7 +47,9 @@ class PacketProcessing {
             }
         }
 
-        virtual void punt_pkt ([[maybe_unused]] inter_thread_comm_t& punted_pkt) const =0;
+        virtual void punt_pkt (inter_thread_comm_t& punted_pkt) const =0;
+
+        auto& lookup_table () { return lookup_table_; }
 
     protected:
         LookupTable<Lookup_Size, Lookup_Value> lookup_table_;
@@ -61,7 +63,7 @@ template<size_t Lookup_Size, typename Lookup_Value, size_t Sleep_Time = 0>
 class CacheL1PacketProcessing final : public PacketProcessing <Lookup_Size, Lookup_Value, Sleep_Time> {
 
     public:
-        virtual void punt_pkt ([[maybe_unused]] inter_thread_comm_t& punted_pkt) const override {
+        virtual void punt_pkt (inter_thread_comm_t& punted_pkt) const override {
             punted_pkt.push_message(this->packet_timestamp_);
         }
 
@@ -71,7 +73,7 @@ template<size_t Lookup_Size, typename Lookup_Value, size_t Sleep_Time = 0>
 class CacheL2PacketProcessing final : public PacketProcessing <Lookup_Size, Lookup_Value, Sleep_Time> {
 
     public:
-        virtual void punt_pkt ([[maybe_unused]] inter_thread_comm_t& punted_pkt) const override {}
+        virtual void punt_pkt (inter_thread_comm_t& punted_pkt) const override {}
 
 };
 
