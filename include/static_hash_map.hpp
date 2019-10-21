@@ -17,6 +17,10 @@
 // Value: type of the value, typename
 // Hash: callable of a custom hash function, typename
 // Compare: callable of a custom compare function, typename
+
+
+// What is the purpose of this hash table? Why not use a regular unordered_map and check the number of elements inserted?
+// We need a unordered_map where the maximal number of keys is fixed. Could used .size() method.
 template <size_t Size,
          typename Key,
          typename Value,
@@ -24,6 +28,7 @@ template <size_t Size,
          typename Compare = std::equal_to<Key>>
 class StaticHashMap {
     public:
+
 
         // Types
         using key_value_t = std::pair<Key, Value>;
@@ -36,6 +41,7 @@ class StaticHashMap {
         auto begin() { return hash_table_.begin(); }
         auto end() { return hash_table_.end(); }
 
+        // Must be modified accordingly in case of collision
         inline size_t get_index (const Key& key) const {
             return hf(key) % Size;
         }
@@ -45,6 +51,10 @@ class StaticHashMap {
         }
 
         // Accessors
+        // Conflict resolution not supported.
+        // If a is already inserted, a new key b can overide a.
+        // Proposed to use a linked list to track down the number of elements inserted in the hash table.
+        // Hash Table bucket holds a vector. 
         auto& operator[](const Key& key) {
             hash_table_[get_index(key)].first = key;
             return hash_table_[get_index(key)].second;
@@ -61,6 +71,8 @@ class StaticHashMap {
     private:
         // Hash table
         hash_table_t hash_table_;
+        // Tracks the hash table capacity.
+        size_t num_keys_inserted_;
         // Hash and comparsion functions
         const Hash hf = Hash();
         const Compare cf = Compare();
