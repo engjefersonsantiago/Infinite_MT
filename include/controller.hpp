@@ -17,39 +17,47 @@
 #include "pkt_common.hpp"
 
 
-template<typename Lookup_Value>
+template<size_t Lookup_Size, typename Lookup_Value, size_t Sleep_Time = 0>
 class Controller{
 
 
     public:
 
     // Types
-    using inter_thread_read_stats_t = ThreadCommunication< >;
+    using inter_thread_digest_cpu = ThreadCommunication<tuple_pkt_size_pair_t>;
     using inter_thread_write_from_controller_t = ThreadCommunication< >;
 
+
+
+    // Constructor 
+    Controller(): {}
     // Messages echanges entre L1 et controller
 
 
     // Interface to/from L1
         // To
-    remove_entry_L1_cache(){
-        
+    void remove_entry_L1_cache(){
+
 
     }
 
-    add_entry_L1_cache(){
+    void add_entry_L1_cache(){
+        // Qui donne la reference vers la lookup table
 
     }
 
 
-    harvest_stats_L1_cache(){
+    void harvest_stats_L1_cache(){
 
     }
 
         // From 
-    process_digest_from_L1_cache(){
+    void process_digest_from_L1_cache(inter_thread_digest_cpu& digest_pkt){
+        // Get
+        digest_pkt.pull_message(this->tuple_size_pair_);
 
-        // Synchronisation
+        // Process - Update Policy TBD 
+        policy.update();
 
     }
     
@@ -60,11 +68,16 @@ class Controller{
 
 
     protected:
-    std::unordered_map<FiveTuple, Lookup_Value> lookup_table_;
+    std::unordered_map<FiveTuple, Lookup_Value> full_lookup_table_;
+    std::unordered_map<FiveTuple, Lookup_Value> lookup_table_L1_; // Which keys are held in the L1 cache?
+
     inter_thread_comm_t write_to_l1_;
     inter_thread_comm_t read_stats_from_l1_;
     inter_thread_comm_t write_to_main_mem_;
     inter_thread_comm_t read_stats_from_main_mem_;
+    tuple_pkt_size_pair_t tuple_size_pair_;
+    tuple_pkt_size_pair_t entry_to_add_;
+
 
 }
 // Interface vers L1

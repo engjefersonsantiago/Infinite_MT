@@ -76,7 +76,7 @@ struct ThreadCommunication {
         return done/* && mqueue.empty()*/;
     }
 
-    void push_message (const Message& message) {
+    void push_message (Message& message) {
         std::unique_lock<std::mutex> lck {mmutex};
         mqueue.push(std::move(message));
         mcond.notify_one();
@@ -93,6 +93,8 @@ struct ThreadCommunication {
 using packet_timestamp_pair_t = std::pair<pcpp::Packet, double>;
 using tuple_pkt_size_pair_t = std::pair<FiveTuple, size_t>;
 using inter_thread_comm_t = ThreadCommunication<packet_timestamp_pair_t>;
+using inter_thread_digest_cpu = ThreadCommunication<tuple_pkt_size_pair_t>;
+
 using nano_second_t = std::chrono::duration<long double, std::nano>;
 
 // Helper functions
