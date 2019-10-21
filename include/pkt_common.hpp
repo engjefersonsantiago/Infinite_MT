@@ -78,16 +78,14 @@ struct ThreadCommunication {
 
     void push_message (const Message& message) {
         std::unique_lock<std::mutex> lck {mmutex};
-        mqueue.push(message);
+        mqueue.push(std::move(message));
         mcond.notify_one();
-        lck.unlock();
     }
     void pull_message (Message& message){ 
         std::unique_lock<std::mutex> lck {mmutex};
         mcond.wait(lck);
-        message = mqueue.front();
+        message = std::move(mqueue.front());
         mqueue.pop();
-        lck.unlock();
     }
 };
 
