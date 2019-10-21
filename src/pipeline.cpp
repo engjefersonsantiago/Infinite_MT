@@ -1,18 +1,49 @@
 #include<thread>
+#include<iostream>
+#include<chrono>
 
-#include "main_pipe.hpp"
+#include "pkt_common.hpp"
+#include "parse_pcap.hpp"
+#include "packet_processing.hpp"
 
-
-using passed_pkt_t = std::pair<pcpp::Packet, double>;
-using in2main_comm_t = ThreadCommunication<passed_pkt_t>;
+using base_pkt_process_t = PacketProcessing<1024, int>;
+using cache_l1_t = CacheL1PacketProcessing<1024, int>;
 
 int main() {
 
-    in2main_comm_t in2main_comm; 
-    MainPipe<1024, int, in2main_comm_t> main_pipe;
+    std::cout << "Enter the PCAP file name\n";
+    std::string pcap_file;
+    std::cin >> pcap_file;
+    std::cout << "Enter the timestamp file name\n";
+    std::string timestamp_file;
+    std::cin >> timestamp_file;
+    std::cout << "Enter the amount of sleep time in ns for the parser thread\n";
+    size_t sleep_time;
+    std::cin >> sleep_time;
 
-    std::thread main_pipe_thread(&MainPipe<1024, int, in2main_comm_t>::process_packet, main_pipe, std::ref(in2main_comm)); 
+    // Inter thread communication
+    inter_thread_comm_t parse_to_l1_comm; 
+    inter_thread_comm_t l1_to_l2_comm; 
+   
+    // Parser 
+    ParsePackets parse_pkts(pcap_file, timestamp_file);
+    
+    // Cache L1 
+    cache_l1_t cache_l1;
+    base_pkt_process_t& base_cache_l1 = cache_l1;
 
-    main_pipe_thread.join();
+    auto start = std::chrono::system_clock::now();
+
+    std::thread thread_parse_pkt(&ParsePackets::from_pcap_file, parse_pkts, std::ref(parse_to_l1_comm), nano_second_t(sleep_time)); 
+    std::thread thread_cache_l1(&base_pkt_process_t::process_packet, std::ref(base_cache_l1), std::ref(parse_to_l1_comm), std::ref(l1_to_l2_comm)); 
+
+    thread_parse_pkt.join();
+    std::cout << "Parser joined\n";
+    thread_cache_l1.join();
+    std::cout << "L1 joined\n";
+
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end - start;
+    std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
 
 }

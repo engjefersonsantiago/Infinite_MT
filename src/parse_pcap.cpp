@@ -1,7 +1,12 @@
+// STL
+#include<chrono>
+#include<iostream>
+#include<fstream>
+
 // Pcap++
 #include "parse_pcap.hpp"
 
-
+using namespace std::literals::chrono_literals;
 
 /* * 
 *   Class to read a pcap trace. 
@@ -12,7 +17,7 @@
 * */
 
 
-void ParsePackets::from_pcap_file(){
+bool ParsePackets::from_pcap_file(inter_thread_comm_t& thread_comm, const nano_second_t sleep_time){
 
     pcpp::PcapFileReaderDevice reader(pcap_file.c_str());
 
@@ -30,27 +35,24 @@ void ParsePackets::from_pcap_file(){
         return false;
     }
 
-
     pcpp::RawPacket rawPacket;
     while (reader.getNextPacket(rawPacket) && !timestamp_reader.eof()) {
-        ++num_pkts_;
+        ++num_packets_parsed;
 
         pcpp::Packet parsedPacket(&rawPacket);        
         double timestamp;
         timestamp_reader >> timestamp;
-        message = std::make_pair(rawPacket,timestamp);
 
         // Push  Packet Timestamp Pair
-        push_message();
+        thread_comm.push_message(std::make_pair(parsedPacket, timestamp));
+
+        std::cout << "Thread ID " << std::this_thread::get_id() << " processed " << num_packets_parsed << " packets\n";
+
+        std::this_thread::sleep_for(sleep_time);
 
     }
+    thread_comm.set_done();
+    return true;
 }
 
-void ParsePackets::push_message(){
 
-    std::unique_lock<std::mutex> lock {thread_comm.mmutex};
-    thread_comm.mqueue.push(message);
-    thread_comm.mcond.notify_one();
-
-
-}
