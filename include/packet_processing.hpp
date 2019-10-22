@@ -56,6 +56,9 @@ class PacketProcessing {
 
     protected:
         LookupTable<Lookup_Size, Lookup_Value> lookup_table_;
+        // Add stats container
+
+        // Add policy - for stats support
         packet_timestamp_pair_t packet_timestamp_;
         size_t num_packets_ = 0;
         tuple_pkt_size_pair_t tuple_size_pair_;
