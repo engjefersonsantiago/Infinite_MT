@@ -34,6 +34,7 @@ class PacketProcessing {
                 // Extract five tuple and packet size
                 auto [five_tuple, pkt_size] = create_five_tuple_from_packet(packet_timestamp_.first);
                 num_packets_++;
+                pkt_size_pair_ = std::make_pair(five_tuple,pkt_size);
                 std::cout << "Thread ID " << std::this_thread::get_id() << " extracted " << num_packets_ << " five tuples\n";
                 std::cout << five_tuple;
 
@@ -47,7 +48,9 @@ class PacketProcessing {
             }
         }
 
-        virtual void punt_pkt (inter_thread_comm_t& punted_pkt) const =0;
+        virtual void punt_pkt_to_next_lvl (inter_thread_comm_t& punted_pkt) const =0;
+
+        virtual void digest_pkt_to_ctrl ( inter_thread_digest_cpu& digest_pkt) const =0;
 
         auto& lookup_table () { return lookup_table_; }
 
@@ -55,6 +58,7 @@ class PacketProcessing {
         LookupTable<Lookup_Size, Lookup_Value> lookup_table_;
         packet_timestamp_pair_t packet_timestamp_;
         size_t num_packets_ = 0;
+        tuple_pkt_size_pair_t tuple_size_pair_;
 
 }; // PacketProcessing
 
@@ -63,9 +67,13 @@ template<size_t Lookup_Size, typename Lookup_Value, size_t Sleep_Time = 0>
 class CacheL1PacketProcessing final : public PacketProcessing <Lookup_Size, Lookup_Value, Sleep_Time> {
 
     public:
-        virtual void punt_pkt (inter_thread_comm_t& punted_pkt) const override {
+        virtual void punt_pkt_to_next_lvl ( inter_thread_comm_t& punted_pkt) const override {
             punted_pkt.push_message(this->packet_timestamp_);
         }
+
+        virtual void digest_pkt_to_ctrl ( inter_thread_digest_cpu& digest_pkt) const override {
+            digest_pkt.push_message(this->tuple_size_pair_);
+
 
 };
 
