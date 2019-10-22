@@ -89,7 +89,7 @@ struct ThreadCommunication {
     }
     void pull_message (Message& message){ 
         std::unique_lock<std::mutex> lck {mmutex};
-        mcond.wait(lck);
+        mcond.wait(lck/*, [=](){ return !get_done(); }*/);
         message = std::move(mqueue.front());
         mqueue.pop();
     }
