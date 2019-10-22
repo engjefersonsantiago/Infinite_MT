@@ -28,9 +28,9 @@ class LookupTable {
 
         auto add_key (const FiveTuple& five_tuple, const Lookup_Value& value) {
             std::unique_lock lock(mutex_);
-            if (capacity_ < LOOKUP_MEM_SIZE) {
-                capacity_++;
-                lookup_table_.insert(five_tuple, value);
+            if (occupancy_ < LOOKUP_MEM_SIZE) {
+                occupancy_++;
+                lookup_table_.insert({ five_tuple, value });
                 return true;
             } else {
                 return false;
@@ -38,9 +38,9 @@ class LookupTable {
         }
 
         auto delete_key (const FiveTuple& five_tuple) {
-            std::unique_lock lock(mutex_);
             if (lookup(five_tuple)) {
-                capacity_--;
+                std::unique_lock lock(mutex_);
+                occupancy_--;
                 lookup_table_.erase(five_tuple);
                 return true;
             } else {
@@ -53,15 +53,15 @@ class LookupTable {
             return (delete_key(old_tuple)) ? add_key(new_tuple, new_value) : false;
         }
 
-        auto get_capacity () const {
+        auto get_occupancy () const {
             std::shared_lock lock(mutex_);
-            return capacity_;
+            return occupancy_;
         }
 
     private:
         std::unordered_map<FiveTuple, Lookup_Value> lookup_table_;
         mutable std::shared_mutex mutex_;
-        size_t capacity_ = 0;
+        size_t occupancy_ = 0;
 
 };
 #endif

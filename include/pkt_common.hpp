@@ -76,6 +76,12 @@ struct ThreadCommunication {
         return done/* && mqueue.empty()*/;
     }
 
+    void push_message (Message&& message) {
+        std::unique_lock<std::mutex> lck {mmutex};
+        mqueue.push(std::move(message));
+        mcond.notify_one();
+    }
+
     void push_message (Message& message) {
         std::unique_lock<std::mutex> lck {mmutex};
         mqueue.push(std::move(message));
