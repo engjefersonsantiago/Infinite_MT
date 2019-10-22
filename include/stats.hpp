@@ -17,6 +17,13 @@
 */
 
 #include "pkt_common.hpp"
+/*
+*
+* Stats Class Used by a Cache.
+*
+* Interfaces with the cache, the controller and the policier.
+*
+*/
 template<size_t Cache_Size, typename Stats_Value>
 class CacheStats{
 
@@ -24,7 +31,17 @@ class CacheStats{
         // Constants
         static constexpr auto STATS_MEM_SIZE = Cache_Size;
 
-        auto& lookup (const FiveTuple& five_tuple)  {
+
+        // Writter 
+        void update_stats(const FiveTuple& five_tuple,Stats_Value& updated_stats){
+           std::unique_lock lock(mutex_);
+            
+            // Assumes Five Tuple is already held       
+            StatsContainer[five_tuple]= updated_stats;
+        }
+
+        // Readers only - Shared Mutex and Lock
+        auto get_stats (const FiveTuple& five_tuple)  {
             std::shared_lock lock(mutex_);
             return StatsContainer.find(five_tuple);
         }
@@ -43,6 +60,7 @@ class CacheStats{
         }
 
         /* Used only by external class only */
+
         auto delete_key (const FiveTuple& five_tuple) {
             std::unique_lock lock(mutex_);
             if (lookup(five_tuple)) {
@@ -53,6 +71,8 @@ class CacheStats{
                 return false;
             }
         }
+
+        /* Used only by external class only */
 
         auto replace_key (const FiveTuple& old_tuple, const FiveTuple& new_tuple, const Stats_Value& new_value) {
             // No need for lock here
