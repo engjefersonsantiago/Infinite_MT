@@ -32,13 +32,12 @@ class PacketProcessing {
                 in_comm_pkt.pull_message(packet_timestamp_);
 
                 // Extract five tuple and packet size
-                auto [five_tuple, pkt_size] = create_five_tuple_from_packet(packet_timestamp_.first);
+                tuple_size_pair_ = create_five_tuple_from_packet(packet_timestamp_.first);
                 num_packets_++;
-                tuple_size_pair_ = std::make_pair(five_tuple,pkt_size);
                 std::cout << "Thread ID " << std::this_thread::get_id() << " extracted " << num_packets_ << " five tuples\n";
-                std::cout << five_tuple;
+                std::cout << tuple_size_pair_.first;
 
-                if (!lookup_table_.lookup(five_tuple)) {
+                if (!lookup_table_.lookup(tuple_size_pair_.first)) {
                     punt_pkt_to_next_lvl(out_comm_pkt);
                 }
 
