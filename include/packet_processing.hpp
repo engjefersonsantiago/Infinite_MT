@@ -79,8 +79,8 @@ class PacketProcessing {
 }; // PacketProcessing
 
 
-template<size_t Lookup_Size, typename Lookup_Value, size_t Sleep_Time = 0>
-class CacheL1PacketProcessing final : public PacketProcessing <Lookup_Size, Lookup_Value, Sleep_Time> {
+template<size_t Lookup_Size, typename Lookup_Value, typename Stats_Value, size_t Sleep_Time = 0>
+class CacheL1PacketProcessing final : public PacketProcessing <Lookup_Size, Lookup_Value, Stats_Value, Sleep_Time> {
 
     public:
         virtual void punt_pkt_to_next_lvl ( inter_thread_comm_t& punted_pkt) override {
@@ -93,8 +93,8 @@ class CacheL1PacketProcessing final : public PacketProcessing <Lookup_Size, Look
 
 };
 
-template<size_t Lookup_Size, typename Lookup_Value, size_t Sleep_Time = 0>
-class CacheL2PacketProcessing final : public PacketProcessing <Lookup_Size, Lookup_Value, Sleep_Time> {
+template<size_t Lookup_Size, typename Lookup_Value, typename Stats_Value, size_t Sleep_Time = 0>
+class CacheL2PacketProcessing final : public PacketProcessing <Lookup_Size, Lookup_Value, Stats_Value, Sleep_Time> {
 
     public:
         virtual void punt_pkt_to_next_lvl (inter_thread_comm_t& punted_pkt) override {}

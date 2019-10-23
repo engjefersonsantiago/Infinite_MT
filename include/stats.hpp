@@ -63,13 +63,13 @@ class CacheStats{
 
         auto delete_key (const FiveTuple& five_tuple) {
             std::unique_lock lock(mutex_);
-            if (lookup(five_tuple)) {
+            /*if (lookup(five_tuple)) {
                 capacity_--;
                 StatsContainer.erase(five_tuple);
                 return true;
             } else {
                 return false;
-            }
+            }*/
         }
 
         /* Used only by external class only */

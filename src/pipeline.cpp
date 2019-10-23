@@ -6,10 +6,10 @@
 #include "parse_pcap.hpp"
 #include "packet_processing.hpp"
 
-using base_l1_pkt_process_t = PacketProcessing<1024, int>;
-using cache_l1_t = CacheL1PacketProcessing<1024, int>;
-using base_l2_pkt_process_t = PacketProcessing<65536, int>;
-using cache_l2_t = CacheL2PacketProcessing<65536, int>;
+using base_l1_pkt_process_t = PacketProcessing<1024, int, int>;
+using cache_l1_t = CacheL1PacketProcessing<1024, int, int>;
+using base_l2_pkt_process_t = PacketProcessing<65536, int, int>;
+using cache_l2_t = CacheL2PacketProcessing<65536, int, int>;
 
 int main() {
 
