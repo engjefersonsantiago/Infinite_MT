@@ -24,6 +24,11 @@
 #include <UdpLayer.h>
 #include <Packet.h>
 
+// Constants
+static constexpr std::size_t CACHE_L1_PROC_SLOWDOWN_FACTOR= 1;
+static constexpr std::size_t CACHE_L2_PROC_SLOWDOWN_FACTOR = 10;
+static constexpr std::size_t CACHE_HOST_PROC_SLOWDOWN_FACTOR = 1000;
+
 // FiveTuple struct
 struct FiveTuple {
     std::string src_addr;   // Evaluate changing to bitset
@@ -62,6 +67,8 @@ template <> struct hash<FiveTuple> {
 
 template<typename Message, typename Queue = std::queue<Message>, std::size_t Size = 1>
 struct ThreadCommunication {
+    using circ_buffer_t = boost::circular_buffer<Message>;
+    static constexpr auto is_circ_buffer = std::is_same_v<Queue, circ_buffer_t>;
     Queue mqueue;     // the queue of messages
     std::condition_variable mcond;  // the variable communicating events
     std::mutex mmutex;              // the locking mechanism
@@ -69,38 +76,48 @@ struct ThreadCommunication {
     std::size_t step = 0;
 
     ThreadCommunication () {
-        if constexpr (std::is_same_v<Queue, boost::circular_buffer<Message>>)
-            mqueue(Size);
+        if constexpr (is_circ_buffer)
+            mqueue.set_capacity(Size);
     }
 
     void set_done() {
-        std::unique_lock<std::mutex> lck {mmutex};
+        std::unique_lock lck {mmutex};
         done = true;
     }
     
     bool get_done() {
-        std::unique_lock<std::mutex> lck {mmutex};
+        std::unique_lock lck {mmutex};
         return done/* && mqueue.empty()*/;
     }
 
     void push_message (Message&& message) {
-        std::unique_lock<std::mutex> lck {mmutex};
-        mqueue.push(std::move(message));
+        std::unique_lock lck {mmutex};
+        if constexpr (is_circ_buffer)
+            mqueue.push_back(std::move(message));
+        else   
+            mqueue.push(std::move(message));
         ++step;
         mcond.notify_one();
     }
 
     void push_message (Message& message) {
-        std::unique_lock<std::mutex> lck {mmutex};
-        mqueue.push(std::move(message));
+        std::unique_lock lck {mmutex};
+        if constexpr (is_circ_buffer)
+            mqueue.push_back(std::move(message));
+        else   
+            mqueue.push(std::move(message));
         ++step;
         mcond.notify_one();
     }
+
     auto pull_message (Message& message, const std::size_t read_step){ 
         std::unique_lock<std::mutex> lck {mmutex};
         mcond.wait(lck, [=](){ return !mqueue.empty() && (step%read_step == 0); });
         message = std::move(mqueue.front());
-        mqueue.pop();
+        if constexpr (is_circ_buffer)
+            mqueue.pop_front();
+        else
+            mqueue.pop();
         return step;
     }
 };
@@ -109,7 +126,7 @@ struct ThreadCommunication {
 using packet_timestamp_pair_t = std::pair<pcpp::Packet, double>;
 using tuple_pkt_size_pair_t = std::pair<FiveTuple, size_t>;
 using inter_thread_comm_t = ThreadCommunication<packet_timestamp_pair_t>;
-using inter_thread_digest_cpu = ThreadCommunication<tuple_pkt_size_pair_t>;
+using inter_thread_digest_cpu = ThreadCommunication<tuple_pkt_size_pair_t, boost::circular_buffer<tuple_pkt_size_pair_t>, CACHE_HOST_PROC_SLOWDOWN_FACTOR>;
 
 using nano_second_t = std::chrono::duration<long double, std::nano>;
 

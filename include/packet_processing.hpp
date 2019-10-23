@@ -26,7 +26,12 @@ class PacketProcessing {
         // Constants
         static constexpr auto LOOKUP_MEM_SIZE = Lookup_Size;
 
-        void process_packet (inter_thread_comm_t& in_comm_pkt, inter_thread_comm_t& out_comm_pkt, const std::size_t read_step, const CacheType cache_type) {
+        void process_packet (inter_thread_comm_t& in_comm_pkt,
+                                inter_thread_comm_t& out_comm_pkt,
+                                inter_thread_digest_cpu& digest_cpu,
+                                const std::size_t read_step,
+                                const CacheType cache_type)
+        {
 
             while (!in_comm_pkt.get_done()) {
                 // Wait until a message is pushed to the queue
@@ -45,6 +50,7 @@ class PacketProcessing {
                 // Is not held in the cache?
                 if (!match) {
                     punt_pkt_to_next_lvl(out_comm_pkt);
+                    digest_pkt_to_ctrl(digest_cpu);
                 }
                 
                 // Update cache defined in the derived
