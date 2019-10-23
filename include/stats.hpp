@@ -1,6 +1,6 @@
-// File: lookup_table.hpp
-// Purpose: Lookup table class
-// Author: jeferson.silva@polymtl.ca
+// File: stats.hpp
+// Purpose: Cache stats base and specialized classes
+// Author: thibaut.stimpfling@polymtl.ca
 
 // STL libs
 #include <cstdint>
@@ -9,6 +9,7 @@
 #include <mutex>
 #include <unordered_map>
 #include <shared_mutex>
+#include <utility>
 
 #ifndef __STATS_LIB__
 #define __STATS_LIB__
@@ -17,6 +18,7 @@
 */
 
 #include "pkt_common.hpp"
+#include "sorted_container.hpp"
 /*
 *
 * Stats Class Used by a Cache.
@@ -24,81 +26,79 @@
 * Interfaces with the cache, the controller and the policier.
 *
 */
-template<size_t Cache_Size, typename Stats_Value>
-class CacheStats{
+
+enum class CacheType : uint8_t {
+    LRU,
+    LFU,
+    LRFU,
+    RANDOM
+};
+
+template<size_t Stats_Size, typename Stats_Value, typename Stats_Container>
+class CacheStats {
 
     public:
         // Constants
-        static constexpr auto STATS_MEM_SIZE = Cache_Size;
+        static constexpr auto STATS_MEM_SIZE = Stats_Size;
 
-        // Writter 
-        void update_stats(const FiveTuple& five_tuple, Stats_Value& updated_stats){
-           std::unique_lock lock(mutex_);
-            
-            // Assumes Five Tuple is already held       
-            StatsContainer.insert(five_tuple, updated_stats);
-        }
-
-        // Readers only - Shared Mutex and Lock
-        auto& get_stats (const FiveTuple& five_tuple) const {
-            std::shared_lock lock(mutex_);
-            return StatsContainer.find(five_tuple);
-        }
+        // Writter
+        virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) =0;
 
         // Read the whole stats
         auto& get_stats () const {
-            std::unique_lock lock(mutex_);  // Needs to be unique, cause the Dataplane should not
+            std::shared_lock lock(mutex_);  // Needs to be unique, cause the Dataplane should not
                                             // modify the stats during controller reading
-            return StatsContainer;
-        }
-        
-        /* Used only by external class only */
-        auto add_key (const FiveTuple& five_tuple, const Stats_Value& value) {
-            std::unique_lock lock(mutex_);
-            if (capacity_ < Cache_Size) {
-                capacity_++;
-                StatsContainer.insert(five_tuple, value);
-                return true;
-            } else {
-                return false;
-            }
+            return stats_container_;
         }
 
-        /* Used only by external class only */
-
-        auto delete_key (const FiveTuple& five_tuple) {
-            std::unique_lock lock(mutex_);
-            /*if (lookup(five_tuple)) {
-                capacity_--;
-                StatsContainer.erase(five_tuple);
-                return true;
-            } else {
-                return false;
-            }*/
-        }
-
-        /* Used only by external class only */
-
-        auto replace_key (const FiveTuple& old_tuple, const FiveTuple& new_tuple, const Stats_Value& new_value) {
-            // No need for lock here
-            return (delete_key(old_tuple)) ? add_key(new_tuple, new_value) : false;
-        }
-
-        auto get_capacity () const {
-            std::shared_lock lock(mutex_);
-            return capacity_;
-        }
-
-    private:
+        // Clear available thru container.clear()
+    protected:
         // Think about a generic container for the stats...
-        // Need a insert function
-        // Need getters
-        // Delete is needed? Not sure
-        // Size must be constrained... maybe with a construction parameter...
-        std::unordered_map<FiveTuple, Stats_Value> StatsContainer;
+        Stats_Container stats_container_ { Stats_Size };
         mutable std::shared_mutex mutex_;
         size_t capacity_ = 0;
 
+};
+
+// LRU Cache stats specialization
+template<typename T>
+using LRUContainer = boost::circular_buffer<std::pair<FiveTuple, T>>;
+
+template<size_t Stats_Size, typename Stats_Value>
+class LRUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LRUContainer<Stats_Value>> {
+    public:
+        virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) {
+            std::unique_lock lock(this->mutex_);
+            this->stats_container_.push_back({ five_tuple, updated_stats });
+        }
+};
+
+// LFU Cache stats specialization
+template<typename T>
+using LFUContainer = SortedContainer<std::pair<FiveTuple, T>>;
+
+template<size_t Stats_Size, typename Stats_Value>
+class LFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LFUContainer<Stats_Value>> {
+
+    public:
+        virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) {
+            std::unique_lock lock(this->mutex_);
+            auto tuple_compare = [&five_tuple = std::as_const(five_tuple)](const auto& elem) { 
+                return elem.first == five_tuple; 
+            };
+            auto value_sort = [](auto a, auto b) { return a.second > b.second; };
+            auto value_compare = [](auto a, auto b) { return std::max(a.second, b.second); };
+
+            auto found = this->stats_container_.find({five_tuple, 0}, tuple_compare);
+            if (found !=  this->stats_container_.end())
+            {
+                *found = {found->first, found->second + updated_stats};
+                this->stats_container_.sort(value_sort);
+            } else
+            {
+                this->stats_container_.insert({five_tuple, updated_stats}, value_sort, value_compare);
+            }
+        }
 };
 
 // LFU implemented as a streaming algorithm... we keep most active flows (more bandwidth) in cache

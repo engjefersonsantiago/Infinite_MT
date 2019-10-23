@@ -21,12 +21,22 @@ class LookupTable {
         // Constants
         static constexpr auto LOOKUP_MEM_SIZE = Lookup_Size;
 
-        auto lookup (const FiveTuple& five_tuple) const {
+        auto begin() { 
             std::shared_lock lock(mutex_);
-            return lookup_table_.find(five_tuple) != lookup_table_.end();
+            return lookup_table_.begin();
+        }
+        
+        auto end() { 
+            std::shared_lock lock(mutex_);
+            return lookup_table_.end();
         }
 
-        auto add_key (const FiveTuple& five_tuple, const Lookup_Value& value) {
+        auto find (const FiveTuple& five_tuple) const {
+            std::shared_lock lock(mutex_);
+            return lookup_table_.find(five_tuple);
+        }
+
+        auto insert (const FiveTuple& five_tuple, const Lookup_Value& value) {
             std::unique_lock lock(mutex_);
             if (occupancy_ < LOOKUP_MEM_SIZE) {
                 occupancy_++;
@@ -37,8 +47,8 @@ class LookupTable {
             }
         }
 
-        auto delete_key (const FiveTuple& five_tuple) {
-            if (lookup(five_tuple)) {
+        auto remove (const FiveTuple& five_tuple) {
+            if (find(five_tuple)) {
                 std::unique_lock lock(mutex_);
                 occupancy_--;
                 lookup_table_.erase(five_tuple);
@@ -48,15 +58,23 @@ class LookupTable {
             }
         }
 
-        auto replace_key (const FiveTuple& old_tuple, const FiveTuple& new_tuple, const Lookup_Value& new_value) {
+        auto replace (const FiveTuple& old_tuple, const FiveTuple& new_tuple, const Lookup_Value& new_value) {
             // No need for lock here
-            return (delete_key(old_tuple)) ? add_key(new_tuple, new_value) : false;
+            return (remove(old_tuple)) ? insert(new_tuple, new_value) : false;
         }
 
-        auto get_occupancy () const {
+        auto occupancy () const {
             std::shared_lock lock(mutex_);
             return occupancy_;
         }
+
+        auto& data () const {   // Raw Data
+            std::shared_lock lock(mutex_);
+            return lookup_table_;
+        }
+
+        LookupTable () {}
+        LookupTable (const std::size_t) {}
 
     private:
         std::unordered_map<FiveTuple, Lookup_Value> lookup_table_;

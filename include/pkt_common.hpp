@@ -11,6 +11,7 @@
 #include <queue>
 #include <tuple>
 #include <memory>
+#include <boost/circular_buffer.hpp>
 
 #ifndef __PKT_COMMON__
 #define __PKT_COMMON__
@@ -59,12 +60,18 @@ template <> struct hash<FiveTuple> {
 
 } // std
 
-template<typename Message>
+template<typename Message, typename Queue = std::queue<Message>, std::size_t Size = 1>
 struct ThreadCommunication {
-    std::queue<Message> mqueue;     // the queue of messages
+    Queue mqueue;     // the queue of messages
     std::condition_variable mcond;  // the variable communicating events
     std::mutex mmutex;              // the locking mechanism
     bool done = false;
+    std::size_t step = 0;
+
+    ThreadCommunication () {
+        if constexpr (std::is_same_v<Queue, boost::circular_buffer<Message>>)
+            mqueue(Size);
+    }
 
     void set_done() {
         std::unique_lock<std::mutex> lck {mmutex};
@@ -79,19 +86,22 @@ struct ThreadCommunication {
     void push_message (Message&& message) {
         std::unique_lock<std::mutex> lck {mmutex};
         mqueue.push(std::move(message));
+        ++step;
         mcond.notify_one();
     }
 
     void push_message (Message& message) {
         std::unique_lock<std::mutex> lck {mmutex};
         mqueue.push(std::move(message));
+        ++step;
         mcond.notify_one();
     }
-    void pull_message (Message& message){ 
+    auto pull_message (Message& message, const std::size_t read_step){ 
         std::unique_lock<std::mutex> lck {mmutex};
-        mcond.wait(lck/*, [=](){ return !get_done(); }*/);
+        mcond.wait(lck, [=](){ return !mqueue.empty() && (step%read_step == 0); });
         message = std::move(mqueue.front());
         mqueue.pop();
+        return step;
     }
 };
 
