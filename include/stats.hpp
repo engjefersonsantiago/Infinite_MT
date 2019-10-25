@@ -31,22 +31,27 @@ class CacheStats{
         // Constants
         static constexpr auto STATS_MEM_SIZE = Cache_Size;
 
-
         // Writter 
-        void update_stats(const FiveTuple& five_tuple,Stats_Value& updated_stats){
+        void update_stats(const FiveTuple& five_tuple, Stats_Value& updated_stats){
            std::unique_lock lock(mutex_);
             
             // Assumes Five Tuple is already held       
-            StatsContainer[five_tuple]= updated_stats;
+            StatsContainer.insert(five_tuple, updated_stats);
         }
 
         // Readers only - Shared Mutex and Lock
-        auto get_stats (const FiveTuple& five_tuple)  {
+        auto& get_stats (const FiveTuple& five_tuple) const {
             std::shared_lock lock(mutex_);
             return StatsContainer.find(five_tuple);
         }
 
-
+        // Read the whole stats
+        auto& get_stats () const {
+            std::unique_lock lock(mutex_);  // Needs to be unique, cause the Dataplane should not
+                                            // modify the stats during controller reading
+            return StatsContainer;
+        }
+        
         /* Used only by external class only */
         auto add_key (const FiveTuple& five_tuple, const Stats_Value& value) {
             std::unique_lock lock(mutex_);
@@ -85,9 +90,20 @@ class CacheStats{
         }
 
     private:
+        // Think about a generic container for the stats...
+        // Need a insert function
+        // Need getters
+        // Delete is needed? Not sure
+        // Size must be constrained... maybe with a construction parameter...
         std::unordered_map<FiveTuple, Stats_Value> StatsContainer;
         mutable std::shared_mutex mutex_;
         size_t capacity_ = 0;
 
 };
+
+// LFU implemented as a streaming algorithm... we keep most active flows (more bandwidth) in cache
+// LRU might be implemented as a static circular buffer. Impact of duplicates??
+// Random can be implemented directed in the controller
+// LRFU can be implemented as a timed streaming algorithm...
+
 #endif

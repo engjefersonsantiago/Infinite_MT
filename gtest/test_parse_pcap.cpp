@@ -1,5 +1,6 @@
 #include <memory>
 #include <thread>
+#include <mutex>
 #include <gtest/gtest.h>
 
 #include "pkt_common.hpp"
@@ -18,17 +19,17 @@ TEST_F(ParsePacketsTest, TestParsing) {
     inter_thread_comm_t	thread_comm;
     int pkt_cnt = 0;
 
+    const auto sleep = nano_second_t(100000);
     auto wait_pkt = [&]() { 
         while (!thread_comm.get_done()) {
-            std::unique_lock<std::mutex> lck {thread_comm.mmutex};
-            auto r = thread_comm.mcond.wait_for(lck, nano_second_t(100*100000));
+            std::unique_lock lck {thread_comm.mmutex};
+            auto r = thread_comm.mcond.wait_for(lck, nano_second_t(100*sleep));
             if (r == std::cv_status::no_timeout) {
                 pkt_cnt++;
             }
         }
     };
 
-    auto sleep = nano_second_t(100000);
     std::thread tp(&ParsePackets::from_pcap_file, *parse_pcap, std::ref(thread_comm),std::ref(sleep));
     std::thread tc(wait_pkt);
 
