@@ -48,7 +48,7 @@ class LookupTable {
         }
 
         auto remove (const FiveTuple& five_tuple) {
-            if (find(five_tuple)) {
+            if (find(five_tuple) != lookup_table_.end()) {
                 std::unique_lock lock(mutex_);
                 occupancy_--;
                 lookup_table_.erase(five_tuple);
