@@ -47,9 +47,14 @@ int main() {
 
     auto start = std::chrono::system_clock::now();
 
-    std::thread thread_parse_pkt(&ParsePackets::from_pcap_file, 
+    // Init lookup table
+    auto unique_tuples = filter_unique_tuples_from_trace(pcap_file);
+    std::cout << "Identified " << unique_tuples.size() << " unique tuples\n";
+
+    // Start processing threads
+    std::thread thread_parse_pkt(&ParsePackets::from_pcap_file,
                                     parse_pkts,
-                                    std::ref(parse_to_l1_comm), 
+                                    std::ref(parse_to_l1_comm),
                                     nano_second_t(sleep_time)
                                 );
     std::thread thread_cache_l1(&base_l1_pkt_process_t::process_packet,

@@ -12,6 +12,7 @@
 #include <tuple>
 #include <memory>
 #include <boost/circular_buffer.hpp>
+#include <unordered_set>
 
 #ifndef __PKT_COMMON__
 #define __PKT_COMMON__
@@ -132,7 +133,6 @@ using nano_second_t = std::chrono::duration<long double, std::nano>;
 
 // Helper functions
 tuple_pkt_size_pair_t create_five_tuple_from_packet (pcpp::Packet& parsedPacket);
-
-
+std::unordered_set<FiveTuple> filter_unique_tuples_from_trace (std::string& pcap_file);
 
 #endif // __PKT_COMMON__

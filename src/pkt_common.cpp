@@ -14,7 +14,7 @@ tuple_pkt_size_pair_t create_five_tuple_from_packet (pcpp::Packet& parsedPacket)
     // 5 tuple
     FiveTuple five_tuple;
     size_t pkt_size = 0;
-   
+
 
     // verify the packet is L4
     if (parsedPacket.isPacketOfType(pcpp::TCP) || parsedPacket.isPacketOfType(pcpp::UDP)) {
@@ -49,3 +49,23 @@ tuple_pkt_size_pair_t create_five_tuple_from_packet (pcpp::Packet& parsedPacket)
     }
     return std::make_pair(five_tuple, pkt_size);
 }
+
+std::unordered_set<FiveTuple> filter_unique_tuples_from_trace (std::string& pcap_file) {
+    std::unordered_set<FiveTuple> five_tuples;
+    pcpp::PcapFileReaderDevice reader(pcap_file.c_str());
+
+    if (!reader.open()) { std::cout << "Error opening the pcap file\n"; }
+
+    pcpp::RawPacket rawPacket;
+    while (reader.getNextPacket(rawPacket)) {
+        // Push Packet
+        pcpp::Packet packet(&rawPacket);
+        const auto& [tuple, size] = create_five_tuple_from_packet(packet);
+        if (five_tuples.find(tuple) == five_tuples.end()) {
+            five_tuples.insert(tuple);
+        }
+        std::cout << tuple;
+    }
+    return five_tuples;
+}
+
