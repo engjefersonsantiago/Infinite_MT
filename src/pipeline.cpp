@@ -12,6 +12,9 @@ using cache_l1_t = CacheL1PacketProcessing<1024, std::size_t, cache_stats_t>;
 using base_l2_pkt_process_t = PacketProcessing<65536, std::size_t, cache_stats_t>;
 using cache_l2_t = CacheL2PacketProcessing<65536, std::size_t, cache_stats_t>;
 
+//TODO: Add Policer.
+
+
 static constexpr auto CACHE_L1_TYPE = CacheType::LRU;
 static constexpr auto CACHE_L2_TYPE = CacheType::LRU;
 
@@ -33,6 +36,7 @@ int main() {
     inter_thread_comm_t l2_to_dummy_comm;
     inter_thread_digest_cpu l1_to_cpu_comm;
     inter_thread_digest_cpu l2_to_cpu_comm;
+    //TODO Add communication CPU to cache
 
     // Parser
     ParsePackets parse_pkts(pcap_file, timestamp_file);
@@ -73,6 +77,9 @@ int main() {
                                     CACHE_L2_PROC_SLOWDOWN_FACTOR,
                                     CACHE_L2_TYPE
                                 );
+
+
+    // TODO: Policer and kernel that ensure that all tasks are completed until the next time slot is started.                          
 
     thread_parse_pkt.join();
     std::cout << "Parser joined\n";

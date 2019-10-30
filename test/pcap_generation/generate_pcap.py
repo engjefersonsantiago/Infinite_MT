@@ -47,17 +47,17 @@ def generate_pcap_traces(num_five_tuples,num_pkt_per_tuple):
             if transport_prot == "TCP":
                 # Not SYN 
                 if packet_index:
-                    packet = packet / TCP(sport=port_src,dport=port_dst,flags="A")
+                    packet = Ether() /packet / TCP(sport=port_src,dport=port_dst,flags="A")
                     packet = packet / packet_padding
                     trace.append(packet)
                 # SYN
                 else:
-                    packet = packet / TCP(sport=port_src,dport=port_dst,flags="S")
+                    packet = Ether()/ packet / TCP(sport=port_src,dport=port_dst,flags="S")
                     packet = packet / packet_padding
                     trace_syn.append(packet)
 
             else:
-                packet = packet / UDP(sport=port_src,dport=port_dst)
+                packet =  Ether()/ packet / UDP(sport=port_src,dport=port_dst)
                 packet = packet / packet_padding
                 trace.append(packet)    
 

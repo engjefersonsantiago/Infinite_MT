@@ -128,7 +128,6 @@ using packet_timestamp_pair_t = std::pair<pcpp::Packet, double>;
 using tuple_pkt_size_pair_t = std::pair<FiveTuple, size_t>;
 using inter_thread_comm_t = ThreadCommunication<packet_timestamp_pair_t>;
 using inter_thread_digest_cpu = ThreadCommunication<tuple_pkt_size_pair_t, boost::circular_buffer<tuple_pkt_size_pair_t>, CACHE_HOST_PROC_SLOWDOWN_FACTOR>;
-
 using nano_second_t = std::chrono::duration<long double, std::nano>;
 
 // Helper functions

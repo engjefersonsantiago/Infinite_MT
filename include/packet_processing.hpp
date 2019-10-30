@@ -95,8 +95,10 @@ class CacheL1PacketProcessing final : public PacketProcessing <Lookup_Size, Look
             punted_pkt.push_message(this->packet_timestamp_);
         }
 
+        // TODO: Send to policer in case of a cache miss
         virtual void digest_pkt_to_ctrl (inter_thread_digest_cpu& digest_pkt) override {
             digest_pkt.push_message(this->tuple_size_pair_);
+            //TODO: Ask Jeff why this is being used.
         }
         
         virtual void update_cache_stats(const bool match, const CacheType cache_type) override {
