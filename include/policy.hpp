@@ -36,20 +36,13 @@ class Policier{
  
  
     private:
-    // Lookup Table 
     LookupTable<Lookup_Size, Lookup_Value>& lookup_table_;
 
     // Controller Five Tuple Vector
     five_tuple_vector_t& reference_five_tuple_vector_;
 
-    // Pkt Digest
-    tuple_pkt_size_pair_t tuple_size_pair_;
-
-    // Stats
     CacheStats<Stats_Size, Stats_Value>& stats_table_; 
 
-    // Policy Type - Info Purpose
-    CacheType cache_type;
 };
 
 template< size_t Lookup_Size, typename Lookup_Value, size_t Stats_Size, typename Stats_Value>
