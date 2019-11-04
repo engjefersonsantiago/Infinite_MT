@@ -40,15 +40,15 @@ TEST_F(LookupTableTest, TestConcurrence) {
 	FiveTuple ft { "IP1", "IP2", 4, 5, 6 };
 	FiveTuple ft2 { "IP2", "IP1", 4, 5, 6 };
     int val = 1;
-	
+
     auto add_key = [&](const auto& key, const auto& val) { lookup_table->insert(key, val); };
-    auto replace_key = [&](const auto& old_key, const auto& new_key, const auto& new_val) { 
+    auto replace_key = [&](const auto& old_key, const auto& new_key, const auto& new_val) {
         lookup_table->replace(old_key, new_key, new_val);
     };
 
     std::thread t1 (add_key, std::ref(ft), std::ref(val));
     std::thread t2 (replace_key, std::ref(ft), std::ref(ft2), std::ref(val));
-    
+
     t1.join();
     t2.join();
 

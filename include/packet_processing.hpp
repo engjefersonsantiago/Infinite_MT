@@ -26,38 +26,34 @@ class PacketProcessing {
         // Constants
         static constexpr auto LOOKUP_MEM_SIZE = Lookup_Size;
 
-        void process_packet (inter_thread_comm_t& in_comm_pkt,
-                                inter_thread_comm_t& out_comm_pkt,
-                                inter_thread_digest_cpu& digest_cpu,
-                                const std::size_t read_step,
-                                const CacheType cache_type)
+        void process_packet (const std::size_t read_step, const CacheType cache_type)
         {
 
-            while (!in_comm_pkt.get_done()) {
+            while (!in_comm_pkt_.get_done()) {
                 // Wait until a message is pushed to the queue
-                discrete_ts = in_comm_pkt.pull_message(packet_timestamp_, read_step);
+                discrete_ts = in_comm_pkt_.pull_message(packet_timestamp_, read_step);
 
                 // Extract five tuple and packet size
                 tuple_size_pair_ = create_five_tuple_from_packet(packet_timestamp_.first);
                 num_packets_++;
                 std::cout << "Thread ID " << std::this_thread::get_id() << " extracted " << num_packets_ << " five tuples\n";
                 std::cout << tuple_size_pair_.first;
-   
+
                 // Look table iterator: key + value
                 auto lookup_result = lookup_table_.find(tuple_size_pair_.first);
                 auto match = lookup_result != lookup_table_.end();
 
                 // Is not held in the cache?
                 if (!match) {
-                    punt_pkt_to_next_lvl(out_comm_pkt);
-                    digest_pkt_to_ctrl(digest_cpu);
+                    punt_pkt_to_next_lvl(out_comm_pkt_);
+                    digest_pkt_to_ctrl(digest_cpu_);
                 }
-                
+
                 // Update cache defined in the derived
                 update_cache_stats(match, cache_type);
 
                 if constexpr (Sleep_Time) {
-                    std::this_thread::sleep_for(nano_second_t(Sleep_Time));        
+                    std::this_thread::sleep_for(nano_second_t(Sleep_Time));
                 }
             }
         }
@@ -69,12 +65,22 @@ class PacketProcessing {
         virtual void update_cache_stats(const bool match, const CacheType cache_type) =0;
 
         auto& lookup_table () { return lookup_table_; }
-        
-        auto& get_stats_table () { return stats_table_; }
 
+        auto& stats_table () { return stats_table_; }
+
+        PacketProcessing(inter_thread_comm_t& in_comm_pkt,
+                            inter_thread_comm_t& out_comm_pkt,
+                            inter_thread_digest_cpu& digest_cpu) :
+                            in_comm_pkt_(in_comm_pkt),
+                            out_comm_pkt_(out_comm_pkt),
+                            digest_cpu_(digest_cpu)
+        {}
 
     protected:
         LookupTable<Lookup_Size, Lookup_Value> lookup_table_;
+        inter_thread_comm_t& in_comm_pkt_;
+        inter_thread_comm_t& out_comm_pkt_;
+        inter_thread_digest_cpu& digest_cpu_;
 
         // Add stats container
         Cache_Stats stats_table_;
@@ -91,6 +97,8 @@ template<size_t Lookup_Size, typename Lookup_Value, typename Cache_Stats, size_t
 class CacheL1PacketProcessing final : public PacketProcessing <Lookup_Size, Lookup_Value, Cache_Stats, Sleep_Time> {
 
     public:
+        using pkt_proc_base_t = PacketProcessing <Lookup_Size, Lookup_Value, Cache_Stats, Sleep_Time>;
+
         virtual void punt_pkt_to_next_lvl (inter_thread_comm_t& punted_pkt) override {
             punted_pkt.push_message(this->packet_timestamp_);
         }
@@ -100,17 +108,24 @@ class CacheL1PacketProcessing final : public PacketProcessing <Lookup_Size, Look
             digest_pkt.push_message(this->tuple_size_pair_);
             //TODO: Ask Jeff why this is being used.
         }
-        
+
         virtual void update_cache_stats(const bool match, const CacheType cache_type) override {
             if (match) {
-                if (cache_type == CacheType::LRU) { 
+                if (cache_type == CacheType::LRU) {
                     this->stats_table_.update_stats(this->tuple_size_pair_.first, this->discrete_ts);
-                } else if (cache_type == CacheType::LFU ) {
+                } else if (cache_type == CacheType::LFU) {
                     this->stats_table_.update_stats(this->tuple_size_pair_.first, this->tuple_size_pair_.second);
                 } else {
                 }
             }
         }
+
+        // CTOR calls the base CTOR
+        CacheL1PacketProcessing(inter_thread_comm_t& in_comm_pkt,
+                                    inter_thread_comm_t& out_comm_pkt,
+                                    inter_thread_digest_cpu& digest_cpu) :
+                                    pkt_proc_base_t(in_comm_pkt, out_comm_pkt, digest_cpu)
+        {}
 
 };
 
@@ -118,9 +133,18 @@ template<size_t Lookup_Size, typename Lookup_Value, typename Cache_Stats, size_t
 class CacheL2PacketProcessing final : public PacketProcessing <Lookup_Size, Lookup_Value, Cache_Stats, Sleep_Time> {
 
     public:
+        using pkt_proc_base_t = PacketProcessing <Lookup_Size, Lookup_Value, Cache_Stats, Sleep_Time>;
+        
         virtual void punt_pkt_to_next_lvl (inter_thread_comm_t& punted_pkt) override {}
         virtual void digest_pkt_to_ctrl (inter_thread_digest_cpu& digest_pkt) override {}
         virtual void update_cache_stats(const bool match, const CacheType cache_type) override {}
+
+        // CTOR calls the base CTOR
+        CacheL2PacketProcessing(inter_thread_comm_t& in_comm_pkt,
+                                    inter_thread_comm_t& out_comm_pkt,
+                                    inter_thread_digest_cpu& digest_cpu) :
+                                    pkt_proc_base_t(in_comm_pkt, out_comm_pkt, digest_cpu)
+        {}
 
 };
 

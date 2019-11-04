@@ -18,15 +18,17 @@ template<size_t Lookup_Size, typename Lookup_Value>
 class LookupTable {
 
     public:
+        using lookup_mem_t = std::unordered_map<FiveTuple, Lookup_Value>;
+
         // Constants
         static constexpr auto LOOKUP_MEM_SIZE = Lookup_Size;
 
-        auto begin() { 
+        auto begin() {
             std::shared_lock lock(mutex_);
             return lookup_table_.begin();
         }
-        
-        auto end() { 
+
+        auto end() {
             std::shared_lock lock(mutex_);
             return lookup_table_.end();
         }
@@ -45,6 +47,11 @@ class LookupTable {
             } else {
                 return false;
             }
+        }
+
+        auto full() const {
+            std::shared_lock lock(mutex_);
+            return occupancy_ >= LOOKUP_MEM_SIZE;
         }
 
         auto remove (const FiveTuple& five_tuple) {
@@ -73,11 +80,17 @@ class LookupTable {
             return lookup_table_;
         }
 
+        auto& data () {   // Raw Data
+            std::unique_lock lock(mutex_);
+            return lookup_table_;
+        }
+
         LookupTable () {}
         LookupTable (const std::size_t) {}
+        LookupTable (const lookup_mem_t& lookup_table) : lookup_table_(lookup_table), occupancy_(lookup_table.size()){}
 
     private:
-        std::unordered_map<FiveTuple, Lookup_Value> lookup_table_;
+        lookup_mem_t lookup_table_;
         mutable std::shared_mutex mutex_;
         size_t occupancy_ = 0;
 
