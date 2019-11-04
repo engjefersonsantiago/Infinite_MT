@@ -16,8 +16,9 @@
 
 #include "pkt_common.hpp"
 #include "packet_processing.hpp"
+#include "lookup_table.hpp"
 
-template<size_t Lookup_Size_L1, size_t Lookup_Size_L2, typename Lookup_Value, size_t Sleep_Time = 0>
+template<typename Lookupe_Table_L1 , typename Lookup_Table_L2, typename Policier_t>
 class Controller{
 
 
@@ -25,42 +26,47 @@ class Controller{
     // Types
     using inter_thread_digest_cpu = ThreadCommunication<tuple_pkt_size_pair_t>;
     using tuple_value_pair_t = std::pair<FiveTuple,Lookup_Value>;
-    
+    using five_tuple_vector_t = std::vector<FiveTuple>;
 
-    // Constructor 
-    Controller(LookupTable<Lookup_Size_L1, Lookup_Value>& lookup_table_L1, LookupTable<Lookup_Size_L2, Lookup_Value>& lookup_table_L2): 
-    lookup_table_L1_(lookup_table_L1) , lookup_table_L2_(lookup_table_L2_) {}
-
+    Controller(Lookup_Table_L1& lookup_table_L1, Lookup_Table_L2& lookup_table_L2,  Policier_t& policy ): 
+    lookup_table_L1_(lookup_table_L1) , lookup_table_L2_(lookup_table_L2), l1_policy(policy) {}
 
 
-    // Messages echanges entre L1 et controller
-    
-    // Interface to/from L1
-        // To
     bool remove_entry_L1_cache(){
         auto& [tuple,value] = entry_to_remove;
-        return lookup_table_L1_.delete_key(tuple);    
+        // TODO: Pourquoi un return statement ici?
+        return lookup_table_L1_.remove(tuple);    
     }
 
     bool add_entry_L1_cache(){
         auto& [tuple,value] = entry_to_add;
-        return lookup_table_L1_.add_key(tuple, value);
+        return lookup_table_L1_.insert(tuple, value);
 
     }
 
+    void harvest_stat_L1_cache(){
 
-    void harvest_stats_L1_cache(){
+    }
+
+    void harvest_full_stats_L1_cache(){
         // See question raised for harvest stats L2 cache
+        // Policy related method.
 
     }
 
-        // From 
     void process_digest_from_L1_cache(inter_thread_digest_cpu& digest_pkt){
-        // Get
-        digest_pkt.pull_message(this->tuple_size_pair_);
+        //TODO: Pourquoi un this->?
+        auto [boolean,step] =  digest_pkt.pull_message(this->tuple_size_pair_);
+        auto [five_tuple, size] = tuple_size_pair_;
 
-        // Process - Update Policy TBD 
-        policy.update();
+        // L1 Table full ? Identify a victim for eviction
+        if lookup_table_L1_.is_full(){
+            auto  [evicted_key,evicted_val] = l1_policy.select_replacement_victim();
+            auto l1_policy.remove(evicted_key);
+        }
+        // Insert the new value.
+        auto value = full_lookup_table_[five_tuple];
+        l1_policy.insert(five_tuple,value);
 
     }
     
@@ -68,9 +74,6 @@ class Controller{
 
     // Interface to/from Main Memory
 
-
-    // Interface to/from L1
-        // To
     bool remove_entry_L2_cache(){
         auto& [tuple,value] = entry_to_remove;
         return lookup_table_L2_.delete_key(tuple);    
@@ -102,7 +105,10 @@ class Controller{
         std::unordered_map<FiveTuple, Lookup_Value> full_lookup_table_;
         LookupTable<Lookup_Size, Lookup_Value>& lookup_table_L1_; 
         LookupTable<Lookup_Size, Lookup_Value>& lookup_table_L2;
+        five_tuple_vector_t reference_five_tuple_vector;
 
+        // Message
+        tuple_pkt_size_pair_t tuple_size_pair_;
         // Stats - Coin
         StatsContainer<Size, Stats_Value>& stats_table_L1_; 
         StatsContainer<Size, Stats_Value>& stats_table_L2;
@@ -110,6 +116,9 @@ class Controller{
         // Entry
         tuple_value_pair_t entry_to_add;
         tuple_value_pair_t entry_to_remove;
+
+        // Policy 
+        Policier_t l1_policy;
         
 }
 // Interface vers L1
