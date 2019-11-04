@@ -17,7 +17,7 @@
 #include "pkt_common.hpp"
 #include "packet_processing.hpp"
 
-template<size_t Lookup_Size_L1, size_t Lookup_Size_L2, typename Lookup_Value, size_t Sleep_Time = 0>
+template<size_t Lookup_Size_L1, size_t Lookup_Size_L2, typename Lookup_Value, size_t Sleep_Time = 0, typename Policier_t>
 class Controller{
 
 
@@ -25,20 +25,18 @@ class Controller{
     // Types
     using inter_thread_digest_cpu = ThreadCommunication<tuple_pkt_size_pair_t>;
     using tuple_value_pair_t = std::pair<FiveTuple,Lookup_Value>;
-    
+    using five_tuple_vector_t = std::vector<FiveTuple>;
 
-    // Constructor 
-    Controller(LookupTable<Lookup_Size_L1, Lookup_Value>& lookup_table_L1, LookupTable<Lookup_Size_L2, Lookup_Value>& lookup_table_L2): 
-    lookup_table_L1_(lookup_table_L1) , lookup_table_L2_(lookup_table_L2_) {}
+    Controller(LookupTable<Lookup_Size_L1, Lookup_Value>& lookup_table_L1, LookupTable<Lookup_Size_L2, Lookup_Value>& lookup_table_L2,  Policier ): 
+    lookup_table_L1_(lookup_table_L1) , lookup_table_L2_(lookup_table_L2_), Policier {}
 
 
 
     // Messages echanges entre L1 et controller
-    
-    // Interface to/from L1
-        // To
+
     bool remove_entry_L1_cache(){
         auto& [tuple,value] = entry_to_remove;
+        // TODO: Pourquoi un return statement ici?
         return lookup_table_L1_.delete_key(tuple);    
     }
 
@@ -48,9 +46,13 @@ class Controller{
 
     }
 
+    void harvest_stat_L1_cache(){
 
-    void harvest_stats_L1_cache(){
+    }
+
+    void harvest_full_stats_L1_cache(){
         // See question raised for harvest stats L2 cache
+        // Policy related method.
 
     }
 
@@ -59,7 +61,30 @@ class Controller{
         // Get
         digest_pkt.pull_message(this->tuple_size_pair_);
 
-        // Process - Update Policy TBD 
+        // Entry to add 
+
+        // Interpret the message
+        // Select the entry to add ?
+
+
+        // Le controlleur ne devrait pas directement manipuler les entree dans la cache L1 et L2?
+            // Dans quel cas est-ce vrai?
+
+        // Polic
+
+        // Read the l1 lookup table cache occupancy.
+            // Is the cache full ?
+
+            // If not.
+                // Select the in reference lookup table the entry to add.m
+                // Insert associated rule
+            // Else
+                // Apply replacement policy.
+                    // Select an entry to evict (from L1)
+
+        // 
+
+
         policy.update();
 
     }
@@ -102,6 +127,8 @@ class Controller{
         std::unordered_map<FiveTuple, Lookup_Value> full_lookup_table_;
         LookupTable<Lookup_Size, Lookup_Value>& lookup_table_L1_; 
         LookupTable<Lookup_Size, Lookup_Value>& lookup_table_L2;
+        five_tuple_vector_t reference_five_tuple_vector;
+
 
         // Stats - Coin
         StatsContainer<Size, Stats_Value>& stats_table_L1_; 
@@ -110,6 +137,10 @@ class Controller{
         // Entry
         tuple_value_pair_t entry_to_add;
         tuple_value_pair_t entry_to_remove;
+
+        // Policy 
+        Policier<> l1_policy;
+        Policier<> l2_policy; 
         
 }
 // Interface vers L1
