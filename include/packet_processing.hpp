@@ -29,9 +29,11 @@ class PacketProcessing {
         void process_packet (const std::size_t read_step, const CacheType cache_type)
         {
 
-            while (!in_comm_pkt_.get_done()) {
+            while (true) {
                 // Wait until a message is pushed to the queue
-                discrete_ts = in_comm_pkt_.pull_message(packet_timestamp_, read_step);
+                auto [timeout, discrete_ts] = in_comm_pkt_.pull_message(packet_timestamp_, read_step);
+
+                if (timeout) { break; }
 
                 // Extract five tuple and packet size
                 tuple_size_pair_ = create_five_tuple_from_packet(packet_timestamp_.first);
