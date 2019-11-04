@@ -32,7 +32,7 @@ int main() {
 
     // Inter thread communication
     inter_thread_comm_t parse_to_l1_comm;
-    inter_thread_comm_t l1_to_l2_comm;
+    inter_thread_comm_t l1_to_l2_comm(10);
     inter_thread_comm_t l2_to_dummy_comm;
     inter_thread_digest_cpu l1_to_cpu_comm;
     inter_thread_digest_cpu l2_to_cpu_comm;

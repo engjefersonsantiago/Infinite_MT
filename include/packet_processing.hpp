@@ -10,6 +10,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <unordered_map>
+#include <typeinfo>
 
 #ifndef __PKT_PROCESSING__
 #define __PKT_PROCESSING__
@@ -33,12 +34,13 @@ class PacketProcessing {
                 // Wait until a message is pushed to the queue
                 auto [timeout, discrete_ts] = in_comm_pkt_.pull_message(packet_timestamp_, read_step);
 
+                // Exit in case of timeout
                 if (timeout) { break; }
 
                 // Extract five tuple and packet size
                 tuple_size_pair_ = create_five_tuple_from_packet(packet_timestamp_.first);
                 num_packets_++;
-                std::cout << "Thread ID " << std::this_thread::get_id() << " extracted " << num_packets_ << " five tuples\n";
+                std::cout << /*"Class " << typeid(*this).name() <<*/ ", Thread ID " << std::this_thread::get_id() << " extracted " << num_packets_ << " five tuples\n";
                 std::cout << tuple_size_pair_.first;
 
                 // Look table iterator: key + value

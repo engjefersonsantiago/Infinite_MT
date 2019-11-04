@@ -64,7 +64,6 @@ std::unordered_set<FiveTuple> filter_unique_tuples_from_trace (std::string& pcap
         if (five_tuples.find(tuple) == five_tuples.end()) {
             five_tuples.insert(tuple);
         }
-        std::cout << tuple;
     }
     return five_tuples;
 }
