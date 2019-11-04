@@ -30,6 +30,9 @@ static constexpr std::size_t CACHE_L1_PROC_SLOWDOWN_FACTOR= 1;
 static constexpr std::size_t CACHE_L2_PROC_SLOWDOWN_FACTOR = 10;
 static constexpr std::size_t CACHE_HOST_PROC_SLOWDOWN_FACTOR = 1000;
 
+using nano_second_t = std::chrono::nanoseconds;
+using second_t = std::chrono::seconds;
+
 // FiveTuple struct
 struct FiveTuple {
     std::string src_addr;   // Evaluate changing to bitset
@@ -75,8 +78,14 @@ struct ThreadCommunication {
     std::mutex mmutex;              // the locking mechanism
     bool done = false;
     std::size_t step = 0;
+    std::size_t timeout_;
 
-    ThreadCommunication () {
+    ThreadCommunication () : timeout_(1){
+        if constexpr (is_circ_buffer)
+            mqueue.set_capacity(Size);
+    }
+
+    ThreadCommunication (const std::size_t timeout) : timeout_(timeout) {
         if constexpr (is_circ_buffer)
             mqueue.set_capacity(Size);
     }
@@ -113,13 +122,19 @@ struct ThreadCommunication {
 
     auto pull_message (Message& message, const std::size_t read_step){ 
         std::unique_lock<std::mutex> lck {mmutex};
-        mcond.wait(lck, [=](){ return !mqueue.empty() && (step%read_step == 0); });
+        auto now = std::chrono::system_clock::now();
+        if (!mcond.wait_until(lck, now + second_t(timeout_),
+            [=](){ return (!mqueue.empty() and !done) && (step%read_step == 0); })
+            )
+        {
+            return std::make_pair(true, 0ul);
+        }
         message = std::move(mqueue.front());
         if constexpr (is_circ_buffer)
             mqueue.pop_front();
         else
             mqueue.pop();
-        return step;
+        return std::make_pair(false, step);
     }
 };
 
@@ -128,7 +143,7 @@ using packet_timestamp_pair_t = std::pair<pcpp::Packet, double>;
 using tuple_pkt_size_pair_t = std::pair<FiveTuple, size_t>;
 using inter_thread_comm_t = ThreadCommunication<packet_timestamp_pair_t>;
 using inter_thread_digest_cpu = ThreadCommunication<tuple_pkt_size_pair_t, boost::circular_buffer<tuple_pkt_size_pair_t>, CACHE_HOST_PROC_SLOWDOWN_FACTOR>;
-using nano_second_t = std::chrono::duration<long double, std::nano>;
+
 
 // Helper functions
 tuple_pkt_size_pair_t create_five_tuple_from_packet (pcpp::Packet& parsedPacket);

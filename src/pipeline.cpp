@@ -42,11 +42,11 @@ int main() {
     ParsePackets parse_pkts(pcap_file, timestamp_file);
 
     // Cache L1
-    cache_l1_t cache_l1;
+    cache_l1_t cache_l1 (parse_to_l1_comm, l1_to_l2_comm, l1_to_cpu_comm);
     base_l1_pkt_process_t& base_cache_l1 = cache_l1;
 
     // Cache L2
-    cache_l2_t cache_l2;
+    cache_l2_t cache_l2 (l1_to_l2_comm, l2_to_dummy_comm, l2_to_cpu_comm);
     base_l2_pkt_process_t& base_cache_l2 = cache_l2;
 
     auto start = std::chrono::system_clock::now();
@@ -54,6 +54,16 @@ int main() {
     // Init lookup table
     auto unique_tuples = filter_unique_tuples_from_trace(pcap_file);
     std::cout << "Identified " << unique_tuples.size() << " unique tuples\n";
+
+    // Populating lookup tables
+    for (const auto& tuple : unique_tuples) {
+        if (!base_cache_l1.lookup_table().full()) {
+            base_cache_l1.lookup_table().data().insert({ tuple, 0 });
+        }
+        if (!base_cache_l2.lookup_table().full()) {
+            base_cache_l2.lookup_table().data().insert({ tuple, 0 });
+        }
+    }
 
     // Start processing threads
     std::thread thread_parse_pkt(&ParsePackets::from_pcap_file,
@@ -63,23 +73,17 @@ int main() {
                                 );
     std::thread thread_cache_l1(&base_l1_pkt_process_t::process_packet,
                                     std::ref(base_cache_l1),
-                                    std::ref(parse_to_l1_comm),
-                                    std::ref(l1_to_l2_comm),
-                                    std::ref(l1_to_cpu_comm),
                                     CACHE_L1_PROC_SLOWDOWN_FACTOR,
                                     CACHE_L1_TYPE
                                 );
     std::thread thread_cache_l2(&base_l2_pkt_process_t::process_packet,
                                     std::ref(base_cache_l2),
-                                    std::ref(l1_to_l2_comm),
-                                    std::ref(l2_to_dummy_comm),
-                                    std::ref(l2_to_cpu_comm),
                                     CACHE_L2_PROC_SLOWDOWN_FACTOR,
                                     CACHE_L2_TYPE
                                 );
 
 
-    // TODO: Policer and kernel that ensure that all tasks are completed until the next time slot is started.                          
+    // TODO: Policer and kernel that ensure that all tasks are completed until the next time slot is started.
 
     thread_parse_pkt.join();
     std::cout << "Parser joined\n";
