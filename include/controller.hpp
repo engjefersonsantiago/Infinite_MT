@@ -34,7 +34,6 @@ class Controller{
 
     bool remove_entry_L1_cache(){
         auto& [tuple,value] = entry_to_remove;
-        // TODO: Pourquoi un return statement ici?
         return lookup_table_L1_.remove(tuple);    
     }
 
@@ -44,13 +43,8 @@ class Controller{
 
     }
 
-    void harvest_stat_L1_cache(){
-
-    }
-
-    void harvest_full_stats_L1_cache(){
-        // See question raised for harvest stats L2 cache
-        // Policy related method.
+    void harvest_stats_L1_cache(){
+        // But?
 
     }
 
@@ -86,21 +80,6 @@ class Controller{
     }
 
 
-    void harvest_stats_L2_cache(){
-        // Where are the L2 cache stored?
-            // Cointainer
-        // Which stats?
-            // Entry to evict
-        // When?
-            // Upon a cache miss?
-
-            // Controller pull before inserting a new value?
-
-
-    }
-
-
-
     private:
         std::unordered_map<FiveTuple, Lookup_Value> full_lookup_table_;
         LookupTable<Lookup_Size, Lookup_Value>& lookup_table_L1_; 
@@ -121,23 +100,10 @@ class Controller{
         Policier_t l1_policy;
         
 }
-// Interface vers L1
-// from
-// to
 
 
-// Interface vers Mem Principale 
-//from 
-// to
-
-// Write key / delete key.
 
 
-// Interface recupere statistic 
-// from  L1, main
 
-
-// Class lookup_table Template Typename 
-// Mutex
 
 #endif // __CONTROLLER__ 
