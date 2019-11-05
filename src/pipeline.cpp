@@ -5,14 +5,15 @@
 #include "pkt_common.hpp"
 #include "parse_pcap.hpp"
 #include "packet_processing.hpp"
+#include "policy.hpp"
 
 using cache_stats_t = LRUCacheStats<32, std::size_t>;
 using base_l1_pkt_process_t = PacketProcessing<1024, std::size_t, cache_stats_t>;
 using cache_l1_t = CacheL1PacketProcessing<1024, std::size_t, cache_stats_t>;
 using base_l2_pkt_process_t = PacketProcessing<65536, std::size_t, cache_stats_t>;
 using cache_l2_t = CacheL2PacketProcessing<65536, std::size_t, cache_stats_t>;
-using LRUPolicy = RandomPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
-using controller_t = Controller<typename cache_l1_t::lookup_table_t, typename cache_l2_t::lookup_table_t,typename random_policy_t>;
+using LRU_policy_t = LRUPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
+using controller_t = Controller<typename cache_l1_t::lookup_table_t, typename cache_l2_t::lookup_table_t, LRU_policy_t>;
 
 //TODO: Add Policer.
 
@@ -39,6 +40,7 @@ int main() {
     inter_thread_digest_cpu l1_to_cpu_comm;
     inter_thread_digest_cpu l2_to_cpu_comm;
 
+
     // Parser
     ParsePackets parse_pkts(pcap_file, timestamp_file);
 
@@ -50,6 +52,12 @@ int main() {
     cache_l2_t cache_l2 (l1_to_l2_comm, l2_to_dummy_comm, l2_to_cpu_comm);
     base_l2_pkt_process_t& base_cache_l2 = cache_l2;
 
+    // Policy
+    LRU_policy_t lru_policy(base_cache_l1.lookup_table(),base_cache_l1.state_table());
+    // Controller with LRU Policy
+    controller_t controller(base_cache_l1.lookup_table(),base_cache_l2.lookup_table(),
+    );
+
     auto start = std::chrono::system_clock::now();
 
     // Init lookup table
@@ -58,10 +66,10 @@ int main() {
 
     // Populating lookup tables
     for (const auto& tuple : unique_tuples) {
-        if (!base_cache_l1.lookup_table().full()) {
+        if (!base_cache_l1.lookup_table().is_full()) {
             base_cache_l1.lookup_table().data().insert({ tuple, 0 });
         }
-        if (!base_cache_l2.lookup_table().full()) {
+        if (!base_cache_l2.lookup_table().is_full()) {
             base_cache_l2.lookup_table().data().insert({ tuple, 0 });
         }
     }
