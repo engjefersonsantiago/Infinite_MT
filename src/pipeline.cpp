@@ -11,6 +11,8 @@ using base_l1_pkt_process_t = PacketProcessing<1024, std::size_t, cache_stats_t>
 using cache_l1_t = CacheL1PacketProcessing<1024, std::size_t, cache_stats_t>;
 using base_l2_pkt_process_t = PacketProcessing<65536, std::size_t, cache_stats_t>;
 using cache_l2_t = CacheL2PacketProcessing<65536, std::size_t, cache_stats_t>;
+using LRUPolicy = RandomPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
+using controller_t = Controller<typename cache_l1_t::lookup_table_t, typename cache_l2_t::lookup_table_t,typename random_policy_t>;
 
 //TODO: Add Policer.
 
@@ -36,7 +38,6 @@ int main() {
     inter_thread_comm_t l2_to_dummy_comm;
     inter_thread_digest_cpu l1_to_cpu_comm;
     inter_thread_digest_cpu l2_to_cpu_comm;
-    //TODO Add communication CPU to cache
 
     // Parser
     ParsePackets parse_pkts(pcap_file, timestamp_file);

@@ -48,7 +48,7 @@ class CacheStats {
         auto& get_stats () const {
             std::shared_lock lock(mutex_);  // Needs to be unique, cause the Dataplane should not
                                             // modify the stats during controller reading
-            return stats_container_;
+            return stats_container_;        //TODO: If using circular_buffer, not thread safe.
         }
 
         // Clear available thru container.clear()
