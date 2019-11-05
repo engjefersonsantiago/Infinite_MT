@@ -46,9 +46,15 @@ class CacheStats {
 
         // Read the whole stats
         auto& get_stats () const {
-            std::shared_lock lock(mutex_);  // Needs to be unique, cause the Dataplane should not
+            std::unique_lock lock(mutex_);  // Needs to be unique, cause the Dataplane should not
                                             // modify the stats during controller reading
             return stats_container_;
+        }
+
+        // Read the whole stats
+        auto& back () const {
+            std::shared_lock lock(mutex_);
+            return stats_container_.back();
         }
 
         // Clear available thru container.clear()
