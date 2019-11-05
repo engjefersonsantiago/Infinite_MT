@@ -46,9 +46,15 @@ class CacheStats {
 
         // Read the whole stats
         auto& get_stats () const {
-            std::shared_lock lock(mutex_);  // Needs to be unique, cause the Dataplane should not
+            std::unique_lock lock(mutex_);  // Needs to be unique, cause the Dataplane should not
                                             // modify the stats during controller reading
             return stats_container_;        //TODO: If using circular_buffer, not thread safe.
+        }
+
+        // Read the whole stats
+        auto& back () const {
+            std::shared_lock lock(mutex_);
+            return stats_container_.back();
         }
 
         // Clear available thru container.clear()
@@ -62,14 +68,30 @@ class CacheStats {
 
 // LRU Cache stats specialization
 template<typename T>
-using LRUContainer = boost::circular_buffer<std::pair<FiveTuple, T>>;
+using LRUContainer = SortedContainer<std::pair<FiveTuple, T>>;
+
+// Duplicate code betwen LFU and LRU... Improve it
 
 template<size_t Stats_Size, typename Stats_Value>
 class LRUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LRUContainer<Stats_Value>> {
     public:
-        virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) {
+        virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) override {
             std::unique_lock lock(this->mutex_);
-            this->stats_container_.push_back({ five_tuple, updated_stats });
+            auto tuple_compare = [=](const auto& elem) {
+                return elem.first == five_tuple;
+            };
+            auto value_sort = [](auto a, auto b) { return a.second > b.second; };
+            auto value_compare = [](auto a, auto b) { return (a.second > b.second) ? a : b; };
+
+            auto found = this->stats_container_.find_if(tuple_compare);
+            if (found !=  this->stats_container_.end())
+            {
+                *found = std::make_pair(found->first, updated_stats);
+                this->stats_container_.sort(value_sort);
+            } else
+            {
+                this->stats_container_.insert(std::make_pair(five_tuple, updated_stats), value_sort, value_compare);
+            }
         }
 };
 
@@ -81,22 +103,22 @@ template<size_t Stats_Size, typename Stats_Value>
 class LFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LFUContainer<Stats_Value>> {
 
     public:
-        virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) {
+        virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) override {
             std::unique_lock lock(this->mutex_);
-            auto tuple_compare = [&five_tuple = std::as_const(five_tuple)](const auto& elem) { 
-                return elem.first == five_tuple; 
+            auto tuple_compare = [=](const auto& elem) {
+                return elem.first == five_tuple;
             };
             auto value_sort = [](auto a, auto b) { return a.second > b.second; };
-            auto value_compare = [](auto a, auto b) { return std::max(a.second, b.second); };
+            auto value_compare = [](auto a, auto b) { return (a.second > b.second) ? a : b; };
 
-            auto found = this->stats_container_.find({five_tuple, 0}, tuple_compare);
+            auto found = this->stats_container_.find_if(tuple_compare);
             if (found !=  this->stats_container_.end())
             {
-                *found = {found->first, found->second + updated_stats};
+                *found = std::make_pair(found->first, found->second + updated_stats);
                 this->stats_container_.sort(value_sort);
             } else
             {
-                this->stats_container_.insert({five_tuple, updated_stats}, value_sort, value_compare);
+                this->stats_container_.insert(std::make_pair(five_tuple, updated_stats), value_sort, value_compare);
             }
         }
 };
