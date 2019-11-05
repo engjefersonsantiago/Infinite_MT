@@ -19,7 +19,7 @@ class SortedContainer {
             data_(size),
             size_(size), occupancy_(0) {}
 
-        auto begin() { 
+        auto begin() {
             std::unique_lock lock(mutex_);
             return data_.begin();
         }
@@ -27,15 +27,24 @@ class SortedContainer {
             std::unique_lock lock(mutex_);
             return data_.end();
         }
-        auto clear() { 
+        auto clear() {
             std::unique_lock lock(mutex_);
             return data_.clear();
         }
 
-        template<typename Compare>
-        auto find(const Type& elem, Compare&& c) {
+        auto& front() const {
             std::unique_lock lock(mutex_);
-            return std::find(data_.begin(), data_.end(), c);
+            return data_.front();
+        }
+        auto& back() const {
+            std::unique_lock lock(mutex_);
+            return data_.back();
+        }
+
+        template<typename Compare>
+        auto find_if(Compare&& c) {
+            std::unique_lock lock(mutex_);
+            return std::find_if(data_.begin(), data_.end(), c);
         }
 
         template<typename Sort>
