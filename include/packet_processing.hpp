@@ -25,8 +25,8 @@ class PacketProcessing {
 
     public:
         // Constants
-        using lookup_table_t = LookupTable<Lookup_Size, Lookup_Value>;
         static constexpr auto LOOKUP_MEM_SIZE = Lookup_Size;
+        using lookup_table_t = LookupTable<Lookup_Size, Lookup_Value>;
 
         void process_packet (const std::size_t read_step, const CacheType cache_type)
         {

@@ -19,7 +19,7 @@ class LookupTable {
 
     public:
         using lookup_mem_t = std::unordered_map<FiveTuple, Lookup_Value>;
-        using table_size_t = Lookup_Size;
+        //using table_size_t = Lookup_Size;
         using table_value_t = Lookup_Value;
         // Constants
         static constexpr auto LOOKUP_MEM_SIZE = Lookup_Size;

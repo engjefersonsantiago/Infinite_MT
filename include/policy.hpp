@@ -4,6 +4,7 @@
 
 
 #include "pkt_common.hpp"
+#include "controller.hpp"
 #include "lookup_table.hpp"
 #include "stats.hpp"
 #include <random>
@@ -23,7 +24,7 @@ template< typename lookup_table_t, typename  stats_table_t>
 class Policier{
 
     public: 
-    using cache_entry_t = std::pair<FiveTuple,lookup_table_t::table_value_t>;
+    using cache_entry_t = std::pair<FiveTuple,typename lookup_table_t::table_value_t>;
 
     Policier( lookup_table_t& lookup_table,
     ,      stats_table_t& stats_table): lookup_table_{lookup_table},  stats_table_{stats_table}  {} 
@@ -55,7 +56,7 @@ class RandomPolicy final: public Policier<lookup_table_t,stats_table_t>{
         }
 
     public:
-
+    using five_tuple_vector_t = typename Controller::five_tuple_vector_t;
         RandomPolicy(lookup_table_t& lookup_table,
     stats_table_t& stats_table,five_tuple_vector_t& reference_five_tuple_vector): Policier(lookup_table,stats_table), reference_five_tuple_vector_{reference_five_tuple_vector}
     {}
@@ -71,6 +72,7 @@ class LRUPolicy final: public Policier<lookup_table_t,stats_table_t>{
         virtual const cache_entry_t& select_replacement_victim() override {
             // Get the least recebtly used entry.
             // TUple + value associe
+            // 1. Get stats 
             stats_table_.back();
         }
 };
