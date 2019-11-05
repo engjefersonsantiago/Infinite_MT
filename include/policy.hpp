@@ -19,52 +19,61 @@
 
 
 
-// Policier (Cache Management Unit)
-template< size_t Lookup_Size, typename Lookup_Value, size_t Stats_Size, typename Stats_Value>
+template< typename lookup_table_t, typename  stats_table_t>
 class Policier{
 
     public: 
-    using cache_entry_t = std::pair<FiveTuple,Lookup_Value>;
+    using cache_entry_t = std::pair<FiveTuple,lookup_table_t::table_value_t>;
 
-    Policier( LookupTable<Lookup_Size, Lookup_Value>& lookup_table,
-    ,      StatsContainer<Size, Stats_Value>& stats_table, five_tuple_vector_t& reference_five_tuple_vector): lookup_table_{lookup_table},  stats_table_{stats_table},
-     {} 
-     
-
+    Policier( lookup_table_t& lookup_table,
+    ,      stats_table_t& stats_table): lookup_table_{lookup_table},  stats_table_{stats_table}  {} 
   
-    virtual cache_entry_t select_replacement_victim() =0; 
+    virtual const cache_entry_t& select_replacement_victim() =0; 
  
  
     private:
-    LookupTable<Lookup_Size, Lookup_Value>& lookup_table_;
+    lookup_table_t& lookup_table_;
+    stats_table_t& stats_table_; 
 
-    // Controller Five Tuple Vector
-    five_tuple_vector_t& reference_five_tuple_vector_;
-
-    CacheStats<Stats_Size, Stats_Value>& stats_table_; 
 
 };
 
-template< size_t Lookup_Size, typename Lookup_Value, size_t Stats_Size, typename Stats_Value>
-class RandomPolicy final: public Policier<Lookup_Size,Lookup_Value,Stats_Size,Stats_Value>
+template< typename lookup_table_t, typename  stats_table_t>
+class RandomPolicy final: public Policier<lookup_table_t,stats_table_t>{
 
     private:
         size_t entry_index_to_remove;
-        constexpr auto Table_Size = Stats_Size;
+        // Controller Five Tuple Vector
+        five_tuple_vector_t& reference_five_tuple_vector_;
 
         // Hide the random generation mechanism
         size_t random_number_generation(){
             std::random_device rd;
             std::mt19937 gen(rd());
-            std::uniform_int_distribution<> dis(0, Table_Size);
+            std::uniform_int_distribution<> dis(0, lookup_table_t::table_size_t);
             return dis(gen);
         }
 
     public:
-        virtual cache_entry_t select_replacement_victim(){
+
+        RandomPolicy(lookup_table_t& lookup_table,
+    stats_table_t& stats_table,five_tuple_vector_t& reference_five_tuple_vector): Policier(lookup_table,stats_table), reference_five_tuple_vector_{reference_five_tuple_vector}
+    {}
+        virtual const cache_entry_t& select_replacement_victim() override {
             return reference_five_tuple_vector_[random_number_generation()];
         }
+};
 
+template< typename lookup_table_t, typename  stats_table_t>
+class LRUPolicy final: public Policier<lookup_table_t,stats_table_t>{
+
+    public:
+        virtual const cache_entry_t& select_replacement_victim() override {
+            // Get the least recebtly used entry.
+            // TUple + value associe
+            stats_table_.back();
+        }
+};
 
 
 #endif
