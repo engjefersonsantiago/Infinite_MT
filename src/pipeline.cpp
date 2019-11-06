@@ -13,7 +13,8 @@ using cache_l1_t = CacheL1PacketProcessing<1024, std::size_t, cache_stats_t>;
 using base_l2_pkt_process_t = PacketProcessing<65536, std::size_t, cache_stats_t>;
 using cache_l2_t = CacheL2PacketProcessing<65536, std::size_t, cache_stats_t>;
 using LRU_policy_t = LRUPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
-using controller_t = Controller<typename cache_l1_t::lookup_table_t, typename cache_l2_t::lookup_table_t, LRU_policy_t>;
+using Random_policy_t = RandomPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
+using controller_t = Controller<typename cache_l1_t::lookup_table_t, typename cache_l2_t::lookup_table_t, Random_policy_t>;
 
 //TODO: Add Policer.
 
@@ -53,10 +54,11 @@ int main() {
     base_l2_pkt_process_t& base_cache_l2 = cache_l2;
 
     // Policy
-    LRU_policy_t lru_policy(base_cache_l1.lookup_table(),base_cache_l1.state_table());
+    LRU_policy_t lru_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table());
+    Random_policy_t random_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table());
+
     // Controller with LRU Policy
-    controller_t controller(base_cache_l1.lookup_table(),base_cache_l2.lookup_table(),
-    );
+    controller_t controller(base_cache_l1.lookup_table(),base_cache_l2.lookup_table(), random_policy);
 
     auto start = std::chrono::system_clock::now();
 
