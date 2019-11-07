@@ -27,7 +27,9 @@
 *
 */
 
-enum class CacheType : uint8_t {
+enum class CacheType : uint8_t 
+{
+    OPT,
     LRU,
     LFU,
     LRFU,
@@ -35,7 +37,8 @@ enum class CacheType : uint8_t {
 };
 
 template<size_t Stats_Size, typename Stats_Value, typename Stats_Container>
-class CacheStats {
+class CacheStats
+{
 
     public:
         // Constants
@@ -45,14 +48,16 @@ class CacheStats {
         virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) =0;
 
         // Read the whole stats
-        auto& get_stats () const {
+        auto& get_stats () const
+        {
             std::unique_lock lock(mutex_);  // Needs to be unique, cause the Dataplane should not
                                             // modify the stats during controller reading
             return stats_container_;        //TODO: If using circular_buffer, not thread safe.
         }
 
         // Read the whole stats
-        auto& back () const {
+        auto& back () const
+        {
             std::shared_lock lock(mutex_);
             return stats_container_.back();
         }
@@ -73,9 +78,11 @@ using LRUContainer = SortedContainer<std::pair<FiveTuple, T>>;
 // Duplicate code betwen LFU and LRU... Improve it
 
 template<size_t Stats_Size, typename Stats_Value>
-class LRUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LRUContainer<Stats_Value>> {
+class LRUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LRUContainer<Stats_Value>> 
+{
     public:
-        virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) override {
+        virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) override
+        {
             std::unique_lock lock(this->mutex_);
             auto tuple_compare = [=](const auto& elem) {
                 return elem.first == five_tuple;
@@ -100,10 +107,12 @@ template<typename T>
 using LFUContainer = SortedContainer<std::pair<FiveTuple, T>>;
 
 template<size_t Stats_Size, typename Stats_Value>
-class LFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LFUContainer<Stats_Value>> {
+class LFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LFUContainer<Stats_Value>>
+{
 
     public:
-        virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) override {
+        virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) override
+        {
             std::unique_lock lock(this->mutex_);
             auto tuple_compare = [=](const auto& elem) {
                 return elem.first == five_tuple;
@@ -122,6 +131,39 @@ class LFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LFUContai
             }
         }
 };
+
+// Optimal cache stats specialization
+// LFU Cache stats specialization
+template<typename T>
+using OPTContainer = SortedContainer<std::pair<FiveTuple, T>>;
+
+template<size_t Stats_Size, typename Stats_Value>
+class OPTCacheStats final : public CacheStats<Stats_Size, Stats_Value, OPTContainer<Stats_Value>>
+{
+
+    public:
+        virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) override
+        {
+            std::unique_lock lock(this->mutex_);
+            auto tuple_compare = [=](const auto& elem) {
+                return elem.first == five_tuple;
+            };
+            auto value_sort = [](auto a, auto b) { return a.second > b.second; };
+            auto value_compare = [](auto a, auto b) { return (a.second > b.second) ? a : b; };
+
+            auto found = this->stats_container_.find_if(tuple_compare);
+            if (found !=  this->stats_container_.end())
+            {
+                *found = std::make_pair(found->first, found->second + updated_stats);
+                this->stats_container_.sort(value_sort);
+            } else
+            {
+                this->stats_container_.insert(std::make_pair(five_tuple, updated_stats), value_sort, value_compare);
+            }
+        }
+};
+
+
 
 // LFU implemented as a streaming algorithm... we keep most active flows (more bandwidth) in cache
 // LRU might be implemented as a static circular buffer. Impact of duplicates??

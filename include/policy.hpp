@@ -74,7 +74,7 @@ class RandomPolicy final: public Policier<lookup_table_t,stats_table_t>
         }
 };
 
-template< typename lookup_table_t, typename  stats_table_t>
+template<typename lookup_table_t, typename  stats_table_t>
 class LRUPolicy final: public Policier<lookup_table_t,stats_table_t>
 {
 
@@ -94,5 +94,10 @@ class LRUPolicy final: public Policier<lookup_table_t,stats_table_t>
         }
 
 };
+
+// Opt Policy uses a ordered list of further seem flows
+// These flows need to be evicted
+template<typename lookup_table_t, typename  stats_table_t>
+using OPTPolicy = LRUPolicy<lookup_table_t, stats_table_t>;
 
 #endif
