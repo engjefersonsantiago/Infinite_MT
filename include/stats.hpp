@@ -63,6 +63,14 @@ class CacheStats
         }
 
         // Clear available thru container.clear()
+
+        // CTOR
+        CacheStats () {}
+        CacheStats (const Stats_Container& stats_container) : 
+            stats_container_(stats_container),
+            capacity_(stats_container.size())
+        {}
+
     protected:
         // Think about a generic container for the stats...
         Stats_Container stats_container_ { Stats_Size };
@@ -76,7 +84,6 @@ template<typename T>
 using LRUContainer = SortedContainer<std::pair<FiveTuple, T>>;
 
 // Duplicate code betwen LFU and LRU... Improve it
-
 template<size_t Stats_Size, typename Stats_Value>
 class LRUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LRUContainer<Stats_Value>> 
 {
@@ -133,33 +140,28 @@ class LFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LFUContai
 };
 
 // Optimal cache stats specialization
-// LFU Cache stats specialization
+// Calculate offline the list of flows to be evicted
+// Store teh into a queue
 template<typename T>
 using OPTContainer = SortedContainer<std::pair<FiveTuple, T>>;
 
 template<size_t Stats_Size, typename Stats_Value>
 class OPTCacheStats final : public CacheStats<Stats_Size, Stats_Value, OPTContainer<Stats_Value>>
 {
+    public:
+        using cache_stats_t = CacheStats<Stats_Size, Stats_Value, OPTContainer<Stats_Value>>;
+        using opt_container_t = OPTContainer<Stats_Value>;
+
+    private:
+        opt_container_t optimal_replace_list () const {
+            // Open the trace
+            //
+        }
 
     public:
+
         virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) override
         {
-            std::unique_lock lock(this->mutex_);
-            auto tuple_compare = [=](const auto& elem) {
-                return elem.first == five_tuple;
-            };
-            auto value_sort = [](auto a, auto b) { return a.second > b.second; };
-            auto value_compare = [](auto a, auto b) { return (a.second > b.second) ? a : b; };
-
-            auto found = this->stats_container_.find_if(tuple_compare);
-            if (found !=  this->stats_container_.end())
-            {
-                *found = std::make_pair(found->first, found->second + updated_stats);
-                this->stats_container_.sort(value_sort);
-            } else
-            {
-                this->stats_container_.insert(std::make_pair(five_tuple, updated_stats), value_sort, value_compare);
-            }
         }
 };
 
