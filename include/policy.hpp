@@ -35,7 +35,6 @@ class Policier{
         lookup_table_t& lookup_table_;
         stats_table_t& stats_table_;
 
-
 };
 
 template< typename lookup_table_t, typename  stats_table_t>
@@ -47,12 +46,10 @@ class RandomPolicy final: public Policier<lookup_table_t,stats_table_t>
         using policer_t =  Policier<lookup_table_t, stats_table_t>;
 
     private:
-        size_t entry_index_to_remove;
-        // Controller Five Tuple Vector
-        five_tuple_vector_t reference_five_tuple_vector_;
 
         // Hide the random generation mechanism
-        size_t random_number_generation() const {
+        size_t random_number_generation() const
+        {
             std::random_device rd;
             std::mt19937 gen(rd());
             std::uniform_int_distribution<> dis(0, lookup_table_t::LOOKUP_MEM_SIZE);
@@ -64,13 +61,13 @@ class RandomPolicy final: public Policier<lookup_table_t,stats_table_t>
         RandomPolicy(lookup_table_t& lookup_table,
                         stats_table_t& stats_table) :
                         policer_t(lookup_table, stats_table)
-        {
-            for(const auto& elem : lookup_table)
-                reference_five_tuple_vector_.push_back(elem.first);
-        }
+        {}
 
-        virtual FiveTuple select_replacement_victim() const override {
-            return reference_five_tuple_vector_[random_number_generation()];
+        virtual FiveTuple select_replacement_victim() const override
+        {
+            // From https://stackoverflow.com/questions/27024269/select-random-element-in-an-unordered-map
+            auto random_it = std::next(std::begin(this->lookup_table_), random_number_generation()); 
+            return random_it->first;
         }
 };
 
@@ -86,8 +83,9 @@ class LRUPolicy final: public Policier<lookup_table_t,stats_table_t>
                         policer_t(lookup_table, stats_table)
         {}
 
-        virtual FiveTuple select_replacement_victim() const override {
-            // Get the least recebtly used entry.
+        virtual FiveTuple select_replacement_victim() const override
+        {
+            // Get the least recently used entry.
             // TUple + value associe
             // 1. Get stats
             return this->stats_table_.back().first;

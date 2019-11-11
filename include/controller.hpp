@@ -68,8 +68,8 @@ class Controller
                 return true; 
             }
 
-            // L1 Table full ? Identify a victim for eviction
-            if (lookup_table_L1_.is_full()){
+            // Lookup Table full ? Identify a victim for eviction
+            if (lookup_table.is_full()){
                 auto evicted_key = policy.select_replacement_victim();
                 [[maybe_unused]] auto ctrl_signal_removal = remove_entry_cache(lookup_table, evicted_key);
             }
@@ -90,7 +90,6 @@ class Controller
             }
             add_entry_cache(lookup_table, five_tuple, value);
             return false;
-
         }
 
         void process_digest(inter_thread_digest_cpu& l1_digest_pkt,

@@ -39,15 +39,16 @@ class LookupTable {
             return lookup_table_.find(five_tuple);
         }
 
+        // No bound check for inserting...
+        // Make sure the controller checks that
         auto insert (const FiveTuple& five_tuple, const Lookup_Value& value) {
             std::unique_lock lock(mutex_);
+            std::cout << "Inserting: " << five_tuple;
+            lookup_table_.insert({ five_tuple, value });
             if (occupancy_ < LOOKUP_MEM_SIZE) {
                 occupancy_++;
-                lookup_table_.insert({ five_tuple, value });
-                return true;
-            } else {
-                return false;
             }
+            return true;
         }
 
         auto is_full() const {

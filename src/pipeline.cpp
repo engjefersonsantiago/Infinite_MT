@@ -10,8 +10,8 @@
 #include "policy.hpp"
 
 using cache_stats_t = LRUCacheStats<32, std::size_t>;
-using base_l1_pkt_process_t = PacketProcessing<1024, std::size_t, cache_stats_t>;
-using cache_l1_t = CacheL1PacketProcessing<1024, std::size_t, cache_stats_t>;
+using base_l1_pkt_process_t = PacketProcessing<2, std::size_t, cache_stats_t>;
+using cache_l1_t = CacheL1PacketProcessing<2, std::size_t, cache_stats_t>;
 using base_l2_pkt_process_t = PacketProcessing<65536, std::size_t, cache_stats_t>;
 using cache_l2_t = CacheL2PacketProcessing<65536, std::size_t, cache_stats_t>;
 using LRU_policy_t = LRUPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
@@ -35,6 +35,22 @@ int main() {
     std::cout << "Enter the amount of sleep time in ns for the parser thread\n";
     std::size_t sleep_time;
     std::cin >> sleep_time;
+
+    // Init lookup table
+    auto unique_tuples = filter_unique_tuples_from_trace(pcap_file);
+    std::cout << "Identified " << unique_tuples.size() << " unique tuples\n";
+
+    // Populating lookup tables
+#if 0
+    for (const auto& tuple : unique_tuples) {
+        if (!base_cache_l1.lookup_table().is_full()) {
+            base_cache_l1.lookup_table().data().insert({ tuple, 0 });
+        }
+        if (!base_cache_l2.lookup_table().is_full()) {
+            base_cache_l2.lookup_table().data().insert({ tuple, 0 });
+        }
+    }
+#endif
 
     // Inter thread communication
     inter_thread_comm_t parse_to_l1_comm;
@@ -67,21 +83,6 @@ int main() {
 
     auto start = std::chrono::system_clock::now();
 
-    // Init lookup table
-    auto unique_tuples = filter_unique_tuples_from_trace(pcap_file);
-    std::cout << "Identified " << unique_tuples.size() << " unique tuples\n";
-
-#if 0
-    // Populating lookup tables
-    for (const auto& tuple : unique_tuples) {
-        if (!base_cache_l1.lookup_table().is_full()) {
-            base_cache_l1.lookup_table().data().insert({ tuple, 0 });
-        }
-        if (!base_cache_l2.lookup_table().is_full()) {
-            base_cache_l2.lookup_table().data().insert({ tuple, 0 });
-        }
-    }
-#endif
 
     // Start processing threads
     std::thread thread_parse_pkt(&ParsePackets::from_pcap_file,
