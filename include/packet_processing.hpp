@@ -65,7 +65,10 @@ class PacketProcessing {
 
         virtual void punt_pkt_to_next_lvl (inter_thread_comm_t& punted_pkt)=0;
 
-        virtual void digest_pkt_to_ctrl (inter_thread_digest_cpu& digest_pkt)=0;
+        // TODO: Send to policer in case of a cache miss
+        void digest_pkt_to_ctrl (inter_thread_digest_cpu& digest_pkt) {
+            digest_pkt.push_message(tuple_size_pair_);
+        }
 
         virtual void update_cache_stats(const bool match, const CacheType cache_type) =0;
 
@@ -108,12 +111,6 @@ class CacheL1PacketProcessing final : public PacketProcessing <Lookup_Size, Look
             punted_pkt.push_message(this->packet_timestamp_);
         }
 
-        // TODO: Send to policer in case of a cache miss
-        virtual void digest_pkt_to_ctrl (inter_thread_digest_cpu& digest_pkt) override {
-            digest_pkt.push_message(this->tuple_size_pair_);
-            //TODO: Ask Jeff why this is being used.
-        }
-
         virtual void update_cache_stats(const bool match, const CacheType cache_type) override {
             if (match) {
                 if (cache_type == CacheType::LRU) {
@@ -141,7 +138,6 @@ class CacheL2PacketProcessing final : public PacketProcessing <Lookup_Size, Look
         using pkt_proc_base_t = PacketProcessing <Lookup_Size, Lookup_Value, Cache_Stats, Sleep_Time>;
         
         virtual void punt_pkt_to_next_lvl (inter_thread_comm_t& punted_pkt) override {}
-        virtual void digest_pkt_to_ctrl (inter_thread_digest_cpu& digest_pkt) override {}
         virtual void update_cache_stats(const bool match, const CacheType cache_type) override {}
 
         // CTOR calls the base CTOR

@@ -21,64 +21,97 @@ class Controller
 
     public:
         // Types
-        using inter_thread_digest_cpu = ThreadCommunication<tuple_pkt_size_pair_t>;
-        using tuple_value_pair_t = std::pair<FiveTuple,typename Lookup_Table_L1::table_value_t>;
+        using Value_t = typename Lookup_Table_L1::table_value_t;
+        using tuple_value_pair_t = std::pair<FiveTuple, Value_t>;
         using five_tuple_vector_t = std::vector<FiveTuple>;
+        using full_look_table_t = std::unordered_map<FiveTuple, Value_t>;
 
-        Controller(Lookup_Table_L1& lookup_table_L1,
+        // CTOR
+        Controller(full_look_table_t& full_lookup_table,
+                    Lookup_Table_L1& lookup_table_L1,
                     Lookup_Table_L2& lookup_table_L2,
-                    Policier_t& policy ) :
+                    Policier_t& policy,
+                    std::size_t slowdown
+                    ) :
+                    full_lookup_table_(full_lookup_table),
                     lookup_table_L1_(lookup_table_L1),
                     lookup_table_L2_(lookup_table_L2),
-                    l1_policy(policy)
+                    l1_policy_(policy),
+                    slowdown_factor_(slowdown)
         {}
 
 
-        bool remove_entry_L1_cache(){
-            auto& [tuple,value] = entry_to_remove;
-            return lookup_table_L1_.remove(tuple);
+        // Add/remove entry uses the same call
+        template<typename Lookup>
+        auto remove_entry_cache(Lookup& lookup_table, FiveTuple tuple)
+        {
+            return lookup_table.remove(tuple);
         }
 
-        bool add_entry_L1_cache(){
-            auto& [tuple,value] = entry_to_add;
-            return lookup_table_L1_.insert(tuple, value);
-
+        template<typename Lookup>
+        auto add_entry_cache(Lookup& lookup_table, FiveTuple tuple, Value_t value)
+        {
+            return lookup_table.insert(tuple, value);
         }
 
-
-
-        void process_digest_from_L1_cache(inter_thread_digest_cpu& digest_pkt){
-            //TODO: Pourquoi un this->?
-            auto [boolean,step] =  digest_pkt.pull_message(this->tuple_size_pair_);
+        template<typename Lookup, typename Policy>
+        auto process_digest_from_cache(inter_thread_digest_cpu& digest_pkt,
+                                        Lookup& lookup_table,
+                                        Policy& policy)
+        {
+            auto [timeout, step] =  digest_pkt.pull_message(tuple_size_pair_, slowdown_factor_);
             auto [five_tuple, size] = tuple_size_pair_;
+
+            // Exit in case of timeout
+            if (timeout)
+            { 
+                return true; 
+            }
 
             // L1 Table full ? Identify a victim for eviction
             if (lookup_table_L1_.is_full()){
-                auto  [evicted_key,evicted_val] = l1_policy.select_replacement_victim();
-                auto ctrl_signal_removal = l1_policy.remove(evicted_key);
+                auto evicted_key = policy.select_replacement_victim();
+                [[maybe_unused]] auto ctrl_signal_removal = remove_entry_cache(lookup_table, evicted_key);
             }
+
+            Value_t value = 0;
             // Insert the new value.
-            auto value = full_lookup_table_[five_tuple];
-            l1_policy.insert(five_tuple,value);
+            auto lookup_it = full_lookup_table_.find(five_tuple);
+            if (lookup_it != full_lookup_table_.end())
+            {
+                // Inserts a new key/velue to the full lookup table
+                // default val = 0
+                full_lookup_table_.insert({ five_tuple, value });
+            } else
+            {
+                value = lookup_it->second;
+            }
+            add_entry_cache(lookup_table, five_tuple, value);
+            return false;
 
         }
 
+        void process_digest(inter_thread_digest_cpu& l1_digest_pkt,
+                                inter_thread_digest_cpu& l2_digest_pkt)
+        {
 
-        // Interface to/from Main Memory
-        bool remove_entry_L2_cache(){
-            auto& [tuple,value] = entry_to_remove;
-            return lookup_table_L2_.delete_key(tuple);
-        }
+            while (true) 
+            {
+                // L1 digest processing
+                // Returns in case of a timeout
+                if (process_digest_from_cache(l1_digest_pkt, lookup_table_L1_, l1_policy_))
+                {
+                    break;
+                }
 
-        bool add_entry_L2_cache(){
-            auto& [tuple,value] = entry_to_add;
-            return lookup_table_L2_.add_key(tuple, value);
-
+                // TODO
+                // L2 digest processing
+            }
         }
 
 
     private:
-        std::unordered_map<FiveTuple, typename Lookup_Table_L1::table_value_t> full_lookup_table_;
+        full_look_table_t full_lookup_table_;
         Lookup_Table_L1& lookup_table_L1_;
         Lookup_Table_L2& lookup_table_L2_;
         five_tuple_vector_t reference_five_tuple_vector;
@@ -89,12 +122,10 @@ class Controller
         //StatsContainer<Size, Stats_Value>& stats_table_L1_;
         //StatsContainer<Size, Stats_Value>& stats_table_L2;
 
-        // Entry
-        tuple_value_pair_t entry_to_add;
-        tuple_value_pair_t entry_to_remove;
-
         // Policy
-        Policier_t l1_policy;
+        Policier_t l1_policy_;
+
+        const std::size_t slowdown_factor_;
 
 };
 

@@ -41,7 +41,6 @@ int main() {
     inter_thread_digest_cpu l1_to_cpu_comm;
     inter_thread_digest_cpu l2_to_cpu_comm;
 
-
     // Parser
     ParsePackets parse_pkts(pcap_file, timestamp_file);
 
@@ -58,7 +57,11 @@ int main() {
     Random_policy_t random_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table());
 
     // Controller with LRU Policy
-    controller_t controller(base_cache_l1.lookup_table(),base_cache_l2.lookup_table(), random_policy);
+    controller_t controller(base_cache_l2.lookup_table().data(),
+                            base_cache_l1.lookup_table(),
+                            base_cache_l2.lookup_table(),
+                            random_policy,
+                            CACHE_HOST_PROC_SLOWDOWN_FACTOR);
 
     auto start = std::chrono::system_clock::now();
 
@@ -92,7 +95,11 @@ int main() {
                                     CACHE_L2_PROC_SLOWDOWN_FACTOR,
                                     CACHE_L2_TYPE
                                 );
-
+    std::thread thread_controller(&controller_t::process_digest,
+                                    controller,
+                                    std::ref(l1_to_cpu_comm),
+                                    std::ref(l2_to_cpu_comm)
+                                );
 
     // TODO: Policer and kernel that ensure that all tasks are completed until the next time slot is started.
 
@@ -102,7 +109,10 @@ int main() {
     std::cout << "L1 joined\n";
     thread_cache_l2.join();
     std::cout << "L2 joined\n";
-
+    thread_controller.join();
+    std::cout << "Controller joined\n";
+   
+    controller.process_digest(l1_to_cpu_comm, l2_to_cpu_comm); 
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = end - start;
     std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
