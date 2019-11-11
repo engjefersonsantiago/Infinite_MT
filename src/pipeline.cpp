@@ -2,6 +2,8 @@
 #include<iostream>
 #include<chrono>
 
+#define DEBUG
+
 #include "pkt_common.hpp"
 #include "parse_pcap.hpp"
 #include "packet_processing.hpp"
@@ -69,6 +71,7 @@ int main() {
     auto unique_tuples = filter_unique_tuples_from_trace(pcap_file);
     std::cout << "Identified " << unique_tuples.size() << " unique tuples\n";
 
+#if 0
     // Populating lookup tables
     for (const auto& tuple : unique_tuples) {
         if (!base_cache_l1.lookup_table().is_full()) {
@@ -78,6 +81,7 @@ int main() {
             base_cache_l2.lookup_table().data().insert({ tuple, 0 });
         }
     }
+#endif
 
     // Start processing threads
     std::thread thread_parse_pkt(&ParsePackets::from_pcap_file,

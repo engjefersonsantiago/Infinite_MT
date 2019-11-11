@@ -41,9 +41,10 @@ class PacketProcessing {
                 // Extract five tuple and packet size
                 tuple_size_pair_ = create_five_tuple_from_packet(packet_timestamp_.first);
                 num_packets_++;
-                std::cout << /*"Class " << typeid(*this).name() <<*/ ", Thread ID " << std::this_thread::get_id() << " extracted " << num_packets_ << " five tuples\n";
+                debug(
+                std::cout << " Thread ID " << std::this_thread::get_id() << " extracted " << num_packets_ << " five tuples\n";
                 std::cout << tuple_size_pair_.first;
-
+                )
                 // Look table iterator: key + value
                 auto lookup_result = lookup_table_.find(tuple_size_pair_.first);
                 auto match = lookup_result != lookup_table_.end();
@@ -52,8 +53,12 @@ class PacketProcessing {
                 if (!match) {
                     punt_pkt_to_next_lvl(out_comm_pkt_);
                     digest_pkt_to_ctrl(digest_cpu_);
+                } else {
+                    matched_packets_++;
+                    std::cout << "Matched " << tuple_size_pair_.first << '\n';
                 }
 
+                std::cout << "Hit Ratio: " << matched_packets_/double(num_packets_) << '\n';
                 // Update cache defined in the derived
                 update_cache_stats(match, cache_type);
 
@@ -95,6 +100,7 @@ class PacketProcessing {
         // Add policy - for stats support
         packet_timestamp_pair_t packet_timestamp_;
         std::size_t num_packets_ = 0;
+        std::size_t matched_packets_ = 0;
         std::size_t discrete_ts = 0;
         tuple_pkt_size_pair_t tuple_size_pair_;
 

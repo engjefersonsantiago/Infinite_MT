@@ -65,7 +65,8 @@ class SortedContainer {
                 }
             }
             // Sort using the predicate s
-            sort(s);
+            // Commented out because it's trowing a deadlock exception
+            //sort(s);
         }
 };
 

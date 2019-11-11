@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <thread>
 #include <mutex>
+#include <shared_mutex>
 #include <condition_variable>
 #include <queue>
 #include <tuple>
@@ -25,10 +26,19 @@
 #include <UdpLayer.h>
 #include <Packet.h>
 
+//#define DEBUG
+#ifdef DEBUG
+	#define debug(...) __VA_ARGS__ 
+#else
+	#define debug(...)
+#endif
+
+
+
 // Constants
 static constexpr std::size_t CACHE_L1_PROC_SLOWDOWN_FACTOR= 1;
-static constexpr std::size_t CACHE_L2_PROC_SLOWDOWN_FACTOR = 10;
-static constexpr std::size_t CACHE_HOST_PROC_SLOWDOWN_FACTOR = 1000;
+static constexpr std::size_t CACHE_L2_PROC_SLOWDOWN_FACTOR = 2;
+static constexpr std::size_t CACHE_HOST_PROC_SLOWDOWN_FACTOR = 3;
 
 using nano_second_t = std::chrono::nanoseconds;
 using second_t = std::chrono::seconds;

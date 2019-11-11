@@ -77,14 +77,16 @@ class Controller
             Value_t value = 0;
             // Insert the new value.
             auto lookup_it = full_lookup_table_.find(five_tuple);
-            if (lookup_it != full_lookup_table_.end())
+            if (lookup_it == full_lookup_table_.end())
             {
                 // Inserts a new key/velue to the full lookup table
                 // default val = 0
                 full_lookup_table_.insert({ five_tuple, value });
+                std::cout << "Learned " << five_tuple << '\n';
             } else
             {
                 value = lookup_it->second;
+                std::cout << "Inserted " << five_tuple << '\n';
             }
             add_entry_cache(lookup_table, five_tuple, value);
             return false;
