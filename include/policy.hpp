@@ -18,13 +18,13 @@
 // Policier is specialized for a given politic.
 // Currently assume that L1 cache enries are updated following a cache miss.
 
-template< typename lookup_table_t, typename  stats_table_t>
+template<typename lookup_table_t, typename  stats_table_t>
 class Policier{
 
     public:
 
-        Policier(lookup_table_t& lookup_table,
-                    stats_table_t& stats_table) :
+        Policier(const lookup_table_t& lookup_table,
+                    const stats_table_t& stats_table) :
                     lookup_table_{lookup_table},
                     stats_table_{stats_table}
         {}
@@ -32,23 +32,22 @@ class Policier{
         virtual FiveTuple select_replacement_victim() const =0;
 
     protected:
-        lookup_table_t& lookup_table_;
-        stats_table_t& stats_table_;
+        const lookup_table_t& lookup_table_;
+        const stats_table_t& stats_table_;
 
 };
 
-template< typename lookup_table_t, typename  stats_table_t>
+template<typename lookup_table_t, typename  stats_table_t>
 class RandomPolicy final: public Policier<lookup_table_t,stats_table_t>
 {
 
     public:
-        using five_tuple_vector_t = std::vector<FiveTuple>;
-        using policer_t =  Policier<lookup_table_t, stats_table_t>;
+        using policer_t = Policier<lookup_table_t, stats_table_t>;
 
     private:
 
         // Hide the random generation mechanism
-        size_t random_number_generation() const
+        std::size_t random_number_generation() const
         {
             std::random_device rd;
             std::mt19937 gen(rd());
@@ -58,16 +57,17 @@ class RandomPolicy final: public Policier<lookup_table_t,stats_table_t>
 
     public:
 
-        RandomPolicy(lookup_table_t& lookup_table,
-                        stats_table_t& stats_table) :
+        RandomPolicy(const lookup_table_t& lookup_table,
+                        const stats_table_t& stats_table) :
                         policer_t(lookup_table, stats_table)
         {}
 
         virtual FiveTuple select_replacement_victim() const override
         {
             // From https://stackoverflow.com/questions/27024269/select-random-element-in-an-unordered-map
-            auto random_it = std::next(std::begin(this->lookup_table_), random_number_generation()); 
-            return random_it->first;
+            const auto tuple = this->lookup_table_.indexed_iter(random_number_generation()).first; 
+            debug(std::cout << "Selected " << tuple << " for replacement\n";)
+            return tuple;
         }
 };
 
@@ -78,8 +78,8 @@ class LRUPolicy final: public Policier<lookup_table_t,stats_table_t>
     public:
         using policer_t =  Policier<lookup_table_t, stats_table_t>;
 
-        LRUPolicy(lookup_table_t& lookup_table,
-                        stats_table_t& stats_table) :
+        LRUPolicy(const lookup_table_t& lookup_table,
+                        const stats_table_t& stats_table) :
                         policer_t(lookup_table, stats_table)
         {}
 
@@ -98,4 +98,25 @@ class LRUPolicy final: public Policier<lookup_table_t,stats_table_t>
 template<typename lookup_table_t, typename  stats_table_t>
 using OPTPolicy = LRUPolicy<lookup_table_t, stats_table_t>;
 
+template<typename lookup_table_t, typename  stats_table_t>
+class LFUPolicy final: public Policier<lookup_table_t,stats_table_t>
+{
+
+    public:
+        using policer_t =  Policier<lookup_table_t, stats_table_t>;
+
+        LFUPolicy(const lookup_table_t& lookup_table,
+                        const stats_table_t& stats_table) :
+                        policer_t(lookup_table, stats_table)
+        {}
+
+        virtual FiveTuple select_replacement_victim() const override
+        {
+            // Get the least recently used entry.
+            // TUple + value associe
+            // 1. Get stats
+            return this->stats_table_.back().first;
+        }
+
+};
 #endif

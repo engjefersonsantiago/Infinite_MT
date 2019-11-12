@@ -36,7 +36,13 @@ class PacketProcessing {
                 auto [timeout, discrete_ts] = in_comm_pkt_.pull_message(packet_timestamp_, read_step);
 
                 // Exit in case of timeout
-                if (timeout) { break; }
+                if (timeout) { 
+                    std::cout << "Total packets: " << num_packets_ << '\n';
+                    std::cout << "Total matches: " << matched_packets_ << '\n';
+                    std::cout << "Normalized: " << matched_packets_/double(num_packets_) << '\n';
+                    std::cout << "AVG Hit Ratio: " << avg_hit_ratio_ << '\n';
+                    break; 
+                }
 
                 // Extract five tuple and packet size
                 tuple_size_pair_ = create_five_tuple_from_packet(packet_timestamp_.first);
@@ -55,10 +61,15 @@ class PacketProcessing {
                     digest_pkt_to_ctrl(digest_cpu_);
                 } else {
                     matched_packets_++;
-                    std::cout << "Matched " << tuple_size_pair_.first << '\n';
+                    debug(std::cout << "Matched " << tuple_size_pair_.first << '\n';)
                 }
 
-                std::cout << "Hit Ratio: " << matched_packets_/double(num_packets_) << '\n';
+                const auto hit_ratio =  matched_packets_/double(num_packets_);
+                avg_hit_ratio_ = (avg_hit_ratio_+ hit_ratio)/2;
+                debug(
+                    const std::string full = ((lookup_table_.is_full()) ? "full" : "not full");
+                    std::cout << "Hit Ratio: " << hit_ratio << ", cache " << full <<'\n';
+                )
                 // Update cache defined in the derived
                 update_cache_stats(match, cache_type);
 
@@ -101,6 +112,7 @@ class PacketProcessing {
         packet_timestamp_pair_t packet_timestamp_;
         std::size_t num_packets_ = 0;
         std::size_t matched_packets_ = 0;
+        double avg_hit_ratio_ = 0.0;
         std::size_t discrete_ts = 0;
         tuple_pkt_size_pair_t tuple_size_pair_;
 

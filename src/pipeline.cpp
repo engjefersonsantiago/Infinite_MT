@@ -1,29 +1,38 @@
 #include<thread>
 #include<iostream>
 #include<chrono>
+#include <variant>
 
-#define DEBUG
+//#define DEBUG
 
 #include "pkt_common.hpp"
 #include "parse_pcap.hpp"
 #include "packet_processing.hpp"
 #include "policy.hpp"
 
+static constexpr auto CACHE_POLICY = CacheType::LFU;
+
+static constexpr auto CACHE_L1_TYPE = (CACHE_POLICY == CacheType::LFU) ? CacheType::LFU : CacheType::LRU;
+static constexpr auto CACHE_L2_TYPE = (CACHE_POLICY == CacheType::LFU) ? CacheType::LFU : CacheType::LRU;
+
+
 using cache_stats_t = LRUCacheStats<32, std::size_t>;
-using base_l1_pkt_process_t = PacketProcessing<2, std::size_t, cache_stats_t>;
-using cache_l1_t = CacheL1PacketProcessing<2, std::size_t, cache_stats_t>;
+using base_l1_pkt_process_t = PacketProcessing<32, std::size_t, cache_stats_t>;
+using cache_l1_t = CacheL1PacketProcessing<32, std::size_t, cache_stats_t>;
 using base_l2_pkt_process_t = PacketProcessing<65536, std::size_t, cache_stats_t>;
 using cache_l2_t = CacheL2PacketProcessing<65536, std::size_t, cache_stats_t>;
+
 using LRU_policy_t = LRUPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
+using LFU_policy_t = LFUPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
 using Random_policy_t = RandomPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
-using controller_t = Controller<typename cache_l1_t::lookup_table_t, typename cache_l2_t::lookup_table_t, Random_policy_t>;
+
+using Policy = std::conditional_t<CACHE_POLICY == CacheType::LFU, LFU_policy_t, std::conditional_t<CACHE_POLICY == CacheType::LRU, LRU_policy_t, Random_policy_t>>;
+
+using controller_t = Controller<typename cache_l1_t::lookup_table_t, typename cache_l2_t::lookup_table_t, Policy>;
 
 //TODO: Add Policer.
 
-
-static constexpr auto CACHE_L1_TYPE = CacheType::LRU;
-static constexpr auto CACHE_L2_TYPE = CacheType::LRU;
-
+ 
 int main() {
 
     std::cout << "Enter the PCAP file name\n";
@@ -36,12 +45,12 @@ int main() {
     std::size_t sleep_time;
     std::cin >> sleep_time;
 
+
+#if 0
     // Init lookup table
     auto unique_tuples = filter_unique_tuples_from_trace(pcap_file);
     std::cout << "Identified " << unique_tuples.size() << " unique tuples\n";
-
     // Populating lookup tables
-#if 0
     for (const auto& tuple : unique_tuples) {
         if (!base_cache_l1.lookup_table().is_full()) {
             base_cache_l1.lookup_table().data().insert({ tuple, 0 });
@@ -72,13 +81,16 @@ int main() {
 
     // Policy
     LRU_policy_t lru_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table());
+    LFU_policy_t lfu_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table());
     Random_policy_t random_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table());
 
-    // Controller with LRU Policy
+    std::tuple<LRU_policy_t, LFU_policy_t, Random_policy_t> policy { lru_policy, lfu_policy, random_policy };
+    
+    // Controller with LRU Policy    
     controller_t controller(base_cache_l2.lookup_table().data(),
                             base_cache_l1.lookup_table(),
                             base_cache_l2.lookup_table(),
-                            random_policy,
+                            std::get<Policy>(policy),
                             CACHE_HOST_PROC_SLOWDOWN_FACTOR);
 
     auto start = std::chrono::system_clock::now();
@@ -95,11 +107,11 @@ int main() {
                                     CACHE_L1_PROC_SLOWDOWN_FACTOR,
                                     CACHE_L1_TYPE
                                 );
-    std::thread thread_cache_l2(&base_l2_pkt_process_t::process_packet,
-                                    std::ref(base_cache_l2),
-                                    CACHE_L2_PROC_SLOWDOWN_FACTOR,
-                                    CACHE_L2_TYPE
-                                );
+    //std::thread thread_cache_l2(&base_l2_pkt_process_t::process_packet,
+    //                                std::ref(base_cache_l2),
+    //                                CACHE_L2_PROC_SLOWDOWN_FACTOR,
+    //                                CACHE_L2_TYPE
+    //                            );
     std::thread thread_controller(&controller_t::process_digest,
                                     controller,
                                     std::ref(l1_to_cpu_comm),
@@ -112,8 +124,8 @@ int main() {
     std::cout << "Parser joined\n";
     thread_cache_l1.join();
     std::cout << "L1 joined\n";
-    thread_cache_l2.join();
-    std::cout << "L2 joined\n";
+    //thread_cache_l2.join();
+    //std::cout << "L2 joined\n";
     thread_controller.join();
     std::cout << "Controller joined\n";
    

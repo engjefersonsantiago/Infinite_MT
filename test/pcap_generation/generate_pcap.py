@@ -85,7 +85,7 @@ def generate_pcap_traces(num_five_tuples,num_pkt_per_tuple):
 
 def generate_pcap_timestamp(num_tuples,num_packets): 
     
-    file_name = f"test_{num_packets}_pkts_{num_tuples}_tuples_.times"
+    file_name = f"test_{num_packets}_pkts_{num_tuples}_tuples.times"
     total_pkts = num_tuples * num_packets
     
     # Max 10^-6 precision
@@ -102,7 +102,7 @@ def generate_pcap_timestamp(num_tuples,num_packets):
             
 
 if __name__ == "__main__":
-    number_of_packets_per_tuple = 12
-    number_of_tuples = 5
+    number_of_packets_per_tuple = 1000
+    number_of_tuples = 1000
     generate_pcap_traces(number_of_tuples,number_of_packets_per_tuple)
     generate_pcap_timestamp(number_of_tuples,number_of_packets_per_tuple)

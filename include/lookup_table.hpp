@@ -25,40 +25,50 @@ class LookupTable {
         static constexpr auto LOOKUP_MEM_SIZE = Lookup_Size;
 
         auto begin() {
-            std::shared_lock lock(mutex_);
+            std::unique_lock lock(mutex_);
             return lookup_table_.begin();
         }
 
+        auto begin() const {
+            std::unique_lock lock(mutex_);
+            return lookup_table_.begin();
+        }
+        
         auto end() {
-            std::shared_lock lock(mutex_);
+            std::unique_lock lock(mutex_);
             return lookup_table_.end();
         }
 
         auto find (const FiveTuple& five_tuple) const {
-            std::shared_lock lock(mutex_);
+            std::unique_lock lock(mutex_);
             return lookup_table_.find(five_tuple);
         }
 
         // No bound check for inserting...
         // Make sure the controller checks that
         auto insert (const FiveTuple& five_tuple, const Lookup_Value& value) {
-            std::unique_lock lock(mutex_);
-            std::cout << "Inserting: " << five_tuple;
-            lookup_table_.insert({ five_tuple, value });
-            if (occupancy_ < LOOKUP_MEM_SIZE) {
+            if (find(five_tuple) == lookup_table_.end() && !is_full()) {
+                std::unique_lock lock(mutex_);
+                //std::cout << "Inserting: " << five_tuple << "Current occupancy: " << occupancy_ << '\n';
+                lookup_table_.insert({ five_tuple, value });
                 occupancy_++;
             }
+            //std::unique_lock lock(mutex_);
+            //if (occupancy_ < LOOKUP_MEM_SIZE) {
+            //    occupancy_++;
+            //}
             return true;
         }
 
         auto is_full() const {
-            std::shared_lock lock(mutex_);
-            return occupancy_ >= LOOKUP_MEM_SIZE;
+            std::unique_lock lock(mutex_);
+            return lookup_table_.size() >= LOOKUP_MEM_SIZE;
         }
 
         auto remove (const FiveTuple& five_tuple) {
             if (find(five_tuple) != lookup_table_.end()) {
                 std::unique_lock lock(mutex_);
+                //std::cout << "Removing: " << five_tuple << "Current occupancy: " << occupancy_ << '\n';;
                 occupancy_--;
                 lookup_table_.erase(five_tuple);
                 return true;
@@ -73,12 +83,13 @@ class LookupTable {
         }
 
         auto occupancy () const {
-            std::shared_lock lock(mutex_);
-            return occupancy_;
+            std::unique_lock lock(mutex_);
+            //return occupancy_;
+            return lookup_table_.size();
         }
 
         auto& data () const {   // Raw Data
-            std::shared_lock lock(mutex_);
+            std::unique_lock lock(mutex_);
             return lookup_table_;
         }
 
@@ -87,6 +98,22 @@ class LookupTable {
             return lookup_table_;
         }
 
+//        auto indexed_iter (std::size_t idx) {
+//            std::unique_lock lock(mutex_);
+//            return std::next(lookup_table_.begin(), idx);
+//        }
+//
+        auto indexed_iter (std::size_t idx) const {
+            std::unique_lock lock(mutex_);
+            //return std::next(lookup_table_.begin(), idx);
+            std::size_t i = 0;
+            for (const auto it : lookup_table_) {
+                if (i++ == idx)
+                    return it;
+            }
+            return *lookup_table_.begin();
+        }
+        
         LookupTable () {}
         LookupTable (const std::size_t) {}
         LookupTable (const lookup_mem_t& lookup_table) : lookup_table_(lookup_table), occupancy_(lookup_table.size()){}

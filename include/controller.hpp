@@ -72,6 +72,7 @@ class Controller
             if (lookup_table.is_full()){
                 auto evicted_key = policy.select_replacement_victim();
                 [[maybe_unused]] auto ctrl_signal_removal = remove_entry_cache(lookup_table, evicted_key);
+                debug(std::cout << "Removing: " << evicted_key << "Current occupancy: " << lookup_table.occupancy() << '\n';)
             }
 
             Value_t value = 0;
@@ -82,13 +83,14 @@ class Controller
                 // Inserts a new key/velue to the full lookup table
                 // default val = 0
                 full_lookup_table_.insert({ five_tuple, value });
-                std::cout << "Learned " << five_tuple << '\n';
+                debug(std::cout << "Learned " << five_tuple << '\n';)
             } else
             {
                 value = lookup_it->second;
-                std::cout << "Inserted " << five_tuple << '\n';
+                //std::cout << "Inserted " << five_tuple << '\n';
             }
             add_entry_cache(lookup_table, five_tuple, value);
+            debug(std::cout << "Inserting: " << five_tuple << "Current occupancy: " << lookup_table.occupancy() << '\n';)
             return false;
         }
 
