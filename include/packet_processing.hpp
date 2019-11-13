@@ -11,6 +11,9 @@
 #include <condition_variable>
 #include <unordered_map>
 #include <typeinfo>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
+
 
 #ifndef __PKT_PROCESSING__
 #define __PKT_PROCESSING__
@@ -19,6 +22,8 @@
 #include "static_hash_map.hpp"
 #include "lookup_table.hpp"
 #include "stats.hpp"
+
+using namespace boost::accumulators;
 
 template<size_t Lookup_Size, typename Lookup_Value, typename Cache_Stats, size_t Sleep_Time = 0>
 class PacketProcessing {
@@ -39,8 +44,10 @@ class PacketProcessing {
                 if (timeout) { 
                     std::cout << "Total packets: " << num_packets_ << '\n';
                     std::cout << "Total matches: " << matched_packets_ << '\n';
-                    std::cout << "Normalized: " << matched_packets_/double(num_packets_) << '\n';
-                    std::cout << "AVG Hit Ratio: " << avg_hit_ratio_ << '\n';
+                    std::cout << "Normalized Hit Ratio: " << matched_packets_/double(num_packets_) << '\n';
+                    //std::cout << "AVG Hit Ratio: " << cum_avg_hit_ratio_/num_packets_ << '\n';
+                    std::cout << "AVG Hit Ratio: " << mean(vec_hit_ratio_) << ", cache " <<'\n';
+                    std::cout << "Variance Hit Ratio: " << variance(vec_hit_ratio_) << ", cache " <<'\n';
                     break; 
                 }
 
@@ -65,10 +72,14 @@ class PacketProcessing {
                 }
 
                 const auto hit_ratio =  matched_packets_/double(num_packets_);
-                avg_hit_ratio_ = (avg_hit_ratio_+ hit_ratio)/2;
+                cum_avg_hit_ratio_ = cum_avg_hit_ratio_ + hit_ratio;
+                vec_hit_ratio_(hit_ratio);
                 debug(
                     const std::string full = ((lookup_table_.is_full()) ? "full" : "not full");
                     std::cout << "Hit Ratio: " << hit_ratio << ", cache " << full <<'\n';
+                    //std::cout << "AVG Hit Ratio: " << cum_avg_hit_ratio_/num_packets_ << ", cache " << full <<'\n';
+                    std::cout << "AVG Hit Ratio: " << mean(vec_hit_ratio_) << ", cache " << full <<'\n';
+                    std::cout << "Variance Hit Ratio: " << variance(vec_hit_ratio_) << ", cache " << full <<'\n';
                 )
                 // Update cache defined in the derived
                 update_cache_stats(match, cache_type);
@@ -112,7 +123,8 @@ class PacketProcessing {
         packet_timestamp_pair_t packet_timestamp_;
         std::size_t num_packets_ = 0;
         std::size_t matched_packets_ = 0;
-        double avg_hit_ratio_ = 0.0;
+        double cum_avg_hit_ratio_ = 0.0;
+        accumulator_set<double, features<tag::mean, tag::variance>> vec_hit_ratio_;
         std::size_t discrete_ts = 0;
         tuple_pkt_size_pair_t tuple_size_pair_;
 

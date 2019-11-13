@@ -3,8 +3,8 @@
 #include<iostream>
 #include<fstream>
 
-// Pcap++
 #include "parse_pcap.hpp"
+#include "pkt_common.hpp"
 
 using namespace std::literals::chrono_literals;
 
@@ -17,7 +17,7 @@ using namespace std::literals::chrono_literals;
 * */
 
 
-bool ParsePackets::from_pcap_file(inter_thread_comm_t& thread_comm, const nano_second_t sleep_time){
+bool ParsePackets::from_pcap_file(inter_thread_comm_t& thread_comm){
 
     pcpp::PcapFileReaderDevice reader(pcap_file.c_str());
 
@@ -43,13 +43,11 @@ bool ParsePackets::from_pcap_file(inter_thread_comm_t& thread_comm, const nano_s
         timestamp_reader >> timestamp;
 
         // Push  Packet Timestamp Pair
-        thread_comm.push_message(std::make_pair(parsedPacket, timestamp));
+        thread_comm.push_message_two_notify(std::make_pair(parsedPacket, timestamp));
 
         debug(
         std::cout << "Thread ID " << std::this_thread::get_id() << " processed " << num_packets_parsed << " packets\n";
         )
-
-        std::this_thread::sleep_for(sleep_time);
 
     }
     thread_comm.set_done();

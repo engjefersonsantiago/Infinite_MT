@@ -1,24 +1,21 @@
 #include<thread>
 #include<iostream>
 #include<chrono>
-#include <variant>
-
-//#define DEBUG
 
 #include "pkt_common.hpp"
 #include "parse_pcap.hpp"
 #include "packet_processing.hpp"
 #include "policy.hpp"
 
-static constexpr auto CACHE_POLICY = CacheType::LFU;
+static constexpr auto CACHE_POLICY = CacheType::RANDOM;
 
 static constexpr auto CACHE_L1_TYPE = (CACHE_POLICY == CacheType::LFU) ? CacheType::LFU : CacheType::LRU;
 static constexpr auto CACHE_L2_TYPE = (CACHE_POLICY == CacheType::LFU) ? CacheType::LFU : CacheType::LRU;
 
 
 using cache_stats_t = LRUCacheStats<32, std::size_t>;
-using base_l1_pkt_process_t = PacketProcessing<32, std::size_t, cache_stats_t>;
-using cache_l1_t = CacheL1PacketProcessing<32, std::size_t, cache_stats_t>;
+using base_l1_pkt_process_t = PacketProcessing<4096, std::size_t, cache_stats_t>;
+using cache_l1_t = CacheL1PacketProcessing<4096, std::size_t, cache_stats_t>;
 using base_l2_pkt_process_t = PacketProcessing<65536, std::size_t, cache_stats_t>;
 using cache_l2_t = CacheL2PacketProcessing<65536, std::size_t, cache_stats_t>;
 
@@ -31,20 +28,21 @@ using Policy = std::conditional_t<CACHE_POLICY == CacheType::LFU, LFU_policy_t, 
 using controller_t = Controller<typename cache_l1_t::lookup_table_t, typename cache_l2_t::lookup_table_t, Policy>;
 
 //TODO: Add Policer.
-
  
-int main() {
+int main(int argc, char** argv)
+{
 
-    std::cout << "Enter the PCAP file name\n";
-    std::string pcap_file;
-    std::cin >> pcap_file;
-    std::cout << "Enter the timestamp file name\n";
-    std::string timestamp_file;
-    std::cin >> timestamp_file;
-    std::cout << "Enter the amount of sleep time in ns for the parser thread\n";
-    std::size_t sleep_time;
-    std::cin >> sleep_time;
-
+    if (argc != 3) {
+    // First parameter: PCAP
+    // Second parameter: Times
+        std::cout << "Wrong number of paramenters\n";
+        std::cout << "Usage: ./pipeline <pcap_file> <timestamp_file>\n";
+        return -1;
+    } else {
+        std::cout << "Runnig pipeline application with parameters: " << argv[1] << " and " << argv[2] << '\n';
+    }
+    const std::string pcap_file { argv[1] };
+    const std::string timestamp_file { argv[2] };
 
 #if 0
     // Init lookup table
@@ -99,8 +97,7 @@ int main() {
     // Start processing threads
     std::thread thread_parse_pkt(&ParsePackets::from_pcap_file,
                                     parse_pkts,
-                                    std::ref(parse_to_l1_comm),
-                                    nano_second_t(sleep_time)
+                                    std::ref(parse_to_l1_comm)
                                 );
     std::thread thread_cache_l1(&base_l1_pkt_process_t::process_packet,
                                     std::ref(base_cache_l1),

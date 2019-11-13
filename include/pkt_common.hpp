@@ -110,6 +110,28 @@ struct ThreadCommunication {
         return done/* && mqueue.empty()*/;
     }
 
+    void push_message_two_notify (Message&& message) {
+        std::unique_lock lck {mmutex};
+        if constexpr (is_circ_buffer)
+            mqueue.push_back(std::move(message));
+        else   
+            mqueue.push(std::move(message));
+        ++step;
+        mcond.notify_one();
+        mcond.wait(lck);
+    }
+
+    void push_message_two_notify (Message& message) {
+        std::unique_lock lck {mmutex};
+        if constexpr (is_circ_buffer)
+            mqueue.push_back(std::move(message));
+        else   
+            mqueue.push(std::move(message));
+        ++step;
+        mcond.notify_one();
+        mcond.wait(lck);
+    }
+
     void push_message (Message&& message) {
         std::unique_lock lck {mmutex};
         if constexpr (is_circ_buffer)
@@ -133,6 +155,7 @@ struct ThreadCommunication {
     auto pull_message (Message& message, const std::size_t read_step){ 
         std::unique_lock<std::mutex> lck {mmutex};
         auto now = std::chrono::system_clock::now();
+        mcond.notify_one();
         if (!mcond.wait_until(lck, now + second_t(timeout_),
             [=](){ return (!mqueue.empty() and !done) && (step%read_step == 0); })
             )

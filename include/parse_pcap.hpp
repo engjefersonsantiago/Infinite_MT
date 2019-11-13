@@ -28,7 +28,7 @@ class ParsePackets {
 
     public:
 
-        bool from_pcap_file(inter_thread_comm_t& thread_comm, const nano_second_t sleep_time);
+        bool from_pcap_file(inter_thread_comm_t& thread_comm);
 
         ParsePackets(const std::string& pcap_file_, const std::string& timestamp_file_) :
            pcap_file(pcap_file_), timestamp_file(timestamp_file_) {}
