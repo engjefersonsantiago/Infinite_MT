@@ -6,18 +6,19 @@
 #include "parse_pcap.hpp"
 #include "packet_processing.hpp"
 #include "policy.hpp"
+#include "pipeline_params.hpp"
 
-static constexpr auto CACHE_POLICY = CacheType::RANDOM;
 
 static constexpr auto CACHE_L1_TYPE = (CACHE_POLICY == CacheType::LFU) ? CacheType::LFU : CacheType::LRU;
 static constexpr auto CACHE_L2_TYPE = (CACHE_POLICY == CacheType::LFU) ? CacheType::LFU : CacheType::LRU;
 
+using cache_stats_t = std::conditional_t<CACHE_POLICY == CacheType::LFU, LFUCacheStats<32, std::size_t>, LRUCacheStats<32, std::size_t>>;
 
-using cache_stats_t = LRUCacheStats<32, std::size_t>;
-using base_l1_pkt_process_t = PacketProcessing<4096, std::size_t, cache_stats_t>;
-using cache_l1_t = CacheL1PacketProcessing<4096, std::size_t, cache_stats_t>;
-using base_l2_pkt_process_t = PacketProcessing<65536, std::size_t, cache_stats_t>;
-using cache_l2_t = CacheL2PacketProcessing<65536, std::size_t, cache_stats_t>;
+using base_l1_pkt_process_t = PacketProcessing<L1_SIZE, std::size_t, cache_stats_t>;
+using cache_l1_t = CacheL1PacketProcessing<L1_SIZE, std::size_t, cache_stats_t>;
+
+using base_l2_pkt_process_t = PacketProcessing<L2_SIZE, std::size_t, cache_stats_t>;
+using cache_l2_t = CacheL2PacketProcessing<L2_SIZE, std::size_t, cache_stats_t>;
 
 using LRU_policy_t = LRUPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
 using LFU_policy_t = LFUPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
