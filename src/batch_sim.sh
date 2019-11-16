@@ -12,6 +12,6 @@ for CACHE in "${CACHE_TYPE_L[@]}"; do
         echo `python3.6 generate_params.py ${CACHE} ${CACHE_L1_SIZE_L[$i]} 65536`
         cd $ORI_DIR
         echo `make`
-        echo `./pipeline /home/jef/Downloads/equinix-nyc.dirA.20190117-125910.UTC.anon.pcap /home/jef/Downloads/equinix-nyc.dirA.20190117-125910.UTC.anon.times >> ${CACHE_L1_SIZE_L[$i]}${CACHE}`
+        echo `./pipeline $1 $2 >> ${CACHE_L1_SIZE_L[$i]}${CACHE}`
     done;
 done
