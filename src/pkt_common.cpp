@@ -50,7 +50,7 @@ tuple_pkt_size_pair_t create_five_tuple_from_packet (pcpp::Packet& parsedPacket)
     return std::make_pair(five_tuple, pkt_size);
 }
 
-std::unordered_set<FiveTuple> filter_unique_tuples_from_trace (std::string& pcap_file) {
+std::unordered_set<FiveTuple> filter_unique_tuples_from_trace (const std::string& pcap_file) {
     std::unordered_set<FiveTuple> five_tuples;
     pcpp::PcapFileReaderDevice reader(pcap_file.c_str());
 

@@ -27,15 +27,6 @@
 *
 */
 
-enum class CacheType : uint8_t 
-{
-    OPT,
-    LRU,
-    LFU,
-    LRFU,
-    RANDOM
-};
-
 template<size_t Stats_Size, typename Stats_Value, typename Stats_Container>
 class CacheStats
 {
