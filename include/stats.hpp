@@ -36,6 +36,12 @@ enum class CacheType : uint8_t
     RANDOM
 };
 
+enum class CacheInit : uint8_t
+{
+    EMPTY,
+    FULL
+};
+
 template<size_t Stats_Size, typename Stats_Value, typename Stats_Container>
 class CacheStats
 {

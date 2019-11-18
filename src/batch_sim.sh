@@ -1,5 +1,6 @@
 #!/bin/bash
 
+CACHE_INIT=("CacheInit::FULL")
 CACHE_L1_SIZE_L=(1024 2048 4096 8192 16384 32768)
 CACHE_TYPE_L=("CacheType::LFU" "CacheType::LRU" "CacheType::RANDOM")
 
@@ -9,9 +10,9 @@ ORI_DIR=$PWD
 for CACHE in "${CACHE_TYPE_L[@]}"; do
     for ((i=0; i < $N_TESTS; i++)); do 
 	    cd ../scripts
-        echo `python3.6 generate_params.py ${CACHE} ${CACHE_L1_SIZE_L[$i]} 65536`
+        echo `python3.6 generate_params.py ${CACHE} ${CACHE_L1_SIZE_L[$i]} 65536 ${CACHE_INIT}`
         cd $ORI_DIR
         echo `make`
-        echo `./pipeline $1 $2 >> ${CACHE_L1_SIZE_L[$i]}${CACHE}`
+        echo `./pipeline $1 $2 >> ${CACHE_L1_SIZE_L[$i]}-${CACHE}-${CACHE_INIT}`
     done;
 done

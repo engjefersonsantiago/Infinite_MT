@@ -45,15 +45,18 @@ class PacketProcessing {
                     std::cout << "Total packets: " << num_packets_ << '\n';
                     std::cout << "Total matches: " << matched_packets_ << '\n';
                     std::cout << "Normalized Hit Ratio: " << matched_packets_/double(num_packets_) << '\n';
-                    //std::cout << "AVG Hit Ratio: " << cum_avg_hit_ratio_/num_packets_ << '\n';
                     std::cout << "AVG Hit Ratio: " << mean(vec_hit_ratio_) << ", cache " <<'\n';
                     std::cout << "Variance Hit Ratio: " << variance(vec_hit_ratio_) << ", cache " <<'\n';
+                    std::cout << "Weighted Normalized Hit Ratio: " << matched_bytes_/double(num_bytes_) << '\n';
+                    std::cout << "Weighted AVG Hit Ratio: " << mean(vec_weghted_hit_ratio_) << ", cache " <<'\n';
+                    std::cout << "Weighted Variance Hit Ratio: " << variance(vec_weghted_hit_ratio_) << ", cache " <<'\n';
                     break; 
                 }
 
                 // Extract five tuple and packet size
                 tuple_size_pair_ = create_five_tuple_from_packet(packet_timestamp_.first);
                 num_packets_++;
+                num_bytes_+=tuple_size_pair_.second;
                 debug(
                 std::cout << " Thread ID " << std::this_thread::get_id() << " extracted " << num_packets_ << " five tuples\n";
                 std::cout << tuple_size_pair_.first;
@@ -68,18 +71,22 @@ class PacketProcessing {
                     digest_pkt_to_ctrl(digest_cpu_);
                 } else {
                     matched_packets_++;
+                    matched_bytes_+=tuple_size_pair_.second;
                     debug(std::cout << "Matched " << tuple_size_pair_.first << '\n';)
                 }
 
                 const auto hit_ratio =  matched_packets_/double(num_packets_);
-                cum_avg_hit_ratio_ = cum_avg_hit_ratio_ + hit_ratio;
+                const auto weighted_hit_ratio =  matched_bytes_/double(num_bytes_);
                 vec_hit_ratio_(hit_ratio);
+                vec_weghted_hit_ratio_(weighted_hit_ratio);
                 debug(
                     const std::string full = ((lookup_table_.is_full()) ? "full" : "not full");
                     std::cout << "Hit Ratio: " << hit_ratio << ", cache " << full <<'\n';
-                    //std::cout << "AVG Hit Ratio: " << cum_avg_hit_ratio_/num_packets_ << ", cache " << full <<'\n';
                     std::cout << "AVG Hit Ratio: " << mean(vec_hit_ratio_) << ", cache " << full <<'\n';
                     std::cout << "Variance Hit Ratio: " << variance(vec_hit_ratio_) << ", cache " << full <<'\n';
+                    std::cout << "Weighted Normalized Hit Ratio: " << matched_bytes_/double(num_bytes_) << '\n';
+                    std::cout << "Weighted AVG Hit Ratio: " << mean(vec_weghted_hit_ratio_) << ", cache " <<'\n';
+                    std::cout << "Weighted Variance Hit Ratio: " << variance(vec_weghted_hit_ratio_) << ", cache " <<'\n';
                 )
                 // Update cache defined in the derived
                 update_cache_stats(match, cache_type);
@@ -122,9 +129,11 @@ class PacketProcessing {
         // Add policy - for stats support
         packet_timestamp_pair_t packet_timestamp_;
         std::size_t num_packets_ = 0;
+        std::size_t num_bytes_ = 0;
         std::size_t matched_packets_ = 0;
-        double cum_avg_hit_ratio_ = 0.0;
+        std::size_t matched_bytes_ = 0;
         accumulator_set<double, features<tag::mean, tag::variance>> vec_hit_ratio_;
+        accumulator_set<double, features<tag::mean, tag::variance>> vec_weghted_hit_ratio_;
         std::size_t discrete_ts = 0;
         tuple_pkt_size_pair_t tuple_size_pair_;
 

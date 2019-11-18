@@ -45,21 +45,6 @@ int main(int argc, char** argv)
     const std::string pcap_file { argv[1] };
     const std::string timestamp_file { argv[2] };
 
-#if 0
-    // Init lookup table
-    auto unique_tuples = filter_unique_tuples_from_trace(pcap_file);
-    std::cout << "Identified " << unique_tuples.size() << " unique tuples\n";
-    // Populating lookup tables
-    for (const auto& tuple : unique_tuples) {
-        if (!base_cache_l1.lookup_table().is_full()) {
-            base_cache_l1.lookup_table().data().insert({ tuple, 0 });
-        }
-        if (!base_cache_l2.lookup_table().is_full()) {
-            base_cache_l2.lookup_table().data().insert({ tuple, 0 });
-        }
-    }
-#endif
-
     // Inter thread communication
     inter_thread_comm_t parse_to_l1_comm;
     inter_thread_comm_t l1_to_l2_comm(10);
@@ -78,13 +63,31 @@ int main(int argc, char** argv)
     cache_l2_t cache_l2 (l1_to_l2_comm, l2_to_dummy_comm, l2_to_cpu_comm);
     base_l2_pkt_process_t& base_cache_l2 = cache_l2;
 
+    // Init lookup table
+    if (CACHE_INIT_STS == CacheInit::FULL) 
+    {
+        auto unique_tuples = filter_unique_tuples_from_trace(pcap_file);
+        std::cout << "Identified " << unique_tuples.size() << " unique tuples\n";
+        // Populating lookup tables
+        for (const auto& tuple : unique_tuples) {
+            if (!base_cache_l1.lookup_table().is_full()) {
+                base_cache_l1.lookup_table().data().insert(std::make_pair(tuple, 0ul));
+            }
+#if 0
+            if (!base_cache_l2.lookup_table().is_full()) {
+                base_cache_l2.lookup_table().data().insert({ tuple, 0 });
+            }
+#endif
+        }
+    }
+
     // Policy
     LRU_policy_t lru_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table());
     LFU_policy_t lfu_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table());
     Random_policy_t random_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table());
 
     std::tuple<LRU_policy_t, LFU_policy_t, Random_policy_t> policy { lru_policy, lfu_policy, random_policy };
-    
+
     // Controller with LRU Policy    
     controller_t controller(base_cache_l2.lookup_table().data(),
                             base_cache_l1.lookup_table(),
