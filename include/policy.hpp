@@ -99,7 +99,7 @@ template<typename lookup_table_t, typename  stats_table_t>
 //using OPTPolicy = LRUPolicy<lookup_table_t, stats_table_t>;
 class OPTPolicy final : public Policier<lookup_table_t,stats_table_t>
 {
-
+    //TODO: validate when we enqueue that the current timestamp is also pushed. Need a global visibility on the timestamp (i.e. a scheduler!) 
     public:
         using policer_t =  Policier<lookup_table_t, stats_table_t>;
         using fivetuple_history_t = std::vector<FiveTuple>;
@@ -107,7 +107,9 @@ class OPTPolicy final : public Policier<lookup_table_t,stats_table_t>
         OPTPolicy(const lookup_table_t& lookup_table,
                         const stats_table_t& stats_table, const std::string& file ) :
                         policer_t(lookup_table, stats_table),  file_name{file}
-        {}
+        {
+             build_five_tuple_history();
+        }
         
         void set_current_packet_timestamp(const size_t& timestamp){
             current_packet_timestamp = timestamp;
