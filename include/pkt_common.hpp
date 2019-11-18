@@ -26,19 +26,14 @@
 #include <UdpLayer.h>
 #include <Packet.h>
 
+#include "pipeline_params.hpp"
+
 //#define DEBUG
 #ifdef DEBUG
 	#define debug(...) __VA_ARGS__ 
 #else
 	#define debug(...)
 #endif
-
-
-
-// Constants
-static constexpr std::size_t CACHE_L1_PROC_SLOWDOWN_FACTOR= 1;
-static constexpr std::size_t CACHE_L2_PROC_SLOWDOWN_FACTOR = 2;
-static constexpr std::size_t CACHE_HOST_PROC_SLOWDOWN_FACTOR = 100;
 
 using nano_second_t = std::chrono::nanoseconds;
 using second_t = std::chrono::seconds;

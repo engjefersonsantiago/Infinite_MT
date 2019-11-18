@@ -9,22 +9,27 @@
 #include "pipeline_params.hpp"
 
 
-static constexpr auto CACHE_L1_TYPE = (CACHE_POLICY == CacheType::LFU) ? CacheType::LFU : CacheType::LRU;
-static constexpr auto CACHE_L2_TYPE = (CACHE_POLICY == CacheType::LFU) ? CacheType::LFU : CacheType::LRU;
+static constexpr auto CACHE_L1_TYPE = (L1_CACHE_POLICY == CacheType::LFU) ? CacheType::LFU : CacheType::LRU;
+static constexpr auto CACHE_L2_TYPE = (L2_CACHE_POLICY == CacheType::LFU) ? CacheType::LFU : CacheType::LRU;
 
-using cache_stats_t = std::conditional_t<CACHE_POLICY == CacheType::LFU, LFUCacheStats<32, std::size_t>, LRUCacheStats<32, std::size_t>>;
+// Cache stats for each cache level
+using cache_stats_t = std::conditional_t<L1_CACHE_POLICY == CacheType::LFU, LFUCacheStats<L1_CACHE_STATS_SIZE, std::size_t>, LRUCacheStats<L1_CACHE_STATS_SIZE, std::size_t>>;
 
-using base_l1_pkt_process_t = PacketProcessing<L1_SIZE, std::size_t, cache_stats_t>;
-using cache_l1_t = CacheL1PacketProcessing<L1_SIZE, std::size_t, cache_stats_t>;
+using base_l1_pkt_process_t = PacketProcessing<L1_CACHE_SIZE, std::size_t, cache_stats_t>;
+using cache_l1_t = CacheL1PacketProcessing<L1_CACHE_SIZE, std::size_t, cache_stats_t>;
 
-using base_l2_pkt_process_t = PacketProcessing<L2_SIZE, std::size_t, cache_stats_t>;
-using cache_l2_t = CacheL2PacketProcessing<L2_SIZE, std::size_t, cache_stats_t>;
+using base_l2_pkt_process_t = PacketProcessing<L2_CACHE_SIZE, std::size_t, cache_stats_t>;
+using cache_l2_t = CacheL2PacketProcessing<L2_CACHE_SIZE, std::size_t, cache_stats_t>;
 
+// Create duplicates for each policy: promotion and eviction
 using LRU_policy_t = LRUPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
 using LFU_policy_t = LFUPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
 using Random_policy_t = RandomPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
 
-using Policy = std::conditional_t<CACHE_POLICY == CacheType::LFU, LFU_policy_t, std::conditional_t<CACHE_POLICY == CacheType::LRU, LRU_policy_t, Random_policy_t>>;
+
+// TODO:
+// Specialize controller with two policies: Evition and Promotion
+using Policy = std::conditional_t<L1_CACHE_POLICY == CacheType::LFU, LFU_policy_t, std::conditional_t<L1_CACHE_POLICY == CacheType::LRU, LRU_policy_t, Random_policy_t>>;
 
 using controller_t = Controller<typename cache_l1_t::lookup_table_t, typename cache_l2_t::lookup_table_t, Policy>;
 
@@ -64,20 +69,18 @@ int main(int argc, char** argv)
     base_l2_pkt_process_t& base_cache_l2 = cache_l2;
 
     // Init lookup table
-    if (CACHE_INIT_STS == CacheInit::FULL) 
+    if constexpr (L1_CACHE_INIT_STS == CacheInit::FULL || L2_CACHE_INIT_STS == CacheInit::FULL) 
     {
         auto unique_tuples = filter_unique_tuples_from_trace(pcap_file);
         std::cout << "Identified " << unique_tuples.size() << " unique tuples\n";
         // Populating lookup tables
         for (const auto& tuple : unique_tuples) {
-            if (!base_cache_l1.lookup_table().is_full()) {
+            if (!base_cache_l1.lookup_table().is_full() && L1_CACHE_INIT_STS == CacheInit::FULL) {
                 base_cache_l1.lookup_table().data().insert(std::make_pair(tuple, 0ul));
             }
-#if 0
-            if (!base_cache_l2.lookup_table().is_full()) {
-                base_cache_l2.lookup_table().data().insert({ tuple, 0 });
+            if (!base_cache_l2.lookup_table().is_full() && L2_CACHE_INIT_STS == CacheInit::FULL) {
+                base_cache_l2.lookup_table().data().insert(std::make_pair(tuple, 0ul));
             }
-#endif
         }
     }
 
