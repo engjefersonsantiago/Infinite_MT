@@ -96,7 +96,79 @@ class LRUPolicy final: public Policier<lookup_table_t,stats_table_t>
 // Opt Policy uses a ordered list of further seem flows
 // These flows need to be evicted
 template<typename lookup_table_t, typename  stats_table_t>
-using OPTPolicy = LRUPolicy<lookup_table_t, stats_table_t>;
+//using OPTPolicy = LRUPolicy<lookup_table_t, stats_table_t>;
+class OPTPolicy final : public Policier<lookup_table_t,stats_table_t>
+{
+
+    public:
+        using policer_t =  Policier<lookup_table_t, stats_table_t>;
+        using fivetuple_history_t = std::vector<FiveTuple>;
+
+        OPTPolicy(const lookup_table_t& lookup_table,
+                        const stats_table_t& stats_table, const std::string& file ) :
+                        policer_t(lookup_table, stats_table),  file_name{file}
+        {}
+        
+        void set_current_packet_timestamp(const size_t& timestamp){
+            current_packet_timestamp = timestamp;
+        }
+
+        void build_five_tuple_history(){
+            pcpp::PcapFileReaderDevice reader(file_name.c_str());
+
+            if (!reader.open())
+            {
+                std::cout << "Error opening the pcap file\n";
+
+            }
+
+
+            pcpp::RawPacket rawPacket;
+            while (reader.getNextPacket(rawPacket)) {
+                pcpp::Packet parsedPacket(&rawPacket);
+                // Create Five Tuple 
+                const auto& [five_tuple,size] = create_five_tuple_from_packet(parsedPacket);
+                // Enqueue FiveTuple
+                five_tuple_history.push_back(five_tuple);
+
+
+
+            }
+        }
+
+        virtual FiveTuple select_replacement_victim() const override
+        {
+            size_t distance_to_farthest_fivetuple {};
+            size_t distance {1};
+            FiveTuple farthest_fivetuple{};
+            // Read the five-tuple key stored in the lookup table
+            for(const auto& key_val_tuple : this->lookup_table_ ){
+                const auto& [key,value] = key_val_tuple;
+
+                // When is the next reference to this key?
+                for(auto index_it = current_packet_timestamp; index_it < five_tuple_history.size(); index_it++ ){
+                    if(this->lookup_table_[index_it] == key){
+                        if((index_it - current_packet_timestamp) > distance_to_farthest_fivetuple){
+                            distance_to_farthest_fivetuple = index_it - current_packet_timestamp;
+                            farthest_fivetuple = key;
+                        }
+                    break;
+                    }
+
+                }
+
+            }
+        return  farthest_fivetuple;   
+
+        }
+
+
+    private:
+        size_t current_packet_timestamp;
+        fivetuple_history_t five_tuple_history;
+        const std::string file_name;
+
+};
 
 template<typename lookup_table_t, typename  stats_table_t>
 class LFUPolicy final: public Policier<lookup_table_t,stats_table_t>
