@@ -65,7 +65,7 @@ class PacketProcessing {
                 auto lookup_result = lookup_table_.find(tuple_size_pair_.first);
                 auto match = lookup_result != lookup_table_.end();
 
-                std::cout << "Blocked before punt\n";    
+                //std::cout << "Blocked before punt\n";    
                 // Is not held in the cache?
                 if (!match) {
                     punt_pkt_to_next_lvl(out_comm_pkt_);
@@ -75,7 +75,7 @@ class PacketProcessing {
                     matched_bytes_+=tuple_size_pair_.second;
                     debug(std::cout << "Matched " << tuple_size_pair_.first << '\n';)
                 }
-                std::cout << "Blocked after punt\n";    
+                //std::cout << "Blocked after punt\n";    
 
                 const auto hit_ratio =  matched_packets_/double(num_packets_);
                 const auto weighted_hit_ratio =  matched_bytes_/double(num_bytes_);
@@ -91,10 +91,10 @@ class PacketProcessing {
                     std::cout << "Weighted Variance Hit Ratio: " << variance(vec_weghted_hit_ratio_) << ", cache " <<'\n';
                 )
                 
-                std::cout << "Blocked before cache stats\n";    
+                //std::cout << "Blocked before cache stats\n";    
                 // Update cache defined in the derived
                 update_cache_stats(match, cache_type);
-                std::cout << "Blocked after cache stats\n";    
+                //std::cout << "Blocked after cache stats\n";    
 
                 if constexpr (Sleep_Time) {
                     std::this_thread::sleep_for(nano_second_t(Sleep_Time));

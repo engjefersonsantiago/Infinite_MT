@@ -30,7 +30,7 @@
 
 #include "pipeline_params.hpp"
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 	#define debug(...) __VA_ARGS__ 
 #else
@@ -148,7 +148,7 @@ struct ThreadCommunication {
         else   
             mqueue.push(std::move(message));
         ++step;
-        std::cout << "Push step " << step.load() << '\n';
+        //std::cout << "Push step " << step.load() << '\n';
         consumed = true;
         mcond.notify_one();
     }

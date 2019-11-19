@@ -92,8 +92,8 @@ class Controller
                 //std::cout << "Inserted " << five_tuple << '\n';
             }
             add_entry_cache(lookup_table, five_tuple, value);
-            //debug(std::cout << "Digested " << punted_pkts << " packets, Inserting: " << five_tuple << << ", Step: " << step << ", Current occupancy: " << lookup_table.occupancy() << '\n';)
-            std::cout << "Digested " << punted_pkts << " packets, Inserting: " << five_tuple << ", Step: " << step << ", Current occupancy: " << lookup_table.occupancy() << '\n';
+            debug(std::cout << "Digested " << punted_pkts << " packets, Inserting: " << five_tuple << ", Step: " << step << ", Current occupancy: " << lookup_table.occupancy() << '\n';)
+            //std::cout << "Digested " << punted_pkts << " packets, Inserting: " << five_tuple << ", Step: " << step << ", Current occupancy: " << lookup_table.occupancy() << '\n';
             return false;
         }
 
