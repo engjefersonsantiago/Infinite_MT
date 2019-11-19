@@ -26,7 +26,7 @@ static constexpr std::size_t CACHE_HOST_PROC_SLOWDOWN_FACTOR = 1;
 static constexpr auto L1_CACHE_INIT_STS = CacheInit::EMPTY;
 static constexpr auto L2_CACHE_INIT_STS = CacheInit::EMPTY;
 
-static constexpr auto L1_CACHE_POLICY = CacheType::LFU;
+static constexpr auto L1_CACHE_POLICY = CacheType::OPT;
 static constexpr auto L2_CACHE_POLICY = CacheType::LFU;
 
 static constexpr std::size_t L1_CACHE_SIZE = 4096;
