@@ -33,6 +33,11 @@ class LookupTable {
             std::unique_lock lock(mutex_);
             return lookup_table_.begin();
         }
+
+        auto end() const {
+            std::unique_lock lock(mutex_);
+            return lookup_table_.end();
+        }
         
         //auto end() {
         //    std::unique_lock lock(mutex_);
