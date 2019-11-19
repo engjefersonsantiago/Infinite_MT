@@ -31,7 +31,7 @@ class Controller
                     Lookup_Table_L1& lookup_table_L1,
                     Lookup_Table_L2& lookup_table_L2,
                     Policier_t& policy,
-                    std::size_t slowdown
+                    const std::size_t slowdown
                     ) :
                     full_lookup_table_(full_lookup_table),
                     lookup_table_L1_(lookup_table_L1),
@@ -57,10 +57,12 @@ class Controller
         template<typename Lookup, typename Policy>
         auto process_digest_from_cache(inter_thread_digest_cpu& digest_pkt,
                                         Lookup& lookup_table,
-                                        Policy& policy)
+                                        Policy& policy,
+                                        std::size_t& punted_pkts)
         {
             auto [timeout, step] =  digest_pkt.pull_message(tuple_size_pair_, slowdown_factor_);
             auto [five_tuple, size] = tuple_size_pair_;
+            ++punted_pkts;
 
             // Exit in case of timeout
             if (timeout)
@@ -90,7 +92,8 @@ class Controller
                 //std::cout << "Inserted " << five_tuple << '\n';
             }
             add_entry_cache(lookup_table, five_tuple, value);
-            debug(std::cout << "Inserting: " << five_tuple << "Current occupancy: " << lookup_table.occupancy() << '\n';)
+            //debug(std::cout << "Digested " << punted_pkts << " packets, Inserting: " << five_tuple << << ", Step: " << step << ", Current occupancy: " << lookup_table.occupancy() << '\n';)
+            std::cout << "Digested " << punted_pkts << " packets, Inserting: " << five_tuple << ", Step: " << step << ", Current occupancy: " << lookup_table.occupancy() << '\n';
             return false;
         }
 
@@ -102,7 +105,7 @@ class Controller
             {
                 // L1 digest processing
                 // Returns in case of a timeout
-                if (process_digest_from_cache(l1_digest_pkt, lookup_table_L1_, l1_policy_))
+                if (process_digest_from_cache(l1_digest_pkt, lookup_table_L1_, l1_policy_, l1_punted_pkts))
                 {
                     break;
                 }
@@ -127,6 +130,8 @@ class Controller
 
         // Policy
         Policier_t l1_policy_;
+
+        std::size_t l1_punted_pkts = 0;
 
         const std::size_t slowdown_factor_;
 

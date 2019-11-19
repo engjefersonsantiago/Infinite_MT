@@ -12,8 +12,10 @@
 #include <queue>
 #include <tuple>
 #include <memory>
-#include <boost/circular_buffer.hpp>
 #include <unordered_set>
+#include <atomic>
+
+#include <boost/circular_buffer.hpp>
 
 #ifndef __PKT_COMMON__
 #define __PKT_COMMON__
@@ -28,7 +30,7 @@
 
 #include "pipeline_params.hpp"
 
-//#define DEBUG
+#define DEBUG
 #ifdef DEBUG
 	#define debug(...) __VA_ARGS__ 
 #else
@@ -81,8 +83,9 @@ struct ThreadCommunication {
     Queue mqueue;     // the queue of messages
     std::condition_variable mcond;  // the variable communicating events
     std::mutex mmutex;              // the locking mechanism
-    bool done = false;
-    std::size_t step = 0;
+    std::atomic_bool done = false;
+    std::atomic_bool consumed = false;
+    std::atomic_size_t step = 0;
     std::size_t timeout_;
 
     ThreadCommunication () : timeout_(1){
@@ -96,13 +99,11 @@ struct ThreadCommunication {
     }
 
     void set_done() {
-        std::unique_lock lck {mmutex};
         done = true;
     }
     
     bool get_done() {
-        std::unique_lock lck {mmutex};
-        return done/* && mqueue.empty()*/;
+        return done;
     }
 
     void push_message_two_notify (Message&& message) {
@@ -112,6 +113,7 @@ struct ThreadCommunication {
         else   
             mqueue.push(std::move(message));
         ++step;
+        consumed = true;
         mcond.notify_one();
         mcond.wait(lck);
     }
@@ -123,6 +125,7 @@ struct ThreadCommunication {
         else   
             mqueue.push(std::move(message));
         ++step;
+        consumed = true;
         mcond.notify_one();
         mcond.wait(lck);
     }
@@ -134,6 +137,7 @@ struct ThreadCommunication {
         else   
             mqueue.push(std::move(message));
         ++step;
+        consumed = true;
         mcond.notify_one();
     }
 
@@ -144,25 +148,28 @@ struct ThreadCommunication {
         else   
             mqueue.push(std::move(message));
         ++step;
+        std::cout << "Push step " << step.load() << '\n';
+        consumed = true;
         mcond.notify_one();
     }
 
     auto pull_message (Message& message, const std::size_t read_step){ 
-        std::unique_lock<std::mutex> lck {mmutex};
-        auto now = std::chrono::system_clock::now();
-        mcond.notify_one();
-        if (!mcond.wait_until(lck, now + second_t(timeout_),
-            [=](){ return (!mqueue.empty() and !done) && (step%read_step == 0); })
+        std::unique_lock lck {mmutex};
+        if (read_step == 1) { mcond.notify_one(); }
+        if (!mcond.wait_until(lck, std::chrono::system_clock::now() + second_t(timeout_),
+            [=](){ return consumed.load() && (!mqueue.empty() && !done.load()) && (step.load()%read_step == 0); })
             )
         {
             return std::make_pair(true, 0ul);
         }
+        consumed = false;
         message = std::move(mqueue.front());
         if constexpr (is_circ_buffer)
             mqueue.pop_front();
         else
             mqueue.pop();
-        return std::make_pair(false, step);
+        lck.unlock();
+        return std::make_pair(false, step.load());
     }
 };
 

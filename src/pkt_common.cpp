@@ -5,7 +5,7 @@ std::ostream& operator<<(std::ostream& os, const FiveTuple& five_tuple) {
         << five_tuple.dst_addr << ", "
         << (int)five_tuple.protocol << ", "
         << five_tuple.src_port << ", "
-        << five_tuple.dst_port << " }\n";
+        << five_tuple.dst_port << " }";
     return os;
 }
 

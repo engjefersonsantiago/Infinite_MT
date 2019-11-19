@@ -34,13 +34,18 @@ class LookupTable {
             return lookup_table_.begin();
         }
         
-        auto end() {
-            std::unique_lock lock(mutex_);
+        //auto end() {
+        //    std::unique_lock lock(mutex_);
+        //    return lookup_table_.end();
+        //}
+
+        auto end() const {
+            std::shared_lock lock(mutex_);
             return lookup_table_.end();
         }
 
         auto find (const FiveTuple& five_tuple) const {
-            std::unique_lock lock(mutex_);
+            std::shared_lock lock(mutex_);
             return lookup_table_.find(five_tuple);
         }
 
@@ -61,7 +66,7 @@ class LookupTable {
         }
 
         auto is_full() const {
-            std::unique_lock lock(mutex_);
+            std::shared_lock lock(mutex_);
             return lookup_table_.size() >= LOOKUP_MEM_SIZE;
         }
 
@@ -83,13 +88,13 @@ class LookupTable {
         }
 
         auto occupancy () const {
-            std::unique_lock lock(mutex_);
+            std::shared_lock lock(mutex_);
             //return occupancy_;
             return lookup_table_.size();
         }
 
         auto& data () const {   // Raw Data
-            std::unique_lock lock(mutex_);
+            std::shared_lock lock(mutex_);
             return lookup_table_;
         }
 
@@ -104,7 +109,7 @@ class LookupTable {
 //        }
 //
         auto indexed_iter (std::size_t idx) const {
-            std::unique_lock lock(mutex_);
+            std::shared_lock lock(mutex_);
             //return std::next(lookup_table_.begin(), idx);
             std::size_t i = 0;
             for (const auto it : lookup_table_) {

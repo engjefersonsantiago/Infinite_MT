@@ -133,7 +133,6 @@ int main(int argc, char** argv)
     thread_controller.join();
     std::cout << "Controller joined\n";
    
-    controller.process_digest(l1_to_cpu_comm, l2_to_cpu_comm); 
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = end - start;
     std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
