@@ -141,15 +141,14 @@ class OPTPolicy final : public Policier<lookup_table_t,stats_table_t>
         virtual FiveTuple select_replacement_victim() const override
         {
             size_t distance_to_farthest_fivetuple {};
-            size_t distance {1};
             FiveTuple farthest_fivetuple{};
             // Read the five-tuple key stored in the lookup table
-            for(const auto& key_val_tuple : this->lookup_table_ ){
+            for( auto  key_val_tuple : this->lookup_table_ ){
                 const auto& [key,value] = key_val_tuple;
 
                 // When is the next reference to this key?
                 for(auto index_it = current_packet_timestamp; index_it < five_tuple_history.size(); index_it++ ){
-                    if(this->lookup_table_[index_it] == key){
+                    if(five_tuple_history[index_it] == key){
                         if((index_it - current_packet_timestamp) > distance_to_farthest_fivetuple){
                             distance_to_farthest_fivetuple = index_it - current_packet_timestamp;
                             farthest_fivetuple = key;
