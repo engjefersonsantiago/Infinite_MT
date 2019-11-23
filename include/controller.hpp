@@ -72,7 +72,7 @@ class Controller
 
             // Lookup Table full ? Identify a victim for eviction
             if (lookup_table.is_full()){
-                auto evicted_key = policy.select_replacement_victim(five_tuple);
+                auto evicted_key = policy.select_replacement_victim(five_tuple,size);
                 auto ctrl_signal_removal = remove_entry_cache(lookup_table, evicted_key);
                 debug(std::cout << "Remove function: " << ctrl_signal_removal << '\n';)
                 if (ctrl_signal_removal)

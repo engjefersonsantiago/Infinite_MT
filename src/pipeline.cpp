@@ -25,11 +25,11 @@ using cache_l2_t = CacheL2PacketProcessing<L2_CACHE_SIZE, std::size_t, cache_sta
 using LRU_policy_t = LRUPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
 using LFU_policy_t = LFUPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
 using Random_policy_t = RandomPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
-
-
+using OPT_policy_t = OPTPolicy<cache_l1_t::lookup_table_t, cache_stats_t>;
 // TODO:
 // Specialize controller with two policies: Evition and Promotion
-using Policy = std::conditional_t<L1_CACHE_POLICY == CacheType::LFU, LFU_policy_t, std::conditional_t<L1_CACHE_POLICY == CacheType::LRU, LRU_policy_t, Random_policy_t>>;
+using Policy = std::conditional_t<L1_CACHE_POLICY == CacheType::LFU, LFU_policy_t, std::conditional_t<L1_CACHE_POLICY == CacheType::OPT, OPT_policy_t,  
+std::conditional_t<L1_CACHE_POLICY == CacheType::LRU, LRU_policy_t, Random_policy_t>>>;
 
 using controller_t = Controller<typename cache_l1_t::lookup_table_t, typename cache_l2_t::lookup_table_t, Policy>;
 
@@ -89,8 +89,10 @@ int main(int argc, char** argv)
     LRU_policy_t lru_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table());
     LFU_policy_t lfu_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table());
     Random_policy_t random_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table());
+    OPT_policy_t opt_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table(),pcap_file);
+    // 
 
-    std::tuple<LRU_policy_t, LFU_policy_t, Random_policy_t> policy { lru_policy, lfu_policy, random_policy };
+    std::tuple<LRU_policy_t, LFU_policy_t, Random_policy_t, OPT_policy_t> policy { lru_policy, lfu_policy, random_policy , opt_policy };
 
     // Controller with LRU Policy    
     controller_t controller(base_cache_l2.lookup_table().data(),

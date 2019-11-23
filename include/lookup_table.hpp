@@ -33,16 +33,17 @@ class LookupTable {
             std::unique_lock lock(mutex_);
             return lookup_table_.begin();
         }
-        
-        //auto end() {
-        //    std::unique_lock lock(mutex_);
-        //    return lookup_table_.end();
-        //}
 
         auto end() const {
-            std::shared_lock lock(mutex_);
+            std::unique_lock lock(mutex_);
             return lookup_table_.end();
         }
+        
+        auto end() {
+            std::unique_lock lock(mutex_);
+            return lookup_table_.end();
+        }
+
 
         auto find (const FiveTuple& five_tuple) const {
             std::shared_lock lock(mutex_);

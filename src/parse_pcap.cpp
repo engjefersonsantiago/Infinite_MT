@@ -28,6 +28,7 @@ bool ParsePackets::from_pcap_file(const bool run_forever, inter_thread_comm_t& t
         return false;
     }
 
+    debug(std::cout << "===========================================\n";)
     pcpp::RawPacket rawPacket;
     while (reader.getNextPacket(rawPacket) && !timestamp_reader.eof())
     {
