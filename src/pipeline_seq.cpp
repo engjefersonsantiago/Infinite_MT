@@ -52,9 +52,9 @@ int main(int argc, char** argv)
 
     // Inter thread communication
     inter_thread_comm_t parse_to_l1_comm;
-    inter_thread_comm_t l1_to_l2_comm(10);
+    inter_thread_comm_t l1_to_l2_comm;
     inter_thread_comm_t l2_to_dummy_comm;
-    inter_thread_digest_cpu l1_to_cpu_comm;
+    inter_thread_digest_cpu l1_to_cpu_comm(0);
     inter_thread_digest_cpu l2_to_cpu_comm;
 
     // Parser
@@ -101,15 +101,14 @@ int main(int argc, char** argv)
 
     auto start = std::chrono::system_clock::now();
 
-
-    std::cout << "Blahhhh\n";
-
     // Start processing threads
     while (parse_pkts.from_pcap_file(false, parse_to_l1_comm))
     {
         base_cache_l1.process_packet(false, CACHE_L1_PROC_SLOWDOWN_FACTOR, CACHE_L1_TYPE);
         controller.process_digest(false, l1_to_cpu_comm,l2_to_cpu_comm);
     }    
+
+    base_cache_l1.print_status();
 
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = end - start;

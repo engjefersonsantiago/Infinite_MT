@@ -30,7 +30,7 @@
 
 #include "pipeline_params.hpp"
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 	#define debug(...) __VA_ARGS__ 
 #else
@@ -168,7 +168,6 @@ struct ThreadCommunication {
             mqueue.pop_front();
         else
             mqueue.pop();
-        lck.unlock();
         return std::make_pair(false, step.load());
     }
 };

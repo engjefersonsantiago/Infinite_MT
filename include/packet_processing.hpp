@@ -41,16 +41,9 @@ class PacketProcessing {
                 auto [timeout, discrete_ts] = in_comm_pkt_.pull_message(packet_timestamp_, read_step);
 
                 // Exit in case of timeout
-                if (timeout) { 
-                    std::cout << "Total packets: " << num_packets_ << '\n';
-                    std::cout << "Total matches: " << matched_packets_ << '\n';
-                    std::cout << "Normalized Hit Ratio: " << matched_packets_/double(num_packets_) << '\n';
-                    std::cout << "AVG Hit Ratio: " << mean(vec_hit_ratio_) << ", cache " <<'\n';
-                    std::cout << "Variance Hit Ratio: " << variance(vec_hit_ratio_) << ", cache " <<'\n';
-                    std::cout << "Weighted Normalized Hit Ratio: " << matched_bytes_/double(num_bytes_) << '\n';
-                    std::cout << "Weighted AVG Hit Ratio: " << mean(vec_weghted_hit_ratio_) << ", cache " <<'\n';
-                    std::cout << "Weighted Variance Hit Ratio: " << variance(vec_weghted_hit_ratio_) << ", cache " <<'\n';
-                    break; 
+                if (timeout) {
+                    print_status();
+                    break;
                 }
 
                 // Extract five tuple and packet size
@@ -59,13 +52,12 @@ class PacketProcessing {
                 num_bytes_+=tuple_size_pair_.second;
                 debug(
                 std::cout << " Thread ID " << std::this_thread::get_id() << " extracted " << num_packets_ << " five tuples\n";
-                std::cout << tuple_size_pair_.first;
+                std::cout << tuple_size_pair_.first << '\n';
                 )
                 // Look table iterator: key + value
                 auto lookup_result = lookup_table_.find(tuple_size_pair_.first);
                 auto match = lookup_result != lookup_table_.end();
 
-                //std::cout << "Blocked before punt\n";    
                 // Is not held in the cache?
                 if (!match) {
                     punt_pkt_to_next_lvl(out_comm_pkt_);
@@ -73,45 +65,46 @@ class PacketProcessing {
                 } else {
                     matched_packets_++;
                     matched_bytes_+=tuple_size_pair_.second;
-                    debug(std::cout << "Matched " << tuple_size_pair_.first << '\n';)
+                    debug(std::cout << "Matched " << tuple_size_pair_.first << "Cache: " << ((lookup_table_.is_full()) ? "full" : "not full") << '\n';)
                 }
-                //std::cout << "Blocked after punt\n";    
 
                 const auto hit_ratio =  matched_packets_/double(num_packets_);
                 const auto weighted_hit_ratio =  matched_bytes_/double(num_bytes_);
                 vec_hit_ratio_(hit_ratio);
                 vec_weghted_hit_ratio_(weighted_hit_ratio);
-                debug(
-                    const std::string full = ((lookup_table_.is_full()) ? "full" : "not full");
-                    std::cout << "Hit Ratio: " << hit_ratio << ", cache " << full <<'\n';
-                    std::cout << "AVG Hit Ratio: " << mean(vec_hit_ratio_) << ", cache " << full <<'\n';
-                    std::cout << "Variance Hit Ratio: " << variance(vec_hit_ratio_) << ", cache " << full <<'\n';
-                    std::cout << "Weighted Normalized Hit Ratio: " << matched_bytes_/double(num_bytes_) << '\n';
-                    std::cout << "Weighted AVG Hit Ratio: " << mean(vec_weghted_hit_ratio_) << ", cache " <<'\n';
-                    std::cout << "Weighted Variance Hit Ratio: " << variance(vec_weghted_hit_ratio_) << ", cache " <<'\n';
-                )
-                
-                //std::cout << "Blocked before cache stats\n";    
+
+                debug(print_status();)
+
                 // Update cache defined in the derived
                 update_cache_stats(match, cache_type);
-                //std::cout << "Blocked after cache stats\n";    
 
+
+                if (num_packets_%100000 == 0)
+                {
+                    print_status();
+                }
+                if (!run_forever) {
+                    debug(print_status();)
+                    break;
+                }
+                
                 if constexpr (Sleep_Time) {
                     std::this_thread::sleep_for(nano_second_t(Sleep_Time));
                 }
-
-               if (!run_forever) { 
-                    std::cout << "Total packets: " << num_packets_ << '\n';
-                    std::cout << "Total matches: " << matched_packets_ << '\n';
-                    std::cout << "Normalized Hit Ratio: " << matched_packets_/double(num_packets_) << '\n';
-                    std::cout << "AVG Hit Ratio: " << mean(vec_hit_ratio_) << ", cache " <<'\n';
-                    std::cout << "Variance Hit Ratio: " << variance(vec_hit_ratio_) << ", cache " <<'\n';
-                    std::cout << "Weighted Normalized Hit Ratio: " << matched_bytes_/double(num_bytes_) << '\n';
-                    std::cout << "Weighted AVG Hit Ratio: " << mean(vec_weghted_hit_ratio_) << ", cache " <<'\n';
-                    std::cout << "Weighted Variance Hit Ratio: " << variance(vec_weghted_hit_ratio_) << ", cache " <<'\n';
-                    break; 
-                }
             }
+        }
+
+        void print_status()
+        {
+            const std::string full = ((lookup_table_.is_full()) ? "full" : "not full");
+            std::cout << "Total packets: " << num_packets_ << '\n';
+            std::cout << "Total matches: " << matched_packets_ << '\n';
+            std::cout << "Normalized Hit Ratio: " << matched_packets_/double(num_packets_) << '\n';
+            std::cout << "AVG Hit Ratio: " << mean(vec_hit_ratio_) << ", cache " << full<<'\n';
+            std::cout << "Variance Hit Ratio: " << variance(vec_hit_ratio_) << ", cache " << full<<'\n';
+            std::cout << "Weighted Normalized Hit Ratio: " << matched_bytes_/double(num_bytes_) << '\n';
+            std::cout << "Weighted AVG Hit Ratio: " << mean(vec_weghted_hit_ratio_) << ", cache " << full<<'\n';
+            std::cout << "Weighted Variance Hit Ratio: " << variance(vec_weghted_hit_ratio_) << ", cache " << full<<'\n';
         }
 
         virtual void punt_pkt_to_next_lvl (inter_thread_comm_t& punted_pkt)=0;
@@ -192,7 +185,7 @@ class CacheL2PacketProcessing final : public PacketProcessing <Lookup_Size, Look
 
     public:
         using pkt_proc_base_t = PacketProcessing <Lookup_Size, Lookup_Value, Cache_Stats, Sleep_Time>;
-        
+
         virtual void punt_pkt_to_next_lvl (inter_thread_comm_t& punted_pkt) override {}
         virtual void update_cache_stats(const bool match, const CacheType cache_type) override {}
 

@@ -82,10 +82,12 @@ class Controller
                     debug(std::cout << "-----------------------------------------------------------\n";)
                 } else
                 {
-                    debug(std::cout << "-----------------------------------------------------------\n";)
-                    debug(std::cout << "Replacement policy failed." << evicted_key << " not present\n";)
-                    debug(std::cout << "-----------------------------------------------------------\n";)
+                    std::cout << "-----------------------------------------------------------\n";
+                    std::cout << "Replacement policy failed." << evicted_key << " not present\n";
+                    std::cout << "-----------------------------------------------------------\n";
                 }
+            } else {
+                policy.stats_table().get_stats().insert(std::make_pair(five_tuple, size), [](){}, [](){}); 
             }
 
 

@@ -196,7 +196,8 @@ class LFUPolicy final: public Policier<lookup_table_t,stats_table_t>
 
         virtual FiveTuple select_replacement_victim(FiveTuple five_tuple) override
         {
-            auto value_sort = [](auto a, auto b) { return a.second < b.second; };
+            //auto value_sort = [](auto a, auto b) { return a.second < b.second; };
+            auto value_sort = [](auto a, auto b) { return a.second > b.second; };
             // Get the least recently used entry.
             // TUple + value associe
             // 1. Get stats
@@ -205,8 +206,9 @@ class LFUPolicy final: public Policier<lookup_table_t,stats_table_t>
             const auto occ = this->stats_table_.get_stats().occupancy();
             const auto replace = this->stats_table_.get_stats().begin() + occ/2;
             this->stats_table_.get_stats().data().front() = { five_tuple, replace->second };
-            this->stats_table_.get_stats().sort(value_sort);
-            std::cout << "Front Elem:" << this->stats_table_.front().first << '\n';
+            std::make_heap(this->stats_table_.get_stats().begin(), this->stats_table_.get_stats().end(),value_sort); 
+            
+            //this->stats_table_.get_stats().sort(value_sort);
             //this->stats_table_.front() = typename stats_table_t::stats_tuple{}; 
             //this->stats_table_.front() = {FiveTuple{}, -1}; 
             return tuple_to_remove.first;

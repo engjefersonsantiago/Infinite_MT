@@ -28,8 +28,6 @@ bool ParsePackets::from_pcap_file(const bool run_forever, inter_thread_comm_t& t
         return false;
     }
 
-    std::cout << "Blahhhh\n";
-
     pcpp::RawPacket rawPacket;
     while (reader.getNextPacket(rawPacket) && !timestamp_reader.eof())
     {
@@ -53,5 +51,5 @@ bool ParsePackets::from_pcap_file(const bool run_forever, inter_thread_comm_t& t
 
     }
     thread_comm.set_done();
-    return true;
+    return false;
 }

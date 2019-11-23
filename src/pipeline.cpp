@@ -101,7 +101,6 @@ int main(int argc, char** argv)
 
     auto start = std::chrono::system_clock::now();
 
-
     // Start processing threads
     std::thread thread_parse_pkt(&ParsePackets::from_pcap_file,
                                     std::ref(parse_pkts),
