@@ -102,41 +102,15 @@ int main(int argc, char** argv)
     auto start = std::chrono::system_clock::now();
 
 
+    std::cout << "Blahhhh\n";
+
     // Start processing threads
-    std::thread thread_parse_pkt(&ParsePackets::from_pcap_file,
-                                    std::ref(parse_pkts),
-                                    true,
-                                    std::ref(parse_to_l1_comm)
-                                );
-    std::thread thread_cache_l1(&base_l1_pkt_process_t::process_packet,
-                                    std::ref(base_cache_l1),
-                                    true,
-                                    CACHE_L1_PROC_SLOWDOWN_FACTOR,
-                                    CACHE_L1_TYPE
-                                );
-    //std::thread thread_cache_l2(&base_l2_pkt_process_t::process_packet,
-    //                                std::ref(base_cache_l2),
-    //                                CACHE_L2_PROC_SLOWDOWN_FACTOR,
-    //                                CACHE_L2_TYPE
-    //                            );
-    std::thread thread_controller(&controller_t::process_digest,
-                                    controller,
-                                    true,
-                                    std::ref(l1_to_cpu_comm),
-                                    std::ref(l2_to_cpu_comm)
-                                );
+    while (parse_pkts.from_pcap_file(false, parse_to_l1_comm))
+    {
+        base_cache_l1.process_packet(false, CACHE_L1_PROC_SLOWDOWN_FACTOR, CACHE_L1_TYPE);
+        controller.process_digest(false, l1_to_cpu_comm,l2_to_cpu_comm);
+    }    
 
-    // TODO: Policer and kernel that ensure that all tasks are completed until the next time slot is started.
-
-    thread_parse_pkt.join();
-    std::cout << "Parser joined\n";
-    thread_cache_l1.join();
-    std::cout << "L1 joined\n";
-    //thread_cache_l2.join();
-    //std::cout << "L2 joined\n";
-    thread_controller.join();
-    std::cout << "Controller joined\n";
-   
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = end - start;
     std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";

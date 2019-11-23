@@ -33,7 +33,7 @@ class PacketProcessing {
         static constexpr auto LOOKUP_MEM_SIZE = Lookup_Size;
         using lookup_table_t = LookupTable<Lookup_Size, Lookup_Value>;
 
-        void process_packet (const std::size_t read_step, const CacheType cache_type)
+        void process_packet (const bool run_forever, const std::size_t read_step, const CacheType cache_type)
         {
 
             while (true) {
@@ -98,6 +98,18 @@ class PacketProcessing {
 
                 if constexpr (Sleep_Time) {
                     std::this_thread::sleep_for(nano_second_t(Sleep_Time));
+                }
+
+               if (!run_forever) { 
+                    std::cout << "Total packets: " << num_packets_ << '\n';
+                    std::cout << "Total matches: " << matched_packets_ << '\n';
+                    std::cout << "Normalized Hit Ratio: " << matched_packets_/double(num_packets_) << '\n';
+                    std::cout << "AVG Hit Ratio: " << mean(vec_hit_ratio_) << ", cache " <<'\n';
+                    std::cout << "Variance Hit Ratio: " << variance(vec_hit_ratio_) << ", cache " <<'\n';
+                    std::cout << "Weighted Normalized Hit Ratio: " << matched_bytes_/double(num_bytes_) << '\n';
+                    std::cout << "Weighted AVG Hit Ratio: " << mean(vec_weghted_hit_ratio_) << ", cache " <<'\n';
+                    std::cout << "Weighted Variance Hit Ratio: " << variance(vec_weghted_hit_ratio_) << ", cache " <<'\n';
+                    break; 
                 }
             }
         }

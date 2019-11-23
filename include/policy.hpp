@@ -24,16 +24,18 @@ class Policier{
     public:
 
         Policier(const lookup_table_t& lookup_table,
-                    const stats_table_t& stats_table) :
+                    stats_table_t& stats_table) :
                     lookup_table_{lookup_table},
                     stats_table_{stats_table}
         {}
 
-        virtual FiveTuple select_replacement_victim() const =0;
+        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple) =0;
+
+        auto& stats_table () { return stats_table_; }
 
     protected:
         const lookup_table_t& lookup_table_;
-        const stats_table_t& stats_table_;
+        stats_table_t& stats_table_;
 
 };
 
@@ -58,11 +60,11 @@ class RandomPolicy final: public Policier<lookup_table_t,stats_table_t>
     public:
 
         RandomPolicy(const lookup_table_t& lookup_table,
-                        const stats_table_t& stats_table) :
+                        stats_table_t& stats_table) :
                         policer_t(lookup_table, stats_table)
         {}
 
-        virtual FiveTuple select_replacement_victim() const override
+        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple) override
         {
             // From https://stackoverflow.com/questions/27024269/select-random-element-in-an-unordered-map
             const auto tuple = this->lookup_table_.indexed_iter(random_number_generation()).first; 
@@ -79,16 +81,26 @@ class LRUPolicy final: public Policier<lookup_table_t,stats_table_t>
         using policer_t =  Policier<lookup_table_t, stats_table_t>;
 
         LRUPolicy(const lookup_table_t& lookup_table,
-                        const stats_table_t& stats_table) :
+                        stats_table_t& stats_table) :
                         policer_t(lookup_table, stats_table)
         {}
 
-        virtual FiveTuple select_replacement_victim() const override
+        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple) override
         {
+            auto value_sort = [](auto a, auto b) { return a.second < b.second; };
             // Get the least recently used entry.
             // TUple + value associe
             // 1. Get stats
-            return this->stats_table_.back().first;
+
+            const auto tuple_to_remove = this->stats_table_.front();
+            const auto occ = this->stats_table_.get_stats().occupancy();
+            const auto replace = this->stats_table_.get_stats().begin() + occ/2;
+            this->stats_table_.front() = { five_tuple, replace->second };
+            this->stats_table_.get_stats().sort(value_sort);
+            std::cout << "Front Elem:" << this->stats_table_.front().first << '\n';
+            //this->stats_table_.front() = typename stats_table_t::stats_tuple{}; 
+            //this->stats_table_.front() = {FiveTuple{}, -1}; 
+            return tuple_to_remove.first;
         }
 
 };
@@ -105,7 +117,7 @@ class OPTPolicy final : public Policier<lookup_table_t,stats_table_t>
         using fivetuple_history_t = std::vector<FiveTuple>;
 
         OPTPolicy(const lookup_table_t& lookup_table,
-                        const stats_table_t& stats_table, const std::string& file ) :
+                        stats_table_t& stats_table, const std::string& file ) :
                         policer_t(lookup_table, stats_table),  file_name{file}
         {}
         
@@ -136,7 +148,7 @@ class OPTPolicy final : public Policier<lookup_table_t,stats_table_t>
             }
         }
 
-        virtual FiveTuple select_replacement_victim() const override
+        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple) override
         {
             size_t distance_to_farthest_fivetuple {};
             size_t distance {1};
@@ -178,16 +190,26 @@ class LFUPolicy final: public Policier<lookup_table_t,stats_table_t>
         using policer_t =  Policier<lookup_table_t, stats_table_t>;
 
         LFUPolicy(const lookup_table_t& lookup_table,
-                        const stats_table_t& stats_table) :
+                        stats_table_t& stats_table) :
                         policer_t(lookup_table, stats_table)
         {}
 
-        virtual FiveTuple select_replacement_victim() const override
+        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple) override
         {
+            auto value_sort = [](auto a, auto b) { return a.second < b.second; };
             // Get the least recently used entry.
             // TUple + value associe
             // 1. Get stats
-            return this->stats_table_.back().first;
+
+            auto tuple_to_remove = this->stats_table_.front();
+            const auto occ = this->stats_table_.get_stats().occupancy();
+            const auto replace = this->stats_table_.get_stats().begin() + occ/2;
+            this->stats_table_.get_stats().data().front() = { five_tuple, replace->second };
+            this->stats_table_.get_stats().sort(value_sort);
+            std::cout << "Front Elem:" << this->stats_table_.front().first << '\n';
+            //this->stats_table_.front() = typename stats_table_t::stats_tuple{}; 
+            //this->stats_table_.front() = {FiveTuple{}, -1}; 
+            return tuple_to_remove.first;
         }
 
 };
