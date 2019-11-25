@@ -29,7 +29,7 @@ class Policier{
                     stats_table_{stats_table}
         {}
 
-        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple) =0;
+        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t timestamp) =0;
 
         auto& stats_table () { return stats_table_; }
 
@@ -64,7 +64,7 @@ class RandomPolicy final: public Policier<lookup_table_t,stats_table_t>
                         policer_t(lookup_table, stats_table)
         {}
 
-        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple) override
+        virtual FiveTuple select_replacement_victim(FiveTuple , size_t) override
         {
             // From https://stackoverflow.com/questions/27024269/select-random-element-in-an-unordered-map
             const auto tuple = this->lookup_table_.indexed_iter(random_number_generation()).first; 
@@ -85,7 +85,7 @@ class LRUPolicy final: public Policier<lookup_table_t,stats_table_t>
                         policer_t(lookup_table, stats_table)
         {}
 
-        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple) override
+        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t) override
         {
             auto value_sort = [](auto a, auto b) { return a.second < b.second; };
             // Get the least recently used entry.
@@ -144,34 +144,68 @@ class OPTPolicy final : public Policier<lookup_table_t,stats_table_t>
                 const auto& [five_tuple,size] = create_five_tuple_from_packet(parsedPacket);
                 // Enqueue FiveTuple
                 five_tuple_history.push_back(five_tuple);
-
-
-
             }
+
+            size_t index{};
+            std::cout << "------ Content of the five tuple history ------\n";
+            for(auto five_tuple: five_tuple_history){
+                std::cout << "Index : " << index << "Five Tuple: " << five_tuple << "\n";
+                index++;
+            }
+            std::cout << "------ End Content of the five tuple history ------\n";
+
+
         }
 
-        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple) override
+        virtual FiveTuple select_replacement_victim(FiveTuple , size_t timestamp) override
         {
             size_t distance_to_farthest_fivetuple {};
             FiveTuple farthest_fivetuple{};
+            current_packet_timestamp = timestamp;
+            FiveTuple default_entry_removed {};
+            bool is_found {false};
+            size_t number_keys_found {};
+            // Remove any non-re referenced entry.
             // Read the five-tuple key stored in the lookup table
             for( auto  key_val_tuple : this->lookup_table_ ){
                 const auto& [key,value] = key_val_tuple;
-
+                //default_entry_removed = key;
+                //std::cout << "Key Evaluated : " << key << "\n";
                 // When is the next reference to this key?
-                for(auto index_it = current_packet_timestamp; index_it < five_tuple_history.size(); index_it++ ){
+                bool is_matched {false};
+                for(auto index_it = (current_packet_timestamp -1); index_it < five_tuple_history.size(); index_it++ ){
+                   //std::cout <<"Index : "<< index_it << "\n";
                     if(five_tuple_history[index_it] == key){
-                        if((index_it - current_packet_timestamp) > distance_to_farthest_fivetuple){
+                        if((index_it - current_packet_timestamp) >= distance_to_farthest_fivetuple){
                             distance_to_farthest_fivetuple = index_it - current_packet_timestamp;
                             farthest_fivetuple = key;
-                        }
-                    break;
-                    }
+                            is_found =  true;
 
+                            //std::cout << "Seletec key: "<< key <<" Timestamp distance : "<< distance_to_farthest_fivetuple << "\n";
+
+                        }
+                        number_keys_found++;
+                        is_matched = true;
+                        // Exit at the first reference.
+                        break;
+                    }
+                // 
+                }
+                // Key not found ! Can be removed !
+                if(!is_matched){
+                    default_entry_removed = key;
+                    std::cout<< "Default Entry to be removed: " << default_entry_removed << "\n";
                 }
 
             }
-        return  farthest_fivetuple;   
+        if (is_found && number_keys_found > 1){
+            return  farthest_fivetuple;   
+
+        }
+        else{
+            std::cout <<  "Return default entry \n";
+            return default_entry_removed;
+        }
 
         }
 
@@ -195,7 +229,7 @@ class LFUPolicy final: public Policier<lookup_table_t,stats_table_t>
                         policer_t(lookup_table, stats_table)
         {}
 
-        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple) override
+        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t) override
         {
             auto value_sort = [](auto a, auto b) { return a.second < b.second; };
             // Get the least recently used entry.

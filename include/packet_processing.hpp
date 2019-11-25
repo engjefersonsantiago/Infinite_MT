@@ -38,7 +38,8 @@ class PacketProcessing {
 
             while (true) {
                 // Wait until a message is pushed to the queue
-                auto [timeout, discrete_ts] = in_comm_pkt_.pull_message(packet_timestamp_, read_step);
+                auto [timeout, tmp_discrete] = in_comm_pkt_.pull_message(packet_timestamp_, read_step);
+                discrete_ts = tmp_discrete  ;
 
                 // Exit in case of timeout
                 if (timeout) { 
@@ -69,7 +70,7 @@ class PacketProcessing {
                 // Is not held in the cache?
                 if (!match) {
                     punt_pkt_to_next_lvl(out_comm_pkt_);
-                    digest_pkt_to_ctrl(digest_cpu_);
+                    digest_pkt_to_ctrl(digest_cpu_, cache_type);
                 } else {
                     matched_packets_++;
                     matched_bytes_+=tuple_size_pair_.second;
@@ -117,8 +118,14 @@ class PacketProcessing {
         virtual void punt_pkt_to_next_lvl (inter_thread_comm_t& punted_pkt)=0;
 
         // TODO: Send to policer in case of a cache miss
-        void digest_pkt_to_ctrl (inter_thread_digest_cpu& digest_pkt) {
-            digest_pkt.push_message(tuple_size_pair_);
+        void digest_pkt_to_ctrl (inter_thread_digest_cpu& digest_pkt, CacheType cache_type) {
+            if(cache_type == CacheType::OPT){ 
+                digest_pkt.push_message({tuple_size_pair_.first,discrete_ts});
+
+            }
+            else{
+                digest_pkt.push_message(tuple_size_pair_);
+            }
         }
 
         virtual void update_cache_stats(const bool match, const CacheType cache_type) =0;
@@ -169,7 +176,7 @@ class CacheL1PacketProcessing final : public PacketProcessing <Lookup_Size, Look
 
         virtual void update_cache_stats(const bool match, const CacheType cache_type) override {
             if (match) {
-                if (cache_type == CacheType::LRU) {
+                if (cache_type == CacheType::LRU ||cache_type == CacheType::OPT) {
                     this->stats_table_.update_stats(this->tuple_size_pair_.first, this->discrete_ts);
                 } else if (cache_type == CacheType::LFU) {
                     this->stats_table_.update_stats(this->tuple_size_pair_.first, this->tuple_size_pair_.second);

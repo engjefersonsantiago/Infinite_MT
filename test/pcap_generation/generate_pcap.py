@@ -102,7 +102,7 @@ def generate_pcap_timestamp(num_tuples,num_packets):
             
 
 if __name__ == "__main__":
-    number_of_packets_per_tuple = 1000
-    number_of_tuples = 1000
+    number_of_packets_per_tuple = 4
+    number_of_tuples = 5
     generate_pcap_traces(number_of_tuples,number_of_packets_per_tuple)
     generate_pcap_timestamp(number_of_tuples,number_of_packets_per_tuple)
