@@ -32,6 +32,7 @@ class CacheStats
 {
 
     public:
+        using stats_tuple = std::pair<FiveTuple, Stats_Value>;
         // Constants
         static constexpr auto STATS_MEM_SIZE = Stats_Size;
 
@@ -39,18 +40,34 @@ class CacheStats
         virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) =0;
 
         // Read the whole stats
-        auto& get_stats () const
+        auto& get_stats ()
         {
             std::unique_lock lock(mutex_);  // Needs to be unique, cause the Dataplane should not
                                             // modify the stats during controller reading
             return stats_container_;        //TODO: If using circular_buffer, not thread safe.
         }
 
-        // Read the whole stats
         auto& back () const
         {
-            std::shared_lock lock(mutex_);
+            std::unique_lock lock(mutex_);
             return stats_container_.back();
+        }
+        auto& front () const  
+        {
+            std::unique_lock lock(mutex_);
+            return stats_container_.front();
+        }
+
+
+        auto& back () 
+        {
+            std::unique_lock lock(mutex_);
+            return stats_container_.back();
+        }
+        auto& front () 
+        {
+            std::unique_lock lock(mutex_);
+            return stats_container_.front();
         }
 
         // Clear available thru container.clear()
@@ -79,23 +96,34 @@ template<size_t Stats_Size, typename Stats_Value>
 class LRUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LRUContainer<Stats_Value>> 
 {
     public:
+
         virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) override
         {
             std::unique_lock lock(this->mutex_);
-            auto tuple_compare = [=](const auto& elem) {
-                return elem.first == five_tuple;
-            };
-            auto value_sort = [](auto a, auto b) { return a.second > b.second; };
-            auto value_compare = [](auto a, auto b) { return (a.second > b.second) ? a : b; };
+            if (updated_stats != 0)
+            {
+                auto tuple_compare = [=](const auto& elem) {
+                    return elem.first == five_tuple;
+                };
+                auto value_sort = [](auto a, auto b) { return a.second < b.second; };
+                auto value_compare = [](auto a, auto b) { return (a.second < b.second) ? a : b; };
 
-            auto found = this->stats_container_.find_if(tuple_compare);
-            if (found !=  this->stats_container_.end())
-            {
-                *found = std::make_pair(found->first, updated_stats);
+                auto found = this->stats_container_.find_if(tuple_compare);
+                if (found !=  this->stats_container_.end())
+                {
+                    *found = std::make_pair(found->first, updated_stats);
+                } else
+                {
+                    this->stats_container_.insert(std::make_pair(five_tuple, updated_stats), value_sort, value_compare);
+                }
                 this->stats_container_.sort(value_sort);
-            } else
-            {
-                this->stats_container_.insert(std::make_pair(five_tuple, updated_stats), value_sort, value_compare);
+                //std::cout << "------------------------\n";
+                //for (auto i : this->stats_container_) {
+                //    std::cout << i.first << " , " << i.second << '\n';
+                //} 
+                //std::cout << this->stats_container_.back().first << '\n';
+                //int i;
+                //std::cin >> i;
             }
         }
 };
@@ -112,21 +140,30 @@ class LFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LFUContai
         virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) override
         {
             std::unique_lock lock(this->mutex_);
-            auto tuple_compare = [=](const auto& elem) {
-                return elem.first == five_tuple;
-            };
-            auto value_sort = [](auto a, auto b) { return a.second > b.second; };
-            auto value_compare = [](auto a, auto b) { return (a.second > b.second) ? a : b; };
+            if (updated_stats != 0)
+            {
+                auto tuple_compare = [=](const auto& elem) {
+                    return elem.first == five_tuple;
+                };
+                auto value_sort = [](auto a, auto b) { return a.second < b.second; };
+                auto value_compare = [](auto a, auto b) { return (a.second < b.second) ? a : b; };
 
-            auto found = this->stats_container_.find_if(tuple_compare);
-            if (found !=  this->stats_container_.end())
-            {
-                *found = std::make_pair(found->first, found->second + updated_stats);
+                auto found = this->stats_container_.find_if(tuple_compare);
+                if (found !=  this->stats_container_.end())
+                {
+                    *found = std::make_pair(found->first, found->second + updated_stats);
+                } else
+                {
+                    this->stats_container_.insert(std::make_pair(five_tuple, updated_stats), value_sort, value_compare);
+                }
                 this->stats_container_.sort(value_sort);
-            } else
-            {
-                this->stats_container_.insert(std::make_pair(five_tuple, updated_stats), value_sort, value_compare);
-                this->stats_container_.sort(value_sort);
+                //std::cout << "------------------------\n";
+                //for (auto i : this->stats_container_) {
+                //    std::cout << i.first << " , " << i.second << '\n';
+                //} 
+                //std::cout << this->stats_container_.back().first << '\n';
+                //int i;
+                //std::cin >> i;
             }
         }
 };

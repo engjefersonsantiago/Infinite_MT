@@ -1,9 +1,7 @@
+#include<fstream>
 
 #ifndef __PARSE_PCAP__
 #define __PARSE_PCAP__
-
-
-
 
 // Pcap++
 #include <PcapFileDevice.h>
@@ -20,18 +18,18 @@ class ParsePackets {
 
 
     private:
-        const std::string pcap_file;
-        const std::string timestamp_file;
         size_t num_packets_parsed = 0;
-
-    // thread producer related members
+        pcpp::PcapFileReaderDevice reader;
+        std::ifstream timestamp_reader;  
+        // thread producer related members
 
     public:
 
-        bool from_pcap_file(inter_thread_comm_t& thread_comm);
+        bool from_pcap_file(const bool run_forever, inter_thread_comm_t& thread_comm);
 
         ParsePackets(const std::string& pcap_file_, const std::string& timestamp_file_) :
-           pcap_file(pcap_file_), timestamp_file(timestamp_file_) {}
+                        reader(pcap_file_.c_str()),
+                        timestamp_reader(timestamp_file_, std::ios_base::in) {}
 
 };
 

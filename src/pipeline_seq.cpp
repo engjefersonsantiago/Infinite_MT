@@ -25,11 +25,11 @@ using cache_l2_t = CacheL2PacketProcessing<L2_CACHE_SIZE, std::size_t, cache_sta
 using LRU_policy_t = LRUPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
 using LFU_policy_t = LFUPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
 using Random_policy_t = RandomPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
-using OPT_policy_t = OPTPolicy<cache_l1_t::lookup_table_t, cache_stats_t>;
+
+
 // TODO:
 // Specialize controller with two policies: Evition and Promotion
-using Policy = std::conditional_t<L1_CACHE_POLICY == CacheType::LFU, LFU_policy_t, std::conditional_t<L1_CACHE_POLICY == CacheType::OPT, OPT_policy_t,  
-std::conditional_t<L1_CACHE_POLICY == CacheType::LRU, LRU_policy_t, Random_policy_t>>>;
+using Policy = std::conditional_t<L1_CACHE_POLICY == CacheType::LFU, LFU_policy_t, std::conditional_t<L1_CACHE_POLICY == CacheType::LRU, LRU_policy_t, Random_policy_t>>;
 
 using controller_t = Controller<typename cache_l1_t::lookup_table_t, typename cache_l2_t::lookup_table_t, Policy>;
 
@@ -89,10 +89,8 @@ int main(int argc, char** argv)
     LRU_policy_t lru_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table());
     LFU_policy_t lfu_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table());
     Random_policy_t random_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table());
-    OPT_policy_t opt_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table(),pcap_file);
-    // 
 
-    std::tuple<LRU_policy_t, LFU_policy_t, Random_policy_t, OPT_policy_t> policy { lru_policy, lfu_policy, random_policy , opt_policy };
+    std::tuple<LRU_policy_t, LFU_policy_t, Random_policy_t> policy { lru_policy, lfu_policy, random_policy };
 
     // Controller with LRU Policy    
     controller_t controller(base_cache_l2.lookup_table().data(),
@@ -104,41 +102,15 @@ int main(int argc, char** argv)
     auto start = std::chrono::system_clock::now();
 
 
+    std::cout << "Blahhhh\n";
+
     // Start processing threads
-    std::thread thread_parse_pkt(&ParsePackets::from_pcap_file,
-                                    std::ref(parse_pkts),
-                                    true,
-                                    std::ref(parse_to_l1_comm)
-                                );
-    std::thread thread_cache_l1(&base_l1_pkt_process_t::process_packet,
-                                    std::ref(base_cache_l1),
-                                    true,
-                                    CACHE_L1_PROC_SLOWDOWN_FACTOR,
-                                    CACHE_L1_TYPE
-                                );
-    //std::thread thread_cache_l2(&base_l2_pkt_process_t::process_packet,
-    //                                std::ref(base_cache_l2),
-    //                                CACHE_L2_PROC_SLOWDOWN_FACTOR,
-    //                                CACHE_L2_TYPE
-    //                            );
-    std::thread thread_controller(&controller_t::process_digest,
-                                    controller,
-                                    true,
-                                    std::ref(l1_to_cpu_comm),
-                                    std::ref(l2_to_cpu_comm)
-                                );
+    while (parse_pkts.from_pcap_file(false, parse_to_l1_comm))
+    {
+        base_cache_l1.process_packet(false, CACHE_L1_PROC_SLOWDOWN_FACTOR, CACHE_L1_TYPE);
+        controller.process_digest(false, l1_to_cpu_comm,l2_to_cpu_comm);
+    }    
 
-    // TODO: Policer and kernel that ensure that all tasks are completed until the next time slot is started.
-
-    thread_parse_pkt.join();
-    std::cout << "Parser joined\n";
-    thread_cache_l1.join();
-    std::cout << "L1 joined\n";
-    //thread_cache_l2.join();
-    //std::cout << "L2 joined\n";
-    thread_controller.join();
-    std::cout << "Controller joined\n";
-   
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = end - start;
     std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";

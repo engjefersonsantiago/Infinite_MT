@@ -72,10 +72,22 @@ class Controller
 
             // Lookup Table full ? Identify a victim for eviction
             if (lookup_table.is_full()){
-                auto evicted_key = policy.select_replacement_victim();
-                [[maybe_unused]] auto ctrl_signal_removal = remove_entry_cache(lookup_table, evicted_key);
-                debug(std::cout << "Removing: " << evicted_key << "Current occupancy: " << lookup_table.occupancy() << '\n';)
+                auto evicted_key = policy.select_replacement_victim(five_tuple);
+                auto ctrl_signal_removal = remove_entry_cache(lookup_table, evicted_key);
+                debug(std::cout << "Remove function: " << ctrl_signal_removal << '\n';)
+                if (ctrl_signal_removal)
+                {
+                    debug(std::cout << "-----------------------------------------------------------\n";)
+                    debug(std::cout << "Removing: " << evicted_key << "Current occupancy: " << lookup_table.occupancy() << '\n';)
+                    debug(std::cout << "-----------------------------------------------------------\n";)
+                } else
+                {
+                    debug(std::cout << "-----------------------------------------------------------\n";)
+                    debug(std::cout << "Replacement policy failed." << evicted_key << " not present\n";)
+                    debug(std::cout << "-----------------------------------------------------------\n";)
+                }
             }
+
 
             Value_t value = 0;
             // Insert the new value.
@@ -91,13 +103,17 @@ class Controller
                 value = lookup_it->second;
                 //std::cout << "Inserted " << five_tuple << '\n';
             }
-            add_entry_cache(lookup_table, five_tuple, value);
+            if (!add_entry_cache(lookup_table, five_tuple, value))
+            {
+                std::cout << "--------------------------\n";
+                std::cout << "Insertion failed\n";
+                std::cout << "--------------------------\n";
+            }
             debug(std::cout << "Digested " << punted_pkts << " packets, Inserting: " << five_tuple << ", Step: " << step << ", Current occupancy: " << lookup_table.occupancy() << '\n';)
-            //std::cout << "Digested " << punted_pkts << " packets, Inserting: " << five_tuple << ", Step: " << step << ", Current occupancy: " << lookup_table.occupancy() << '\n';
             return false;
         }
 
-        void process_digest(inter_thread_digest_cpu& l1_digest_pkt,
+        void process_digest(const bool run_forever, inter_thread_digest_cpu& l1_digest_pkt,
                                 inter_thread_digest_cpu& l2_digest_pkt)
         {
 
@@ -105,7 +121,7 @@ class Controller
             {
                 // L1 digest processing
                 // Returns in case of a timeout
-                if (process_digest_from_cache(l1_digest_pkt, lookup_table_L1_, l1_policy_, l1_punted_pkts))
+                if (process_digest_from_cache(l1_digest_pkt, lookup_table_L1_, l1_policy_, l1_punted_pkts) || !run_forever)
                 {
                     break;
                 }

@@ -16,8 +16,23 @@ class SortedContainer {
 
     public:
         SortedContainer (const size_t size) :
-            data_(size),
+            //data_(size),
+            data_{},
             size_(size), occupancy_(0) {}
+
+        auto erase (typename std::vector<Type>::const_iterator it)
+        {
+            std::unique_lock lock(mutex_);
+            {
+            return data_.erase(it);
+            }
+        }
+
+        auto occupancy () const
+        {
+            std::unique_lock lock(mutex_);
+            return occupancy_;
+        }
 
         auto begin() {
             std::unique_lock lock(mutex_);
@@ -27,9 +42,28 @@ class SortedContainer {
             std::unique_lock lock(mutex_);
             return data_.end();
         }
+
+        auto begin() const {
+            std::unique_lock lock(mutex_);
+            return data_.begin();
+        }
+        auto end() const {
+            std::unique_lock lock(mutex_);
+            return data_.end();
+        }
+
         auto clear() {
             std::unique_lock lock(mutex_);
             return data_.clear();
+        }
+
+        auto& front() {
+            std::unique_lock lock(mutex_);
+            return data_.front();
+        }
+        auto& back() {
+            std::unique_lock lock(mutex_);
+            return data_.back();
         }
 
         auto& front() const {
@@ -47,6 +81,11 @@ class SortedContainer {
             return std::find_if(data_.begin(), data_.end(), c);
         }
 
+        auto& data() {
+            std::unique_lock lock(mutex_);
+            return data_;
+        }
+
         template<typename Sort>
         void sort (Sort&& s) {
             std::unique_lock lock(mutex_);
@@ -57,11 +96,24 @@ class SortedContainer {
         void insert (const Type& element, Sort&& s, Compare&& c) {
             std::unique_lock lock(mutex_);
             {
+                //std::cout << occupancy_ << '\n';
                 if (occupancy_ < size_) {
-                    data_[occupancy_++] = element;
+                    //if ((occupancy_ > 0) && data_.front() == Type{})
+                    //    data_.front() = element;
+                    //else
+                    //{
+                        occupancy_++;
+                        data_.push_back(element);
+                    //}
                 } else {
                     // Compare the back element with the new element
-                    data_.back() = c(data_.back(), element);
+                    //data_.back() = c(data_.back(), element);
+                    //if (data_.front() == Type{})
+                    //    data_.front() = element;
+                    //else
+                        data_.back() = element;
+                    //data_[occupancy_-1] = element;
+                    //std::cout << back().first << '\n';
                 }
             }
             // Sort using the predicate s
