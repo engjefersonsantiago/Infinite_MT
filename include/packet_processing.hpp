@@ -75,6 +75,7 @@ class PacketProcessing {
                     matched_packets_++;
                     matched_bytes_+=tuple_size_pair_.second;
                     debug(std::cout << "Matched " << tuple_size_pair_.first << '\n';)
+                    digest_cpu_.step++;
                 }
                 //std::cout << "Blocked after punt\n";    
 

@@ -132,8 +132,17 @@ struct ThreadCommunication {
 
     void push_message (Message&& message) {
         std::unique_lock lck {mmutex};
-        if constexpr (is_circ_buffer)
+        if constexpr (is_circ_buffer){
+
+            std::cout << "Front element before enqueue | FiveTuple: " << message.first << "\n";
+           
             mqueue.push_back(std::move(message));
+            // After Enqueuing 
+            for(const auto& message: mqueue){
+                std::cout << "After enqueue | FiveTuple: " << message.first << "\n";
+            }
+
+            }
         else   
             mqueue.push(std::move(message));
         ++step;
@@ -164,8 +173,10 @@ struct ThreadCommunication {
         }
         consumed = false;
         message = std::move(mqueue.front());
-        if constexpr (is_circ_buffer)
+        if constexpr (is_circ_buffer){
             mqueue.pop_front();
+            std::cout << "-- Message pulled from Queue -- \n";
+        }
         else
             mqueue.pop();
         lck.unlock();

@@ -64,14 +64,20 @@ class Controller
             auto [five_tuple, size] = tuple_size_pair_;
             ++punted_pkts;
 
+
+            std::cout << "-- Controller Processing a Message -- \n";
             // Exit in case of timeout
             if (timeout)
             { 
+                std::cout << "Timeout ! with Five Tuple: "<<five_tuple <<"\n";
+
                 return true; 
             }
 
             // Lookup Table full ? Identify a victim for eviction
             if (lookup_table.is_full()){
+
+                std::cout << "Finding a replacement victim with Five Tuple: "<<five_tuple <<"\n";
                 auto evicted_key = policy.select_replacement_victim(five_tuple,size);
                 auto ctrl_signal_removal = remove_entry_cache(lookup_table, evicted_key);
                 debug(std::cout << "Remove function: " << ctrl_signal_removal << '\n';)
