@@ -60,10 +60,12 @@ class Controller
                                         Policy& policy,
                                         std::size_t& punted_pkts)
         {
+
             auto [timeout, step] =  digest_pkt.pull_message(tuple_size_pair_, slowdown_factor_);
-            auto [five_tuple, size] = tuple_size_pair_;
+            auto [five_tuple, size_or_timestamp] = tuple_size_pair_;
             ++punted_pkts;
 
+            //std::cout << "------------- " << timeout << ", " << step << " ------------------\n";
             // Exit in case of timeout
             if (timeout)
             { 
@@ -71,23 +73,42 @@ class Controller
             }
 
             // Lookup Table full ? Identify a victim for eviction
-            if (lookup_table.is_full()){
-                auto evicted_key = policy.select_replacement_victim(five_tuple,size);
-                auto ctrl_signal_removal = remove_entry_cache(lookup_table, evicted_key);
-                debug(std::cout << "Remove function: " << ctrl_signal_removal << '\n';)
-                if (ctrl_signal_removal)
+            if (lookup_table.is_full() && (lookup_table.find(five_tuple) == lookup_table.end()))
+            {
+                if (lookup_table.find(five_tuple) == lookup_table.end())
                 {
-                    debug(std::cout << "-----------------------------------------------------------\n";)
-                    debug(std::cout << "Removing: " << evicted_key << "Current occupancy: " << lookup_table.occupancy() << '\n';)
-                    debug(std::cout << "-----------------------------------------------------------\n";)
-                } else
-                {
+                    auto evicted_key = policy.select_replacement_victim(five_tuple, size_or_timestamp);
+                    auto ctrl_signal_removal = remove_entry_cache(lookup_table, evicted_key);
+                    debug(std::cout << "Remove function: " << ctrl_signal_removal << '\n';)
+                    if (ctrl_signal_removal)
+                    {
+                        debug(std::cout << "-----------------------------------------------------------\n";)
+                        debug(std::cout << "Removing: " << evicted_key << "Current occupancy: " << lookup_table.occupancy() << '\n';)
+                        debug(std::cout << "-----------------------------------------------------------\n";)
+                    } else
+                    {
+                        std::cout << "-----------------------------------------------------------\n";
+                        std::cout << "Replacement policy failed." << evicted_key << " not present\n";
+                        std::cout << "-----------------------------------------------------------\n";
+                        int i;
+                        std::cin >> i;
+                    }
+                } else {
                     std::cout << "-----------------------------------------------------------\n";
-                    std::cout << "Replacement policy failed." << evicted_key << " not present\n";
+                    std::cout << "Entry already in the lookup table." << five_tuple << '\n';
                     std::cout << "-----------------------------------------------------------\n";
                 }
             } else {
-                policy.stats_table().get_stats().insert(std::make_pair(five_tuple, size), [](){}, [](){}); 
+                //
+                auto tuple_compare = [=](const auto& elem) {
+                    return elem.first == five_tuple;
+                };
+
+                auto found = policy.stats_table().get_stats().find_if(tuple_compare);
+                if (found ==  policy.stats_table().get_stats().end())
+                {
+                    policy.stats_table().get_stats().insert(std::make_pair(five_tuple, size_or_timestamp), [](){}, [](){}); 
+                }
             }
 
 

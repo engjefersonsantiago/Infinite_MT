@@ -203,11 +203,4 @@ class OPTCacheStats final : public CacheStats<Stats_Size, Stats_Value, OPTContai
         }
 };
 
-
-
-// LFU implemented as a streaming algorithm... we keep most active flows (more bandwidth) in cache
-// LRU might be implemented as a static circular buffer. Impact of duplicates??
-// Random can be implemented directed in the controller
-// LRFU can be implemented as a timed streaming algorithm...
-
 #endif

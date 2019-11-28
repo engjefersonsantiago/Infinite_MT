@@ -85,21 +85,15 @@ class LRUPolicy final: public Policier<lookup_table_t,stats_table_t>
                         policer_t(lookup_table, stats_table)
         {}
 
-        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t) override
+        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t timestamp) override
         {
-            auto value_sort = [](auto a, auto b) { return a.second < b.second; };
+            auto value_sort = [](auto a, auto b) { return a.second > b.second; };
             // Get the least recently used entry.
             // TUple + value associe
             // 1. Get stats
-
-            const auto tuple_to_remove = this->stats_table_.front();
-            const auto occ = this->stats_table_.get_stats().occupancy();
-            const auto replace = this->stats_table_.get_stats().begin() + occ/2;
-            this->stats_table_.front() = { five_tuple, replace->second };
-            this->stats_table_.get_stats().sort(value_sort);
-            std::cout << "Front Elem:" << this->stats_table_.front().first << '\n';
-            //this->stats_table_.front() = typename stats_table_t::stats_tuple{}; 
-            //this->stats_table_.front() = {FiveTuple{}, -1}; 
+            auto tuple_to_remove = this->stats_table_.front();
+            this->stats_table_.get_stats().data().front() = { five_tuple, timestamp };
+            std::make_heap(this->stats_table_.get_stats().begin(), this->stats_table_.get_stats().end(),value_sort); 
             return tuple_to_remove.first;
         }
 
@@ -108,19 +102,18 @@ class LRUPolicy final: public Policier<lookup_table_t,stats_table_t>
 // Opt Policy uses a ordered list of further seem flows
 // These flows need to be evicted
 template<typename lookup_table_t, typename  stats_table_t>
-//using OPTPolicy = LRUPolicy<lookup_table_t, stats_table_t>;
 class OPTPolicy final : public Policier<lookup_table_t,stats_table_t>
 {
     //TODO: validate when we enqueue that the current timestamp is also pushed. Need a global visibility on the timestamp (i.e. a scheduler!) 
     public:
         using policer_t =  Policier<lookup_table_t, stats_table_t>;
-        using fivetuple_history_t = std::vector<FiveTuple>;
+        using fivetuple_history_t = std::unordered_map<FiveTuple, std::pair<std::size_t, std::vector<std::size_t>>>;
 
         OPTPolicy(const lookup_table_t& lookup_table,
                         stats_table_t& stats_table, const std::string& file ) :
                         policer_t(lookup_table, stats_table),  file_name{file}
         {
-             build_five_tuple_history();
+             //build_five_tuple_history();
         }
         
         void set_current_packet_timestamp(const size_t& timestamp){
@@ -136,28 +129,33 @@ class OPTPolicy final : public Policier<lookup_table_t,stats_table_t>
 
             }
 
-
+            std::size_t pkts = 0;
             pcpp::RawPacket rawPacket;
             while (reader.getNextPacket(rawPacket)) {
                 pcpp::Packet parsedPacket(&rawPacket);
                 // Create Five Tuple 
                 const auto& [five_tuple,size] = create_five_tuple_from_packet(parsedPacket);
                 // Enqueue FiveTuple
-                five_tuple_history.push_back(five_tuple);
+                five_tuple_history[five_tuple].first = 0;
+                five_tuple_history[five_tuple].second.push_back(++pkts);
             }
 
-            size_t index{};
             std::cout << "------ Content of the five tuple history ------\n";
-            for(auto five_tuple: five_tuple_history){
-                std::cout << "Index : " << index << "Five Tuple: " << five_tuple << "\n";
-                index++;
+            debug(
+            for(auto five_tuple : five_tuple_history)
+            {
+                for(auto pkt_idx : five_tuple.second.second)
+                {
+                    std::cout << "Index : " << pkt_idx << " Five Tuple: " << five_tuple.first << "\n";
+                }
             }
+            )
             std::cout << "------ End Content of the five tuple history ------\n";
 
 
         }
 
-        virtual FiveTuple select_replacement_victim(FiveTuple , size_t timestamp) override
+        virtual FiveTuple select_replacement_victim(FiveTuple, size_t timestamp) override
         {
             size_t distance_to_farthest_fivetuple {};
             FiveTuple farthest_fivetuple{};
@@ -167,45 +165,68 @@ class OPTPolicy final : public Policier<lookup_table_t,stats_table_t>
             size_t number_keys_found {};
             // Remove any non-re referenced entry.
             // Read the five-tuple key stored in the lookup table
-            for( auto  key_val_tuple : this->lookup_table_ ){
-                const auto& [key,value] = key_val_tuple;
+            for(const auto& key_val_tuple : this->lookup_table_)
+            {
+                const auto& [key, value] = key_val_tuple;
                 //default_entry_removed = key;
                 //std::cout << "Key Evaluated : " << key << "\n";
                 // When is the next reference to this key?
+
+                auto history_it = five_tuple_history.find(key);
                 bool is_matched {false};
-                for(auto index_it = (current_packet_timestamp -1); index_it < five_tuple_history.size(); index_it++ ){
-                   //std::cout <<"Index : "<< index_it << "\n";
-                    if(five_tuple_history[index_it] == key){
-                        if((index_it - current_packet_timestamp) >= distance_to_farthest_fivetuple){
-                            distance_to_farthest_fivetuple = index_it - current_packet_timestamp;
-                            farthest_fivetuple = key;
-                            is_found =  true;
-
-                            //std::cout << "Seletec key: "<< key <<" Timestamp distance : "<< distance_to_farthest_fivetuple << "\n";
-
+                if (history_it != five_tuple_history.end())
+                {
+                    auto& [ini_idx, tuple_vec] = history_it->second;
+                    for (auto idx = ini_idx; idx < tuple_vec.size(); ++idx)
+                    {
+                        auto entry_to_remove = tuple_vec[idx];
+                        if (entry_to_remove < current_packet_timestamp)
+                        {
+                            continue;
+                            //history_it->second.erase(entry_to_remove);
+                        } else
+                        {
+                            ini_idx = idx;
+                            if((entry_to_remove - current_packet_timestamp) >= distance_to_farthest_fivetuple)
+                            {
+                                distance_to_farthest_fivetuple = entry_to_remove - current_packet_timestamp;
+                                farthest_fivetuple = key;
+                                is_found =  true;
+                            }
+                            number_keys_found++;
+                            is_matched = true;
+                            // Exit at the first reference.
+                            break;
                         }
-                        number_keys_found++;
-                        is_matched = true;
-                        // Exit at the first reference.
-                        break;
                     }
-                // 
                 }
                 // Key not found ! Can be removed !
                 if(!is_matched){
                     default_entry_removed = key;
-                    std::cout<< "Default Entry to be removed: " << default_entry_removed << "\n";
+                    debug(std::cout<< "Default Entry to be removed: " << default_entry_removed << "\n";)
                 }
-
             }
-        if (is_found && number_keys_found > 1){
-            return  farthest_fivetuple;   
+            if (is_found && number_keys_found > 1)
+            {
+                debug(
+                std::cout << "---------------------------\n";
+                std::cout << "Lookup table contents\n";
+                std::cout << "---------------------------\n";
+                for(const auto& [key, _] : this->lookup_table_)
+                {
+                    std::cout <<  key << '\n'; 
+                }
+                std::cout << "---------------------------\n";
+                std::cout << "Key to remove " << farthest_fivetuple << '\n';
+                std::cout << "---------------------------\n";
+                )
+                return farthest_fivetuple;   
 
-        }
-        else{
-            std::cout <<  "Return default entry \n";
-            return default_entry_removed;
-        }
+            } else
+            {
+                debug(std::cout <<  "Return default entry \n";)
+                return default_entry_removed;
+            }
 
         }
 
@@ -229,24 +250,39 @@ class LFUPolicy final: public Policier<lookup_table_t,stats_table_t>
                         policer_t(lookup_table, stats_table)
         {}
 
-        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t) override
+        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t pkt_size) override
         {
-            //auto value_sort = [](auto a, auto b) { return a.second < b.second; };
             auto value_sort = [](auto a, auto b) { return a.second > b.second; };
             // Get the least recently used entry.
             // TUple + value associe
             // 1. Get stats
-
             auto tuple_to_remove = this->stats_table_.front();
-            const auto occ = this->stats_table_.get_stats().occupancy();
-            const auto replace = this->stats_table_.get_stats().begin() + occ/2;
-            this->stats_table_.get_stats().data().front() = { five_tuple, replace->second };
-            std::make_heap(this->stats_table_.get_stats().begin(), this->stats_table_.get_stats().end(),value_sort); 
-            
-            //this->stats_table_.get_stats().sort(value_sort);
-            //this->stats_table_.front() = typename stats_table_t::stats_tuple{}; 
-            //this->stats_table_.front() = {FiveTuple{}, -1}; 
+            this->stats_table_.get_stats().data().front() = { five_tuple, tuple_to_remove.second  + pkt_size };
+            std::make_heap(this->stats_table_.get_stats().begin(), this->stats_table_.get_stats().end(), value_sort); 
+
+
+            debug(
+            std::cout << "---------------------------\n";
+            std::cout << "Lookup table contents\n";
+            std::cout << "---------------------------\n";
+            for(const auto& [key, _] : this->lookup_table_)
+            {
+                std::cout <<  key << '\n'; 
+            }
+            std::cout << "---------------------------\n";
+            std::cout << "Stats table contents\n";
+            std::cout << "---------------------------\n";
+            for(const auto& [key, val] : this->stats_table_.get_stats().data())
+            {
+                std::cout <<  key <<  ", " << val << '\n'; 
+            } 
+            std::cout << "---------------------------\n";
+            std::cout << "Key to remove " << tuple_to_remove.first << '\n';
+            std::cout << "---------------------------\n";
+            )
+
             return tuple_to_remove.first;
+
         }
 
 };

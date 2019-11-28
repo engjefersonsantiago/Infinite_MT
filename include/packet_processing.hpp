@@ -64,6 +64,7 @@ class PacketProcessing {
                     punt_pkt_to_next_lvl(out_comm_pkt_);
                     digest_pkt_to_ctrl(digest_cpu_, cache_type);
                 } else {
+                    digest_cpu_.step++;
                     matched_packets_++;
                     matched_bytes_+=tuple_size_pair_.second;
                     debug(std::cout << "Matched " << tuple_size_pair_.first << "Cache: " << ((lookup_table_.is_full()) ? "full" : "not full") << '\n';)
@@ -80,7 +81,7 @@ class PacketProcessing {
                 update_cache_stats(match, cache_type);
 
 
-                if (num_packets_%100000 == 0)
+                if (num_packets_%10000 == 0)
                 {
                     print_status();
                 }
@@ -112,11 +113,11 @@ class PacketProcessing {
 
         // TODO: Send to policer in case of a cache miss
         void digest_pkt_to_ctrl (inter_thread_digest_cpu& digest_pkt, CacheType cache_type) {
-            if(cache_type == CacheType::OPT){ 
-                digest_pkt.push_message({tuple_size_pair_.first,discrete_ts});
-
-            }
-            else{
+            if(cache_type == CacheType::OPT || cache_type == CacheType::LRU)
+            { 
+                digest_pkt.push_message({ tuple_size_pair_.first, discrete_ts });
+            } else
+            {
                 digest_pkt.push_message(tuple_size_pair_);
             }
         }
