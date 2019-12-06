@@ -90,8 +90,8 @@ class Controller
                         std::cout << "-----------------------------------------------------------\n";
                         std::cout << "Replacement policy failed." << evicted_key << " not present\n";
                         std::cout << "-----------------------------------------------------------\n";
-                        int i;
-                        std::cin >> i;
+                        //int i;
+                        //std::cin >> i;
                     }
                 } else {
                     std::cout << "-----------------------------------------------------------\n";

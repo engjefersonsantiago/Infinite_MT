@@ -1,4 +1,5 @@
 #include <random>
+#include <algorithm>
 
 #ifndef __POLICY__
 #define __POLICY__
@@ -87,15 +88,42 @@ class LRUPolicy final: public Policier<lookup_table_t,stats_table_t>
 
         virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t timestamp) override
         {
-            auto value_sort = [](auto a, auto b) { return a.second > b.second; };
+            auto value_sort = [](auto a, auto b) { return a.second < b.second; };
             // Get the least recently used entry.
             // TUple + value associe
             // 1. Get stats
-            auto tuple_to_remove = this->stats_table_.front();
-            this->stats_table_.get_stats().data().front() = { five_tuple, timestamp };
-            std::make_heap(this->stats_table_.get_stats().begin(), this->stats_table_.get_stats().end(),value_sort); 
-            return tuple_to_remove.first;
+            //auto tuple_to_remove = this->stats_table_.front();
+            //this->stats_table_.get_stats().data().front() = { five_tuple, tuple_to_remove.second  + pkt_size };
+            //std::make_heap(this->stats_table_.get_stats().begin(), this->stats_table_.get_stats().end(), value_sort); 
+
+            auto tuple_to_remove = std::min_element(this->stats_table_.get_stats().begin(), this->stats_table_.get_stats().end(), value_sort);
+            auto selected = tuple_to_remove->first;
+            *tuple_to_remove = { five_tuple, timestamp };
+
+            debug(
+            std::cout << "---------------------------\n";
+            std::cout << "Lookup table contents\n";
+            std::cout << "---------------------------\n";
+            for(const auto& [key, _] : this->lookup_table_)
+            {
+                std::cout <<  key << '\n'; 
+            }
+            std::cout << "---------------------------\n";
+            std::cout << "Stats table contents\n";
+            std::cout << "---------------------------\n";
+            for(const auto& [key, val] : this->stats_table_.get_stats().data())
+            {
+                std::cout <<  key <<  ", " << val << '\n'; 
+            } 
+            std::cout << "---------------------------\n";
+            std::cout << "Key to remove " << tuple_to_remove->first << '\n';
+            std::cout << "---------------------------\n";
+            )
+
+            return selected;
+
         }
+
 
 };
 
@@ -142,13 +170,13 @@ class OPTPolicy final : public Policier<lookup_table_t,stats_table_t>
 
             std::cout << "------ Content of the five tuple history ------\n";
             debug(
-            for(auto five_tuple : five_tuple_history)
-            {
-                for(auto pkt_idx : five_tuple.second.second)
-                {
-                    std::cout << "Index : " << pkt_idx << " Five Tuple: " << five_tuple.first << "\n";
-                }
-            }
+            //for(auto five_tuple : five_tuple_history)
+            //{
+            //    for(auto pkt_idx : five_tuple.second.second)
+            //    {
+            //        std::cout << "Index : " << pkt_idx << " Five Tuple: " << five_tuple.first << "\n";
+            //    }
+            //}
             )
             std::cout << "------ End Content of the five tuple history ------\n";
 
@@ -252,14 +280,17 @@ class LFUPolicy final: public Policier<lookup_table_t,stats_table_t>
 
         virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t pkt_size) override
         {
-            auto value_sort = [](auto a, auto b) { return a.second > b.second; };
+            auto value_sort = [](auto a, auto b) { return a.second < b.second; };
             // Get the least recently used entry.
             // TUple + value associe
             // 1. Get stats
-            auto tuple_to_remove = this->stats_table_.front();
-            this->stats_table_.get_stats().data().front() = { five_tuple, tuple_to_remove.second  + pkt_size };
-            std::make_heap(this->stats_table_.get_stats().begin(), this->stats_table_.get_stats().end(), value_sort); 
+            //auto tuple_to_remove = this->stats_table_.front();
+            //this->stats_table_.get_stats().data().front() = { five_tuple, tuple_to_remove.second  + pkt_size };
+            //std::make_heap(this->stats_table_.get_stats().begin(), this->stats_table_.get_stats().end(), value_sort); 
 
+            auto tuple_to_remove = std::min_element(this->stats_table_.get_stats().begin(), this->stats_table_.get_stats().end(), value_sort);
+            auto selected = tuple_to_remove->first;
+            *tuple_to_remove = { five_tuple, tuple_to_remove->second  + pkt_size };
 
             debug(
             std::cout << "---------------------------\n";
@@ -277,11 +308,11 @@ class LFUPolicy final: public Policier<lookup_table_t,stats_table_t>
                 std::cout <<  key <<  ", " << val << '\n'; 
             } 
             std::cout << "---------------------------\n";
-            std::cout << "Key to remove " << tuple_to_remove.first << '\n';
+            std::cout << "Key to remove " << tuple_to_remove->first << '\n';
             std::cout << "---------------------------\n";
             )
 
-            return tuple_to_remove.first;
+            return selected;
 
         }
 

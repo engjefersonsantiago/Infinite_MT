@@ -116,7 +116,7 @@ class LRUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LRUContai
                 {
                     this->stats_container_.insert(std::make_pair(five_tuple, updated_stats), value_sort, value_compare);
                 }
-                this->stats_container_.sort(value_sort);
+                //this->stats_container_.sort(value_sort);
                 //std::cout << "------------------------\n";
                 //for (auto i : this->stats_container_) {
                 //    std::cout << i.first << " , " << i.second << '\n';
@@ -145,8 +145,8 @@ class LFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LFUContai
                 auto tuple_compare = [=](const auto& elem) {
                     return elem.first == five_tuple;
                 };
-                //auto value_sort = [](auto a, auto b) { return a.second < b.second; };
-                auto value_sort = [](auto a, auto b) { return a.second > b.second; };
+                auto heap_value_sort = [](auto a, auto b) { return a.second > b.second; };
+                auto value_sort = [](auto a, auto b) { return a.second < b.second; };
                 auto value_compare = [](auto a, auto b) { return (a.second < b.second) ? a : b; };
 
                 auto found = this->stats_container_.find_if(tuple_compare);
@@ -164,7 +164,8 @@ class LFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LFUContai
                 //    std::cout << i.first << " , " << i.second << '\n';
                 //} 
 
-                std::make_heap(this->stats_container_.begin(), this->stats_container_.end(), value_sort); 
+                //std::make_heap(this->stats_container_.begin(), this->stats_container_.end(), heap_value_sort); 
+                //std::sort(this->stats_container_.begin(), this->stats_container_.end(), value_sort); 
                 
                 //std::cout << "------------------------\n";
                 //for (auto i : this->stats_container_) {

@@ -1,3 +1,4 @@
+#include <arpa/inet.h>
 #include "pkt_common.hpp"
 
 std::ostream& operator<<(std::ostream& os, const FiveTuple& five_tuple) {
@@ -22,12 +23,12 @@ tuple_pkt_size_pair_t create_five_tuple_from_packet (pcpp::Packet& parsedPacket)
         // Extract L4 fields to build the 5 tuple
         if (parsedPacket.isPacketOfType(pcpp::TCP)) {
             auto tcp_layer = parsedPacket.getLayerOfType<pcpp::TcpLayer>();
-            five_tuple.src_port = tcp_layer->getTcpHeader()->portSrc;
-            five_tuple.dst_port = tcp_layer->getTcpHeader()->portDst;
+            five_tuple.src_port = htons(tcp_layer->getTcpHeader()->portSrc);
+            five_tuple.dst_port = htons(tcp_layer->getTcpHeader()->portDst);
         } else {
             auto udp_layer = parsedPacket.getLayerOfType<pcpp::UdpLayer>();
-            five_tuple.src_port = udp_layer->getUdpHeader()->portSrc;
-            five_tuple.dst_port = udp_layer->getUdpHeader()->portDst;
+            five_tuple.src_port = htons(udp_layer->getUdpHeader()->portSrc);
+            five_tuple.dst_port = htons(udp_layer->getUdpHeader()->portDst);
         }
 
         // Extract L3 fields to build the remaining of the 5 tuple
@@ -38,13 +39,13 @@ tuple_pkt_size_pair_t create_five_tuple_from_packet (pcpp::Packet& parsedPacket)
             five_tuple.protocol = ipv6_layer->getIPv6Header()->nextHeader;
             // Because the IPv6 PayloadLength does not take into account the IPv6 header itself, we
             // add 40 bytes, the IPV6 header size, to measure the same amount of information over an IPv4 header.
-            pkt_size = ipv6_layer->getIPv6Header()->payloadLength + 40; // create a constant here
+            pkt_size = htons(ipv6_layer->getIPv6Header()->payloadLength) + 40; // create a constant here
         } else {
             auto ipv4_layer = parsedPacket.getLayerOfType<pcpp::IPv4Layer>();
             five_tuple.src_addr = ipv4_layer->getSrcIpAddress().toString();
             five_tuple.dst_addr = ipv4_layer->getDstIpAddress().toString();
             five_tuple.protocol = ipv4_layer->getIPv4Header()->protocol;
-            pkt_size = ipv4_layer->getIPv4Header()->totalLength;
+            pkt_size = htons(ipv4_layer->getIPv4Header()->totalLength);
         }
     }
     return std::make_pair(five_tuple, pkt_size);
