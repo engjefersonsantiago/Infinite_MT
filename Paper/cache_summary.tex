@@ -198,7 +198,7 @@ Thus, Weighted LFU (WLFU) differs from \textit{vanilla} LFU by considering the p
 Again, Optmistic LFU (OLFU) is a proposition to overcome the limitations of \textit{vanilla} LFU for flow caching.
 OLFU is a an LFU derivation that gives a chance for a cache promotion candidate to remain in cache regardless its \textit{actual} hit frequency.
 In case of a cache hit, OLFU behaves as the original LFU.
-Otherwise, instead of zeroing the frequency counter, the new cache entry takes control of the victim counter, as show in Algorithm~\ref{algo:olfu}.
+Otherwise, instead of re-initializing the frequency counter, the new cache entry takes control of the victim counter, as show in Algorithm~\ref{algo:olfu}.
 
 \begin{algorithm}[]
 \caption{OLFU policy}
@@ -239,7 +239,7 @@ Otherwise, instead of zeroing the frequency counter, the new cache entry takes c
 \paragraph{OWLFU}
 OWLFU is a combination of OLFU and WLFU aiming at increasing the efficiency of LFU-based policies.
 In case of a hit, OWLFU behaves as WLFU.
-Otherwise, OWLFU modifies OLFU by incrementing the current packet size to the victim frequency counter, as in in Algorithm~\ref{algo:owlfu}.
+Otherwise, OWLFU modifies OLFU by incrementing the current packet size to the victim frequency counter, as in Algorithm~\ref{algo:owlfu}.
 
 \begin{algorithm}[]
 \caption{OWLFU policy}
@@ -281,6 +281,7 @@ Otherwise, OWLFU modifies OLFU by incrementing the current packet size to the vi
 
 In this section, we present the cache performance for different policies and cache sizes.
 In addition, we have simulated the cache performance by emulating different cache policer reaction times.
+As performance metrics, we report the cache hit ratio and the traffic size weighted hit ratio.
 We use the term slowdown factor to refer to the policer reaction time.
 The slowdown factor is relative to the cache speed, i.e., a slowdown of 10 means that the cache policer is 10 times slower than a cache access.
 To enable reproducibility, we open-source our codes\footnote{\url{https://github.com/engjefersonsantiago/Infinite_MT}.}.
