@@ -1,0 +1,819 @@
+%%% ====================================================================
+%%%  BibTeX-file{
+%%%     author          = "Gerry Murray",
+%%%     version         = "1.2",
+%%%     date            = "2 April 2012",
+%%%     filename        = "acmsmall-sample-bibfile.bib",
+%%%     address         = "ACM, NY",
+%%%     email           = "murray at hq.acm.org",
+%%%     codetable       = "ISO/ASCII",
+%%%     keywords        = "ACM Reference Format, bibliography, citation, references",
+%%%     supported       = "yes",
+%%%     docstring       = "This BibTeX database file contains 'bibdata' entries
+%%%                        that 'match' the examples provided in the Specifications Document
+%%%                        AND, also, 'legacy'-type bibs. It should assist authors in 
+%%%                        choosing the 'correct' at-bibtype and necessary bib-fields
+%%%                        so as to obtain the appropriate ACM Reference Format output. 
+%%%			   It also contains many 'Standard Abbreviations'. "
+%%%  }
+%%% ====================================================================
+
+@IEEEtranBSTCTL{IEEEexample:BSTcontrol,
+CTLuse_forced_etal       = "yes",
+CTLmax_names_forced_etal = "2",
+CTLnames_show_etal       = "1" 
+}
+
+% Journals
+
+% First the Full Name is given, then the abbreviation used in the AMS Math
+% Reviews, with an indication if it could not be found there.
+% Note the 2nd overwrites the 1st, so swap them if you want the full name.
+
+ %{AMS}
+ @String{AMSTrans = "American Mathematical Society Translations" }
+ @String{AMSTrans = "Amer. Math. Soc. Transl." }
+ @String{BullAMS = "Bulletin of the American Mathematical Society" }
+ @String{BullAMS = "Bull. Amer. Math. Soc." }
+ @String{ProcAMS = "Proceedings of the American Mathematical Society" }
+ @String{ProcAMS = "Proc. Amer. Math. Soc." }
+ @String{TransAMS = "Transactions of the American Mathematical Society" }
+ @String{TransAMS = "Trans. Amer. Math. Soc." }
+
+ %ACM
+ @String{CACM = "Communications of the {ACM}" }
+ @String{CACM = "Commun. {ACM}" }
+ @String{CompServ = "Comput. Surveys" }
+ @String{JACM = "J. ACM" }
+ @String{ACMMathSoft = "{ACM} Transactions on Mathematical Software" }
+ @String{ACMMathSoft = "{ACM} Trans. Math. Software" }
+ @String{SIGNUM = "{ACM} {SIGNUM} Newsletter" }
+ @String{SIGNUM = "{ACM} {SIGNUM} Newslett." }
+
+ @String{AmerSocio = "American Journal of Sociology" }
+ @String{AmerStatAssoc = "Journal of the American Statistical Association" }
+ @String{AmerStatAssoc = "J. Amer. Statist. Assoc." }
+ @String{ApplMathComp = "Applied Mathematics and Computation" }
+ @String{ApplMathComp = "Appl. Math. Comput." }
+ @String{AmerMathMonthly = "American Mathematical Monthly" }
+ @String{AmerMathMonthly = "Amer. Math. Monthly" }
+ @String{BIT = "{BIT}" }
+ @String{BritStatPsych = "British Journal of Mathematical and Statistical
+          Psychology" }
+ @String{BritStatPsych = "Brit. J. Math. Statist. Psych." }
+ @String{CanMathBull = "Canadian Mathematical Bulletin" }
+ @String{CanMathBull = "Canad. Math. Bull." }
+ @String{CompApplMath = "Journal of Computational and Applied Mathematics" }
+ @String{CompApplMath = "J. Comput. Appl. Math." }
+ @String{CompPhys = "Journal of Computational Physics" }
+ @String{CompPhys = "J. Comput. Phys." }
+ @String{CompStruct = "Computers and Structures" }
+ @String{CompStruct = "Comput. \& Structures" }
+ @String{CompJour = "The Computer Journal" }
+ @String{CompJour = "Comput. J." }
+ @String{CompSysSci = "Journal of Computer and System Sciences" }
+ @String{CompSysSci = "J. Comput. System Sci." }
+ @String{Computing = "Computing" }
+ @String{ContempMath = "Contemporary Mathematics" }
+ @String{ContempMath = "Contemp. Math." }
+ @String{Crelle = "Crelle's Journal" }
+ @String{GiornaleMath = "Giornale di Mathematiche" }
+ @String{GiornaleMath = "Giorn. Mat." } % didn't find in AMS MR., ibid.
+
+ %IEEE
+ @String{Computer = "{IEEE} Computer" }
+ @String{IEEETransComp = "{IEEE} Transactions on Computers" }
+ @String{IEEETransComp = "{IEEE} Trans. Comput." }
+ @String{IEEETransAC = "{IEEE} Transactions on Automatic Control" }
+ @String{IEEETransAC = "{IEEE} Trans. Automat. Control" }
+ @String{IEEESpec = "{IEEE} Spectrum" } % didn't find in AMS MR
+ @String{ProcIEEE = "Proceedings of the {IEEE}" }
+ @String{ProcIEEE = "Proc. {IEEE}" } % didn't find in AMS MR
+ @String{IEEETransAeroElec = "{IEEE} Transactions on Aerospace and Electronic
+     Systems" }
+ @String{IEEETransAeroElec = "{IEEE} Trans. Aerospace Electron. Systems" }
+
+ @String{IMANumerAna = "{IMA} Journal of Numerical Analysis" }
+ @String{IMANumerAna = "{IMA} J. Numer. Anal." }
+ @String{InfProcLet = "Information Processing Letters" }
+ @String{InfProcLet = "Inform. Process. Lett." }
+ @String{InstMathApp = "Journal of the Institute of Mathematics and
+     its Applications" }
+ @String{InstMathApp = "J. Inst. Math. Appl." }
+ @String{IntControl = "International Journal of Control" }
+ @String{IntControl = "Internat. J. Control" }
+ @String{IntNumerEng = "International Journal for Numerical Methods in
+     Engineering" }
+ @String{IntNumerEng = "Internat. J. Numer. Methods Engrg." }
+ @String{IntSuper = "International Journal of Supercomputing Applications" }
+ @String{IntSuper = "Internat. J. Supercomputing Applic." } % didn't find
+%% in AMS MR
+ @String{Kibernetika = "Kibernetika" }
+ @String{JResNatBurStand = "Journal of Research of the National Bureau
+     of Standards" }
+ @String{JResNatBurStand = "J. Res. Nat. Bur. Standards" }
+ @String{LinAlgApp = "Linear Algebra and its Applications" }
+ @String{LinAlgApp = "Linear Algebra Appl." }
+ @String{MathAnaAppl = "Journal of Mathematical Analysis and Applications" }
+ @String{MathAnaAppl = "J. Math. Anal. Appl." }
+ @String{MathAnnalen = "Mathematische Annalen" }
+ @String{MathAnnalen = "Math. Ann." }
+ @String{MathPhys = "Journal of Mathematical Physics" }
+ @String{MathPhys = "J. Math. Phys." }
+ @String{MathComp = "Mathematics of Computation" }
+ @String{MathComp = "Math. Comp." }
+ @String{MathScand = "Mathematica Scandinavica" }
+ @String{MathScand = "Math. Scand." }
+ @String{TablesAidsComp = "Mathematical Tables and Other Aids to Computation" }
+ @String{TablesAidsComp = "Math. Tables Aids Comput." }
+ @String{NumerMath = "Numerische Mathematik" }
+ @String{NumerMath = "Numer. Math." }
+ @String{PacificMath = "Pacific Journal of Mathematics" }
+ @String{PacificMath = "Pacific J. Math." }
+ @String{ParDistComp = "Journal of Parallel and Distributed Computing" }
+ @String{ParDistComp = "J. Parallel and Distrib. Comput." } % didn't find
+%% in AMS MR
+ @String{ParComputing = "Parallel Computing" }
+ @String{ParComputing = "Parallel Comput." }
+ @String{PhilMag = "Philosophical Magazine" }
+ @String{PhilMag = "Philos. Mag." }
+ @String{ProcNAS = "Proceedings of the National Academy of Sciences
+                    of the USA" }
+ @String{ProcNAS = "Proc. Nat. Acad. Sci. U. S. A." }
+ @String{Psychometrika = "Psychometrika" }
+ @String{QuartMath = "Quarterly Journal of Mathematics, Oxford, Series (2)" }
+ @String{QuartMath = "Quart. J. Math. Oxford Ser. (2)" }
+ @String{QuartApplMath = "Quarterly of Applied Mathematics" }
+ @String{QuartApplMath = "Quart. Appl. Math." }
+ @String{RevueInstStat = "Review of the International Statisical Institute" }
+ @String{RevueInstStat = "Rev. Inst. Internat. Statist." }
+
+ %SIAM
+ @String{JSIAM = "Journal of the Society for Industrial and Applied
+     Mathematics" }
+ @String{JSIAM = "J. Soc. Indust. Appl. Math." }
+ @String{JSIAMB = "Journal of the Society for Industrial and Applied
+     Mathematics, Series B, Numerical Analysis" }
+ @String{JSIAMB = "J. Soc. Indust. Appl. Math. Ser. B Numer. Anal." }
+ @String{SIAMAlgMeth = "{SIAM} Journal on Algebraic and Discrete Methods" }
+ @String{SIAMAlgMeth = "{SIAM} J. Algebraic Discrete Methods" }
+ @String{SIAMAppMath = "{SIAM} Journal on Applied Mathematics" }
+ @String{SIAMAppMath = "{SIAM} J. Appl. Math." }
+ @String{SIAMComp = "{SIAM} Journal on Computing" }
+ @String{SIAMComp = "{SIAM} J. Comput." }
+ @String{SIAMMatrix = "{SIAM} Journal on Matrix Analysis and Applications" }
+ @String{SIAMMatrix = "{SIAM} J. Matrix Anal. Appl." }
+ @String{SIAMNumAnal = "{SIAM} Journal on Numerical Analysis" }
+ @String{SIAMNumAnal = "{SIAM} J. Numer. Anal." }
+ @String{SIAMReview = "{SIAM} Review" }
+ @String{SIAMReview = "{SIAM} Rev." }
+ @String{SIAMSciStat = "{SIAM} Journal on Scientific and Statistical
+     Computing" }
+ @String{SIAMSciStat = "{SIAM} J. Sci. Statist. Comput." }
+
+ @String{SoftPracExp = "Software Practice and Experience" }
+ @String{SoftPracExp = "Software Prac. Experience" } % didn't find in AMS MR
+ @String{StatScience = "Statistical Science" }
+ @String{StatScience = "Statist. Sci." }
+ @String{Techno = "Technometrics" }
+ @String{USSRCompMathPhys = "{USSR} Computational Mathematics and Mathematical
+     Physics" }
+ @String{USSRCompMathPhys = "{U. S. S. R.} Comput. Math. and Math. Phys." }
+ @String{VLSICompSys = "Journal of {VLSI} and Computer Systems" }
+ @String{VLSICompSys = "J. {VLSI} Comput. Syst." }
+ @String{ZAngewMathMech = "Zeitschrift fur Angewandte Mathematik und
+     Mechanik" }
+ @String{ZAngewMathMech = "Z. Angew. Math. Mech." }
+ @String{ZAngewMathPhys = "Zeitschrift fur Angewandte Mathematik und Physik" }
+ @String{ZAngewMathPhys = "Z. Angew. Math. Phys." }
+
+% Publishers % ================================================= |
+
+ @String{Academic = "Academic Press" }
+ @String{ACMPress = "{ACM} Press" }
+ @String{AdamHilger = "Adam Hilger" }
+ @String{AddisonWesley = "Addison-Wesley" }
+ @String{AllynBacon = "Allyn and Bacon" }
+ @String{AMS = "American Mathematical Society" }
+ @String{Birkhauser = "Birkha{\"u}ser" }
+ @String{CambridgePress = "Cambridge University Press" }
+ @String{Chelsea = "Chelsea" }
+ @String{ClaredonPress = "Claredon Press" }
+ @String{DoverPub = "Dover Publications" }
+ @String{Eyolles = "Eyolles" }
+ @String{HoltRinehartWinston = "Holt, Rinehart and Winston" }
+ @String{Interscience = "Interscience" }
+ @String{JohnsHopkinsPress = "The Johns Hopkins University Press" }
+ @String{JohnWileySons = "John Wiley and Sons" }
+ @String{Macmillan = "Macmillan" }
+ @String{MathWorks = "The Math Works Inc." }
+ @String{McGrawHill = "McGraw-Hill" }
+ @String{NatBurStd = "National Bureau of Standards" }
+ @String{NorthHolland = "North-Holland" }
+ @String{OxfordPress = "Oxford University Press" }  %address Oxford or London?
+ @String{PergamonPress = "Pergamon Press" }
+ @String{PlenumPress = "Plenum Press" }
+ @String{PrenticeHall = "Prentice-Hall" }
+ @String{SIAMPub = "{SIAM} Publications" }
+ @String{Springer = "Springer-Verlag" }
+ @String{TexasPress = "University of Texas Press" }
+ @String{VanNostrand = "Van Nostrand" }
+ @String{WHFreeman = "W. H. Freeman and Co." }
+
+
+%Entries
+
+% Intro
+%SDN
+@misc{sdn:12,
+  author = {{The Open Networking Foundation}},
+  month = {April.},
+  title = {{Software-Defined Networking: The New Norm for Networks}},
+  year = 2012
+}
+
+% Openflow
+@misc{of:14,
+  author = {{The Open Networking Foundation}},
+  month = {Dec.},
+  title = {{OpenFlow Switch Specification}},
+  year = 2014
+}
+
+@misc{tofino:18,
+  author = {{Barefoot Networks}},
+  title = {{Barefoot Tofino}},
+  howpublished = {\url{https://www.barefootnetworks.com/products/brief-tofino/}},
+  year = 2018
+}
+
+
+
+@ARTICLE{Foster:13, 
+author={N. Foster and A. Guha and M. Reitblatt and A. Story and M. J. Freedman and N. P. Katta and C. Monsanto and J. Reich and J. Rexford and C. Schlesinger and D. Walker and R. Harrison}, 
+journal={IEEE Communications Magazine}, 
+title={{Languages for software-defined networks}}, 
+year={2013}, 
+volume={51}, 
+number={2}, 
+pages={128-134}, 
+keywords={application program interfaces;computer network management;high level languages;protocols;software radio;telecommunication traffic;Frenetic project;OpenFlow controllers;OpenFlow protocol;SDN;access control;backbone networks;computer networks;data center;higher-level abstractions;intuitive abstractions;low-level API;network management;network traffic monitoring;networking devices;packet forwarding policies;proprietary configuration interfaces;server load balancing;software-defined networks;switch hardware;Control systems;IP networks;Languages;Monitoring;Ports (Computers);Repeaters;Runtime;Software radio}, 
+doi={10.1109/MCOM.2013.6461197}, 
+ISSN={0163-6804}, 
+month={February}
+}
+
+% P4
+@article{Bosshart:14,
+ author = {Bosshart, Pat and Daly, Dan and Gibb, Glen and Izzard, Martin and McKeown, Nick and Rexford, Jennifer and Schlesinger, Cole and Talayco, Dan and Vahdat, Amin and Varghese, George and Walker, David},
+ title = {{P4: Programming Protocol-independent Packet Processors}},
+ journal = {SIGCOMM Comput. Commun. Rev.},
+ issue_date = {July 2014},
+ volume = {44},
+ number = {3},
+ month = jul,
+ year = {2014},
+ issn = {0146-4833},
+ pages = {87--95},
+ numpages = {9},
+ url = {http://doi.acm.org/10.1145/2656877.2656890},
+ doi = {10.1145/2656877.2656890},
+ acmid = {2656890},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {p4, protocol-independent, reconfigurability, sdn}
+} 
+
+@article{Budiu:17,
+ author = {Budiu, Mihai and Dodd, Chris},
+ title = {The P416 Programming Language},
+ journal = {SIGOPS Oper. Syst. Rev.},
+ issue_date = {August 2017},
+ volume = {51},
+ number = {1},
+ month = sep,
+ year = {2017},
+ issn = {0163-5980},
+ pages = {5--14},
+ numpages = {10},
+ url = {http://doi.acm.org/10.1145/3139645.3139648},
+ doi = {10.1145/3139645.3139648},
+ acmid = {3139648},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+}
+
+% POF
+@inproceedings{Song:13,
+ author = {Song, Haoyu},
+ title = {{Protocol-oblivious Forwarding: Unleash the Power of SDN Through a Future-proof Forwarding Plane}},
+ booktitle = {Proceedings of the Second ACM SIGCOMM Workshop on Hot Topics in Software Defined Networking},
+ series = {HotSDN '13},
+ year = {2013},
+ isbn = {978-1-4503-2178-5},
+ location = {Hong Kong, China},
+ pages = {127--132},
+ numpages = {6},
+ url = {http://doi.acm.org/10.1145/2491185.2491190},
+ doi = {10.1145/2491185.2491190},
+ acmid = {2491190},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {forwarding plane, openflow, pof, sdn}
+} 
+
+% RMT
+@article{Bosshart:13,
+ author = {Bosshart, Pat and Gibb, Glen and Kim, Hun-Seok and Varghese, George and McKeown, Nick and Izzard, Martin and Mujica, Fernando and Horowitz, Mark},
+ title = {{Forwarding Metamorphosis: Fast Programmable Match-action Processing in Hardware for SDN}},
+ journal = {SIGCOMM Comput. Commun. Rev.},
+ issue_date = {October 2013},
+ volume = {43},
+ number = {4},
+ month = aug,
+ year = {2013},
+ issn = {0146-4833},
+ pages = {99--110},
+ numpages = {12},
+ url = {http://doi.acm.org/10.1145/2534169.2486011},
+ doi = {10.1145/2534169.2486011},
+ acmid = {2486011},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {reconfigurable match tables, rmt model, sdn}
+} 
+
+% Related work
+@inproceedings{casado:2008,
+  title={Rethinking Packet Forwarding Hardware.},
+  author={Casado, Martin and Koponen, Teemu and Moon, Daekyeong and Shenker, Scott},
+  organization={Citeseer}
+}
+
+
+@inproceedings{Lockwood:2007,
+ author = {Lockwood, John W. and McKeown, Nick and Watson, Greg and Gibb, Glen and Hartke, Paul and Naous, Jad and Raghuraman, Ramanan and Luo, Jianying},
+ title = {{NetFPGA--An Open Platform for Gigabit-Rate Network Switching and Routing}},
+ booktitle = {Proceedings of the 2007 IEEE International Conference on Microelectronic Systems Education},
+ series = {MSE '07},
+ year = {2007},
+ isbn = {0-7695-2849-X},
+ pages = {160--161},
+ numpages = {2},
+ url = {http://dx.doi.org/10.1109/MSE.2007.69},
+ doi = {10.1109/MSE.2007.69},
+ acmid = {1262788},
+ publisher = {IEEE Computer Society},
+ address = {Washington, DC, USA}
+} 
+
+
+@INPROCEEDINGS{Zhou:14, 
+author={S. Zhou and W. Jiang and V. K. Prasanna}, 
+booktitle={2014 IEEE 33rd International Performance Computing and Communications Conference (IPCCC)}, 
+title={{A flexible and scalable high-performance OpenFlow switch on heterogeneous SoC platforms}}, 
+year={2014}, 
+pages={1-8}, 
+keywords={field programmable gate arrays;hardware-software codesign;protocols;software defined networking;system-on-chip;ARM processor core;FPGA;OpenFlow protocol;SDN;Xilinx Zynq ZC706 board;field programmable gate array;hardware-software codesign approach;heterogeneous SoC platform;high-performance OpenFlow switch;next generation Internet provision;software defined networking;software-based controller;system-on-chip;Computer architecture;Field programmable gate arrays;Ports (Computers);Radiation detectors;Random access memory;Switches;System-on-chip;Heterogeneous SoC;OpenFlow Switch;Software Defined Networking}, 
+doi={10.1109/PCCC.2014.7017053}, 
+ISSN={1097-2641}, 
+month={Dec}
+}
+
+@ARTICLE{Brebner:14, 
+author={G. Brebner and W. Jiang}, 
+journal={IEEE Micro}, 
+title={{High-Speed Packet Processing using Reconfigurable Computing}}, 
+year={2014}, 
+volume={34}, 
+number={1}, 
+pages={8-18}, 
+keywords={field programmable gate arrays;firmware;object-oriented methods;reconfigurable architectures;FPGA technology;PX;customized computing architecture;declarative language;domain-specific packet-processing language;dynamical programmability;firmware updates;high-performance reconfigurable-computing architectures;high-speed packet processing;object-oriented semantics;packet-processing system;tool chain;Computer architecture;Computer languages;Data communication;Field programmable gate arrays;Packet switching;Program processors;Reconfigurable architectures;OpenFlow;PX;data communications;declarative language;domain-specific architectures;packet processing;programming environments;reconfigurable hardware}, 
+doi={10.1109/MM.2014.19}, 
+ISSN={0272-1732}, 
+month={Jan}
+}
+
+@article{wang:2017,
+ author = {Wang, Han and Soul{\'e}, Robert and Dang, Huynh Tu and Lee, Ki Suh and Shrivastav, Vishal and Foster, Nate and Weatherspoon, Hakim},
+ title = {{P4FPGA: A Rapid Prototyping Framework for P4}},
+ booktitle = {Proceedings of the Symposium on SDN Research},
+ series = {SOSR '17},
+ year = {2017},
+ isbn = {978-1-4503-4947-5},
+ location = {Santa Clara, CA, USA},
+ pages = {122--135},
+ numpages = {14},
+ url = {http://doi.acm.org/10.1145/3050220.3050234},
+ doi = {10.1145/3050220.3050234},
+ acmid = {3050234},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {FPGA, High-level synthesis, P4},
+} 
+
+%Method
+@misc{p4c_git:16,
+  author = {{The P4 Language Consortium}},
+  title = {{P4 Compiler}},
+  year = {2017},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/p4lang/p4c}}
+}
+
+@misc{Xilinxp42sdnet,
+  author = {{Xilinx Inc.}},
+  title = {{P4-SDNet Translator User Guide}},
+  year = {2017},
+  howpublished = {\url{https://www.xilinx.com/support/documentation/sw\_manuals/xilinx2017\_1/ug1252-p4-sdnet-translator.pdf}}
+}
+
+@misc{p4_runtime:18,
+  author = {{The P4 Language Consortium}},
+  title = {{P4Runtime}},
+  year = {2018},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/p4lang/PI}}
+}
+ 
+% Problem
+@INPROCEEDINGS{p4eu:18,
+author={J. Santiago da Silva and T. Stimpfling and T. Luinaud and B. Fradj and B. Boughzala},
+booktitle={2018 IEEE 26th International Conference on Network Protocols (ICNP)},
+title={{One for All, All for One: A Heterogeneous Data Plane for Flexible P4 Processing}},
+year={2018},
+volume={},
+number={},
+pages={440-441},
+keywords={application specific integrated circuits;field programmable gate arrays;heterogeneous data plane;programmable ASIC;user-defined processing modules;heterogeneous P4 programmable data plane;emulated ASIC match-table capacity;FPGA;flexible P4 processing;simplified L2 switch;P4 extern;Field programmable gate arrays;Hardware;Pipelines;Protocols;Switches;Couplings;Throughput;P4, Heterogeneous systems, FPGA},
+doi={10.1109/ICNP.2018.00063},
+ISSN={1092-1648},
+month={Sep.},}
+
+@misc{IntelFPGA:18,
+  author = {{Intel Inc.}},
+  title = {{Intel\textsuperscript{\textregistered} Programmable Acceleration Card with Intel Stratix\textsuperscript{\textregistered} 10 SX FPGA}},
+  year = {2018},
+  howpublished = {\url{https://www.intel.com/content/www/us/en/programmable/products/boards\_and\_kits/dev-kits/altera/acceleration-card-stratix-10-sx.html}}
+}
+
+@misc{XilinxFPGA:18,
+  author = {{Xilinx Inc.}},
+  title = {{Xilinx Virtex UltraScale+ FPGA VCU118 Evaluation Kit}},
+  year = {2018},
+  howpublished = {\url{https://www.xilinx.com/products/boards-and-kits/1-ivt2yg.html}}
+}
+
+@article{Armbrust:2010,
+ author = {Armbrust, Michael and Fox, Armando and Griffith, Rean and Joseph, Anthony D. and Katz, Randy and Konwinski, Andy and Lee, Gunho and Patterson, David and Rabkin, Ariel and Stoica, Ion and Zaharia, Matei},
+ title = {A View of Cloud Computing},
+ journal = {Commun. ACM},
+ issue_date = {April 2010},
+ volume = {53},
+ number = {4},
+ month = apr,
+ year = {2010},
+ issn = {0001-0782},
+ pages = {50--58},
+ numpages = {9},
+ url = {http://doi.acm.org/10.1145/1721654.1721672},
+ doi = {10.1145/1721654.1721672},
+ acmid = {1721672},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+} 
+
+
+
+% Hitters
+%Sketch
+@article{Cormode:05,
+title = "An improved data stream summary: the count-min sketch and its applications",
+journal = "Journal of Algorithms",
+volume = "55",
+number = "1",
+pages = "58 - 75",
+year = "2005",
+issn = "0196-6774",
+doi = "https://doi.org/10.1016/j.jalgor.2003.12.001",
+url = "http://www.sciencedirect.com/science/article/pii/S0196677403001913",
+author = "Graham Cormode and S. Muthukrishnan"
+}
+
+@article{Cormode:08,
+ author = {Cormode, Graham and Hadjieleftheriou, Marios},
+ title = {Finding Frequent Items in Data Streams},
+ journal = {Proc. VLDB Endow.},
+ issue_date = {August 2008},
+ volume = {1},
+ number = {2},
+ month = aug,
+ year = {2008},
+ issn = {2150-8097},
+ pages = {1530--1541},
+ numpages = {12},
+ url = {http://dx.doi.org/10.14778/1454159.1454225},
+ doi = {10.14778/1454159.1454225},
+ acmid = {1454225},
+ publisher = {VLDB Endowment},
+} 
+
+@inproceedings{Liu:16,
+ author = {Liu, Zaoxing and Manousis, Antonis and Vorsanger, Gregory and Sekar, Vyas and Braverman, Vladimir},
+ title = {One Sketch to Rule Them All: Rethinking Network Flow Monitoring with UnivMon},
+ booktitle = {Proceedings of the 2016 ACM SIGCOMM Conference},
+ series = {SIGCOMM '16},
+ year = {2016},
+ isbn = {978-1-4503-4193-6},
+ location = {Florianopolis, Brazil},
+ pages = {101--114},
+ numpages = {14},
+ url = {http://doi.acm.org/10.1145/2934872.2934906},
+ doi = {10.1145/2934872.2934906},
+ acmid = {2934906},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {Flow Monitoring, Sketching, Streaming Algorithm},
+} 
+
+% Space Saving
+
+@inproceedings{Metwally:05,
+ author = {Metwally, Ahmed and Agrawal, Divyakant and El Abbadi, Amr},
+ title = {Efficient Computation of Frequent and Top-k Elements in Data Streams},
+ booktitle = {Proceedings of the 10th International Conference on Database Theory},
+ series = {ICDT'05},
+ year = {2005},
+ isbn = {3-540-24288-0, 978-3-540-24288-8},
+ location = {Edinburgh, UK},
+ pages = {398--412},
+ numpages = {15},
+ url = {http://dx.doi.org/10.1007/978-3-540-30570-5_27},
+ doi = {10.1007/978-3-540-30570-5_27},
+ acmid = {2131596},
+ publisher = {Springer-Verlag},
+ address = {Berlin, Heidelberg},
+} 
+
+@inproceedings{Sivaraman:17,
+ author = {Sivaraman, Vibhaalakshmi and Narayana, Srinivas and Rottenstreich, Ori and Muthukrishnan, S. and Rexford, Jennifer},
+ title = {Heavy-Hitter Detection Entirely in the Data Plane},
+ booktitle = {Proceedings of the Symposium on SDN Research},
+ series = {SOSR '17},
+ year = {2017},
+ isbn = {978-1-4503-4947-5},
+ location = {Santa Clara, CA, USA},
+ pages = {164--176},
+ numpages = {13},
+ url = {http://doi.acm.org/10.1145/3050220.3063772},
+ doi = {10.1145/3050220.3063772},
+ acmid = {3063772},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {Network Algorithms, Network Monitoring, Programmable Networks, Software-Defined Networks},
+} 
+
+@inproceedings{Grigoryan:18,
+ author = {Grigoryan, Garegin and Liu, Yaoqing},
+ title = {PFCA: A Programmable FIB Caching Architecture},
+ booktitle = {Proceedings of the 2018 Symposium on Architectures for Networking and Communications Systems},
+ series = {ANCS '18},
+ year = {2018},
+ isbn = {978-1-4503-5902-3},
+ location = {Ithaca, New York},
+ pages = {97--103},
+ numpages = {7},
+ url = {http://doi.acm.org/10.1145/3230718.3230721},
+ doi = {10.1145/3230718.3230721},
+ acmid = {3230721},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {FIB caching, TCAM overflow, routing},
+} 
+
+% FPGA
+@article{Tong:16,
+ author = {Tong, Da and Prasanna, Viktor},
+ title = {High Throughput Sketch Based Online Heavy Hitter Detection on FPGA},
+ journal = {SIGARCH Comput. Archit. News},
+ issue_date = {September 2015},
+ volume = {43},
+ number = {4},
+ month = apr,
+ year = {2016},
+ issn = {0163-5964},
+ pages = {70--75},
+ numpages = {6},
+ url = {http://doi.acm.org/10.1145/2927964.2927977},
+ doi = {10.1145/2927964.2927977},
+ acmid = {2927977},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {Heavy hitter detection, Sketch data structure, Streaming algorithm},
+} 
+
+
+@INPROCEEDINGS{Tong:13,
+author={D. Tong and V. Prasanna},
+booktitle={2013 International Conference on Reconfigurable Computing and FPGAs (ReConFig)},
+title={Online heavy hitter detector on FPGA},
+year={2013},
+volume={},
+number={},
+pages={1-6},
+keywords={computer centres;computer network management;computer network security;concurrency control;field programmable gate arrays;Internet;parallel architectures;pipeline processing;on-chip BRAM based implementation;concurrent flows;run-time parameters;data hazard handling;application specific data forwarding mechanism;pipelined architecture;bandwidth consumption;data stream;data centers;Internet;network security applications;network management applications;FPGA;online heavy hitter detector;Pipelines;Clocks;Radiation detectors;Computer architecture;Sorting;Bandwidth;Shift registers},
+doi={10.1109/ReConFig.2013.6732297},
+ISSN={2325-6532},
+month={Dec},}
+
+
+@INPROCEEDINGS{Zazo:17,
+author={J. F. Zazo and S. Lopez-Buedo and M. Ruiz and G. Sutter},
+booktitle={2017 International Conference on ReConFigurable Computing and FPGAs (ReConFig)},
+title={A single-FPGA architecture for detecting heavy hitters in 100 Gbit/s ethernet links},
+year={2017},
+volume={},
+number={},
+pages={1-6},
+keywords={field programmable gate arrays;local area networks;telecommunication traffic;single-FPGA architecture;ethernet links;network traffic monitoring;heavy hitter detector;network packet parser;network link;integrated 100G Ethernet Subsystem;Xilinx Ultrascale devices;VCU108 evaluation kit;Count Sketch algorithm;priority list;bit rate 100.0 Gbit/s;memory size 215.0 Byte;Estimation;Monitoring;Hardware;IP networks;Algorithm design and analysis;Software;Memory management},
+doi={10.1109/RECONFIG.2017.8279770},
+ISSN={},
+month={Dec},}
+
+
+% limitations
+@article{Degermark:1997,
+ author = {Degermark, Mikael and Brodnik, Andrej and Carlsson, Svante and Pink, Stephen},
+ title = {Small Forwarding Tables for Fast Routing Lookups},
+ journal = {SIGCOMM Comput. Commun. Rev.},
+ issue_date = {Oct. 1997},
+ volume = {27},
+ number = {4},
+ month = oct,
+ year = {1997},
+ issn = {0146-4833},
+ pages = {3--14},
+ numpages = {12},
+ url = {http://doi.acm.org/10.1145/263109.263133},
+ doi = {10.1145/263109.263133},
+ acmid = {263133},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+} 
+
+@inproceedings{Katta:2014,
+ author = {Katta, Naga and Alipourfard, Omid and Rexford, Jennifer and Walker, David},
+ title = {Infinite CacheFlow in Software-defined Networks},
+ booktitle = {Proceedings of the Third Workshop on Hot Topics in Software Defined Networking},
+ series = {HotSDN '14},
+ year = {2014},
+ isbn = {978-1-4503-2989-7},
+ location = {Chicago, Illinois, USA},
+ pages = {175--180},
+ numpages = {6},
+ url = {http://doi.acm.org/10.1145/2620728.2620734},
+ doi = {10.1145/2620728.2620734},
+ acmid = {2620734},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {commodity switch, openflow, rule caching, software-defined networking, tcam},
+}
+
+@inproceedings{Katta:2016,
+ author = {Katta, Naga and Alipourfard, Omid and Rexford, Jennifer and Walker, David},
+ title = {CacheFlow: Dependency-Aware Rule-Caching for Software-Defined Networks},
+ booktitle = {Proceedings of the Symposium on SDN Research},
+ series = {SOSR '16},
+ year = {2016},
+ isbn = {978-1-4503-4211-7},
+ location = {Santa Clara, CA, USA},
+ pages = {6:1--6:12},
+ articleno = {6},
+ numpages = {12},
+ url = {http://doi.acm.org/10.1145/2890955.2890969},
+ doi = {10.1145/2890955.2890969},
+ acmid = {2890969},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {Commodity Switch, OpenFlow, Rule Caching, Software-Defined Networking, TCAM},
+} 
+
+
+%Experimental results
+% dataset
+@inproceedings{Roy:15,
+  author = {Roy, Arjun and Zeng, Hongyi and Bagga, Jasmeet and Porter, George and Snoeren, Alex C.},
+  title = {Inside the Social Network's (Datacenter) Network},
+  booktitle = {Proceedings of the 2015 ACM Conference on Special Interest Group on Data Communication},
+  series = {SIGCOMM '15},
+  year = {2015},
+  isbn = {978-1-4503-3542-3},
+  location = {London, United Kingdom},
+  pages = {123--137},
+  numpages = {15},
+  url = {http://doi.acm.org/10.1145/2785956.2787472},
+  doi = {10.1145/2785956.2787472},
+  acmid = {2787472},
+  publisher = {ACM},
+  address = {New York, NY, USA},
+  keywords = {datacenter traffic patterns},
+}
+
+% Flow caching
+
+@inproceedings{Pfaff:15,
+author = {Ben Pfaff and Justin Pettit and Teemu Koponen and Ethan Jackson and Andy Zhou and Jarno Rajahalme and Jesse Gross and Alex Wang and Joe Stringer and Pravin Shelar and Keith Amidon and Martin Casado},
+title = {The Design and Implementation of Open vSwitch},
+booktitle = {12th {USENIX} Symposium on Networked Systems Design and Implementation ({NSDI} 15)},
+year = {2015},
+isbn = {978-1-931971-218},
+address = {Oakland, CA},
+pages = {117--130},
+url = {https://www.usenix.org/conference/nsdi15/technical-sessions/presentation/pfaff},
+publisher = {{USENIX} Association},
+}
+
+@INPROCEEDINGS{Zhang:2018,
+author={C. Zhang and J. Bi and Y. Zhou and K. Zhang and Z. Ma},
+booktitle={2018 IEEE Symposium on Computers and Communications (ISCC)},
+title={B-Cache: A Behavior-Level Caching Framework for the Programmable Data Plane},
+year={2018},
+volume={},
+number={},
+pages={00084-00090},
+keywords={cache storage;program compilers;specification languages;network performance enhancement;P4 programs;B-cache;packet processing pipeline;domain-specific language;synthetic cache table;stateless behaviors;stateful behaviors;general behavior-level caching framework;performance degradation;PDP;programmable data plane;offloading network;Pipelines;Metadata;Switches;Registers;Runtime;Delays;Throughput},
+doi={10.1109/ISCC.2018.8538450},
+ISSN={1530-1346},
+month={June},}
+
+@inproceedings{Kim:2018,
+ author = {Kim, Daehyeok and Zhu, Yibo and Kim, Changhoon and Lee, Jeongkeun and Seshan, Srinivasan},
+ title = {Generic External Memory for Switch Data Planes},
+ booktitle = {Proceedings of the 17th ACM Workshop on Hot Topics in Networks},
+ series = {HotNets '18},
+ year = {2018},
+ isbn = {978-1-4503-6120-0},
+ location = {Redmond, WA, USA},
+ pages = {1--7},
+ numpages = {7},
+ url = {http://doi.acm.org/10.1145/3286062.3286063},
+ doi = {10.1145/3286062.3286063},
+ acmid = {3286063},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+} 
+
+% Zipf
+@article{Sarrar:2012,
+ author = {Sarrar, Nadi and Uhlig, Steve and Feldmann, Anja and Sherwood, Rob and Huang, Xin},
+ title = {Leveraging Zipf's Law for Traffic Offloading},
+ journal = {SIGCOMM Comput. Commun. Rev.},
+ issue_date = {January 2012},
+ volume = {42},
+ number = {1},
+ month = jan,
+ year = {2012},
+ issn = {0146-4833},
+ pages = {16--22},
+ numpages = {7},
+ url = {http://doi.acm.org/10.1145/2096149.2096152},
+ doi = {10.1145/2096149.2096152},
+ acmid = {2096152},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {heavy hitters, software defined network, software router},
+} 
+
+@misc{caida:19,
+  author = {{The CAIDA UCSD Anonymized Internet Traces 2019 Dataset}},
+  howpublished = {\url{https://data.caida.org/datasets/passive-2019/}},
+  year = 2019
+}
+
+% Flat Earth
+@InProceedings{Kim:09,
+author="Kim, Changhoon
+and Caesar, Matthew
+and Gerber, Alexandre
+and Rexford, Jennifer",
+editor="Moon, Sue B.
+and Teixeira, Renata
+and Uhlig, Steve",
+title="Revisiting Route Caching: The World Should Be Flat",
+booktitle="Passive and Active Network Measurement",
+year="2009",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="3--12",
+abstract="Internet routers' forwarding tables (FIBs), which must be stored in expensive fast memory for high-speed packet forwarding, are growing quickly in size due to increased multihoming, finer-grained traffic engineering, and deployment of IPv6 and VPNs. To address this problem, several Internet architectures have been proposed to reduce FIB size by returning to the earlier approach of route caching: storing only the working set of popular routes in the FIB. This paper revisits route caching. We build upon previous work by studying flat, uni-class (/24) prefix caching, with modern traffic traces from more than 60 routers in a tier-1 ISP. We first characterize routers' working sets and then evaluate route-caching performance under different cache replacement strategies and cache sizes. Surprisingly, despite the large number of deaggregated /24 subnets, caching uni-class prefixes can effectively curb the increase of FIB sizes. Moreover, uni-class prefixes substantially simplify a cache design by eliminating longest-prefix matching, enabling FIB design with slower memory technologies. Finally, by comparing our results with previous work, we show that the distribution of traffic across prefixes is becoming increasingly skewed, making route caching more appealing.",
+isbn="978-3-642-00975-4"
+}
+
+@InProceedings{Spang:19,
+  title={On estimating the number of flows},
+  author={Spang, Bruce and McKeown, Nick},
+  booktitle={Workshop on Buffer Sizing},
+  year="2019",
+}
