@@ -1,4 +1,4 @@
-\section{Analysing Traffic Characteristics}
+\section{Analysing Traffic Characteristics}\label{sec:traffic}
 
 As reported in previous research~\cite{Sarrar:2012}, network traffic follows a Zipf distribution.
 Indeed, several research has demonstrated that network flows monopolizes the a huge slice of the whole traffic.
@@ -48,7 +48,7 @@ Such characteristic favors flow caching in memory scarce programmable dataplanes
 However, we notice that short-lived flows dominate the trace and therefore the caching policy algorithm needs fast reaction time in order to adapt to traffic changes.
 In addition, such temporal traffic characteristic will probably favor time-based cache policies (e.g. LRU).
 
-\section{Cache Replacement Algorithms}
+\section{Cache Replacement Algorithms}\label{sec:policies}
 
 \paragraph{LRU}
 The LRU replacement algorithm evicts the most ancient cache entry in case of a cache miss.
@@ -277,30 +277,49 @@ Otherwise, OWLFU modifies OLFU by incrementing the current packet size to the vi
 }
 \end{algorithm}
 
-\section{Evaluating Cache Policies}
+\section{Evaluating Cache Policies}\label{sec:cache_results}
 
-In this section, we present the cache performance for different policies and cache sizes.
+\subsection{Experimental Setup}
+We present the cache performance for different policies and cache sizes, as presented in Table~\ref{tab:setup}.
 In addition, we have simulated the cache performance by emulating different cache policer reaction times.
 As performance metrics, we report the cache hit ratio and the traffic size weighted hit ratio.
 We use the term slowdown factor to refer to the policer reaction time.
 The slowdown factor is relative to the cache speed, i.e., a slowdown of 10 means that the cache policer is 10 times slower than a cache access.
 To enable reproducibility, we open-source our codes\footnote{\url{https://github.com/engjefersonsantiago/Infinite_MT}.}.
 
+\begin{table}[]
+	\centering
+	\caption{Experimental Parameters}
+	\label{tab:setup}
+	\begin{tabular}{|l|l|}
+		\hline
+		\textbf{Parameter}       & \textbf{Value}   \\
+		\hline
+		Cache policy            & LRU, LFU, Random, WLFU, OLFU, OWLFU    \\
+		Cache Size              & 64 to \SI{8}{\kilo\nothing} entries  \\
+		Slowdown Factor         & 1, 10, 100        \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\subsection{Results}
+Figure~\ref{fig:hit_ratio} presents the results for our experiments.
+
 \begin{figure*}[]
 \centering
-\subfloat[Hit Ratio. Slowdown = 1]{
+\subfloat[Hit Ratio. Slowdown factor = 1]{
 \includegraphics[width=0.5\textwidth]{hit_ratio_sf1.pdf}
 \label{fig:hit_ratio_sf1}
 }
-\subfloat[Hit Ratio. Slowdown = 10]{
+\subfloat[Hit Ratio. Slowdown factor = 10]{
 \includegraphics[width=0.5\textwidth]{hit_ratio_sf10.pdf}
 \label{fig:hit_ratio_sf10}
 }\\
-\subfloat[Size Weighted Hit Ratio. Slowdown = 1]{
+\subfloat[Size Weighted Hit Ratio. Slowdown factor = 1]{
 \includegraphics[width=0.5\textwidth]{weighted_hit_ratio_sf1.pdf}
 \label{fig:weighted_hit_ratio_sf1}
 }
-\subfloat[Size Weighted Hit Ratio. Slowdown = 10]{
+\subfloat[Size Weighted Hit Ratio. Slowdown factor = 10]{
 \includegraphics[width=0.5\textwidth]{weighted_hit_ratio_sf10.pdf}
 \label{fig:weighted_hit_ratio_sf10}
 }
