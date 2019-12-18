@@ -1,0 +1,67 @@
+\section{Introduction}\label{sec:intro}
+
+The Software-Defined Networking (SDN) paradigm has brought programmability to the once rigid network ecosystem.
+By allowing both control and data planes to evolve independently, SDN has opened new research avenues in networking, including data plane programming.
+Notably, the P4 language is a result of the SDN convergence~\cite{Bosshart:14}.
+P4 leverages OpenFlow by allowing network administrators to program their network in a custom fashion.
+Thanks to P4 and recent programmable dataplanes~\cite{Bosshart:13}, they can now deploy custom protocols by reprogramming network switches according to evolving needs, without deploying expensive new hardware. 
+
+However, current data center networks (DCNs) requirements are such \textcolor{red}{[ref]} that even state-of-the-art programmable ASICs~\cite{tofino:18} cannot solely meet them.
+Next generation mobile communication (5G) requirements, for instance, include multi-million active sessions ($>$\SI{5}{\mega\nothing}) at terabit rates and stringently low end-to-end latency ($<$\SI{1}{\milli\second}), possibly running over P4-defined customized protocols.
+
+Recently, some research has suggested using heterogeneous programmable data planes (HDPs) to alleviate data center network switch bottlenecks~\cite{p4eu:18}.
+Indeed, using complementary and distinct packet forwarding devices increases the overall switch processing capabilities.
+However, research regarding HDPs is still in its infancy with many questions to be solved, including the development of heterogeneous compilers, mismatched processing capabilities, and distributed match-tables management.
+
+In this work, we address the issue of distributed match-action (M-A) table management in HDPs comprising a high speed programmable ASIC, an FPGA, and a host CPU, as illustrated in Figure~\ref{fig:high_level_network}.
+To that end, we borrow the cache hierarchy concept of regular computer systems.
+However, M-A caching is fairly different from CPU caching since temporal and spatial data locality are less predictable in network systems. 
+In our system, a first-level cache is the high-performance but memory limited programmable ASIC.
+The FPGA plays the role of second-level cache, and finally the CPU is the last-level cache.
+
+\begin{figure}[]
+	\centering
+	\input{arch_scheme.tex}
+	\caption{Reference network system}
+	\label{fig:high_level_network}
+\end{figure}
+
+%Thus, we propose a M-A cache policer split into the forwarding devices.
+%We use online traffic hitters to estimate which M-A entries are candidates to be promoted/evicted to/from another cache level.
+%We are inspired in previous works on flow caching \cite{casado:2008,Katta:2014,Pfaff:15} and on heuristic dataplane-based traffic hitters \cite{Sivaraman:17} aiming to maintain line-rate throughput and required cache update rate while minimizing the usage of scarce memory resources available in each device and reducing processing latency.
+
+Thus, we conduct a series of experiments to evaluate the feasibility of such an HDP caching system.
+We start by re-characterizing current data center network traffic in order to understanding network traffic temporal locality.
+Following the traffic analysis, we have conducted cache simulations to choose realistic cache policies to be implemented in HDPs.
+Finally, we have evaluated which cache policies are implementable in current programmable dataplanes and how can they be described in P4.
+
+To the best of our knowledge, our work is the first to consider a M-A  table management for HDPs.
+The contributions of this work are as follows: 
+
+\begin{itemize}[noitemsep,topsep=0pt]
+	\item an open-source match-action cache policer for HDPs (\S\ref{sec:method});
+	\item a real-world network traffic analisys to derive M-A cache premises;
+	\item an evaluation of cache policies in the context of programmable dataplanes; and
+	\item a model to estimate the performance and overhead of a M-A cache system in an HDP (\S\ref{sec:model}).
+\end{itemize}
+
+\section{Related Work}\label{sec:related_works}
+
+\textit{Flow caching} has been studied since the early times in flow-based networking.
+\citeauthor{casado:2008}~\cite{casado:2008} remarked in 2008 that a hardware-based SDN switch must achieve over 99\% hit-ratio to avoid system bottlenecks due to software interaction.
+
+Since then, flow caching has been explored for both hardware and software solutions.
+\citeauthor{Kim:09}~\cite{Kim:09} have revisited cache policies in the context of IP networks.
+\citeauthor{Katta:2014}~\cite{Katta:2014,Katta:2016} have addressed the issue of limited TCAM resources in hardware switches by proposing a hybrid hardware-software switch to exploit memory-abundant CPUs.
+The cache policy algorithm, however, is performed offline. 
+From the software side, the Open vSwitch (OVS) has employed flow caching from its inception \cite{Pfaff:15}.
+In OVS, the flow cache is split in two levels, microflow and megaflow.
+The microflow caches at fine granularity for long lasting connections while the megaflow, at coarser granularity, takes care of short-lived flows.
+
+\citeauthor{Grigoryan:18} have proposed a programmable FIB caching architecture~\cite{Grigoryan:18}. They were inspired by the heavy-hitter implementation of \cite{Sivaraman:17} to detect and evict infrequent M-A TCAM entries. However, their approach requires data-plane based learning for cache replacement and it assumes that the switch is able to deal with non-deterministic lookup time, which can compromise performance due to pipeline stalls. 
+
+\citeauthor{Zhang:2018} have presented B-cache, a behavior-level cache for programmable dataplanes~\cite{Zhang:2018}. Similarly to Grigoryan \textit{et al.} \cite{Grigoryan:18}, the authors exploit heavy-hitters to identify hot behavior in programmable dataplanes, which in turn could be cached. Similarly, this works is infeasible in current homogeneous high-performance switches since it breaks the streaming flow in the pipeline.
+
+\citeauthor{Kim:2018} have proposed extending the memory capacity in programmable switches by borrowing memory resources from RDMA-capable servers in data centers~\cite{Kim:2018}. However, the achieved latency can be in the order of microseconds and the switch does not consider any cache policy mechanism.
+
+%\textit{Traffic Hitters} have mainly been used for network monitoring and management with the goal of identifying hot network behavior, and potential attacks. Realistic implementations of traffic hitters have mainly used sketch algorithms and their variations \cite{Cormode:05,Cormode:08,Metwally:05} in order to increase memory efficiency. Liu \textit{et al. } \cite{Liu:16} have deployed network-wide flow monitoring. Sivaraman \textit{et al. } \cite{Sivaraman:17} have adapted the classical finding the top-k element problem \cite{Metwally:05} to map it efficiently to programmable switches \cite{Bosshart:13}. FPGA-based deployments have also been proposed \cite{Tong:13,Tong:16,Zazo:17}.
