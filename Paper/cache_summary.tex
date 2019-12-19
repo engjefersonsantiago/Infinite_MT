@@ -1,4 +1,22 @@
-\section{Analysing Traffic Characteristics}\label{sec:traffic}
+%\begin{figure*}[t!]
+%	\centering
+%	\subfloat[Heavy hitter analysis]{
+%		\includegraphics[width=0.33\textwidth]{fig_cdf.pdf}
+%		\label{fig:cdf}
+%	}
+%	\subfloat[Flow duration]{
+%		\includegraphics[width=0.33\textwidth]{fig_duration.pdf}
+%		\label{fig:flow_duration}
+%	}
+%	\subfloat[Average flow size]{
+%		\includegraphics[width=0.33\textwidth]{fig_avg_flow_size.pdf}
+%		\label{fig:flow_size}
+%	}
+%	\caption{CAIDA trace summary}
+%	\label{fig:traces}
+%\end{figure*}
+
+\section{Learning from the Traffic}\label{sec:traffic}
 
 As reported in previous research~\cite{Sarrar:2012}, network traffic follows a Zipf distribution.
 Indeed, several research has demonstrated that network flows monopolizes the a huge slice of the whole traffic.
@@ -8,24 +26,6 @@ We have replayed a CAIDA network trace extracted from an IXP in a data center in
 Astute readers will notice that similar analysis has been done by~\citeauthor{Spang:19} to estimate number of TCP/IP flows~\cite{Spang:19}.
 The analysed trace is 1 minute long monitoring a full-duplex \SI{40}{\giga\bit/\second} link connecting New York and S\~ao Paulo/Brazil.
 Figure~\ref{fig:traces} summarizes our observations. In our analysis, a flow is characterized by a unique five tuple $\langle$~IPv4/IPv6 Source IP address, IPv4/IPv6 destination IP address, L4 protocol, UDP/TCP source port, UDP/TCP destination port~$\rangle$ connection.
-
-\begin{figure*}[]
-\centering
-\subfloat[Heavy hitter analysis]{
-\includegraphics[width=0.33\textwidth]{fig_cdf.pdf}
-\label{fig:cdf}
-}
-\subfloat[Flow duration]{
-\includegraphics[width=0.33\textwidth]{fig_duration.pdf}
-\label{fig:flow_duration}
-}
-\subfloat[Average flow size]{
-\includegraphics[width=0.33\textwidth]{fig_avg_flow_size.pdf}
-\label{fig:flow_size}
-}
-\caption{CAIDA trace summary}
-\label{fig:traces}
-\end{figure*}
 
 As we observe in Figure~\ref{fig:cdf}, Zipf's characteristic is still present in current network traffic.
 In the figure, we present the CDF, in terms of transmitted bytes, for several observation intervals, ranging from \SI{100}{\micro\second} to \SI{60}{\second}.
@@ -287,7 +287,7 @@ We use the term slowdown factor to refer to the policer reaction time.
 The slowdown factor is relative to the cache speed, i.e., a slowdown of 10 means that the cache policer is 10 times slower than a cache access.
 To enable reproducibility, we open-source our codes\footnote{\url{https://github.com/engjefersonsantiago/Infinite_MT}.}.
 
-\begin{table}[]
+\begin{table}[h]
 	\centering
 	\caption{Experimental Parameters}
 	\label{tab:setup}

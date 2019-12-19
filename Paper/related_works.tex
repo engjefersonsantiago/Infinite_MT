@@ -1,0 +1,20 @@
+\section{Related Work}\label{sec:related_works}
+
+\textit{Flow caching} has been studied since the early times in flow-based networking.
+\citeauthor{casado:2008}~\cite{casado:2008} remarked in 2008 that a hardware-based SDN switch must achieve over 99\% hit-ratio to avoid system bottlenecks due to software interaction.
+
+Since then, flow caching has been explored for both hardware and software solutions.
+\citeauthor{Kim:09}~\cite{Kim:09} have revisited cache policies in the context of IP networks.
+\citeauthor{Katta:2014}~\cite{Katta:2014,Katta:2016} have addressed the issue of limited TCAM resources in hardware switches by proposing a hybrid hardware-software switch to exploit memory-abundant CPUs.
+The cache policy algorithm, however, is performed offline. 
+From the software side, the Open vSwitch (OVS) has employed flow caching from its inception \cite{Pfaff:15}.
+In OVS, the flow cache is split in two levels, microflow and megaflow.
+The microflow caches at fine granularity for long lasting connections while the megaflow, at coarser granularity, takes care of short-lived flows.
+
+\citeauthor{Grigoryan:18} have proposed a programmable FIB caching architecture~\cite{Grigoryan:18}. They were inspired by the heavy-hitter implementation of \cite{Sivaraman:17} to detect and evict infrequent match-action TCAM entries. However, their approach requires data-plane based learning for cache replacement and it assumes that the switch is able to deal with non-deterministic lookup time, which can compromise performance due to pipeline stalls. 
+
+\citeauthor{Zhang:2018} have presented B-cache, a behavior-level cache for programmable dataplanes~\cite{Zhang:2018}. Similarly to Grigoryan \textit{et al.} \cite{Grigoryan:18}, the authors exploit heavy-hitters to identify hot behavior in programmable dataplanes, which in turn could be cached. Similarly, this works is infeasible in current homogeneous high-performance switches since it breaks the streaming flow in the pipeline.
+
+\citeauthor{Kim:2018} have proposed extending the memory capacity in programmable switches by borrowing memory resources from RDMA-capable servers in data centers~\cite{Kim:2018}. However, the achieved latency can be in the order of microseconds and the switch does not consider any cache policy mechanism.
+
+%\textit{Traffic Hitters} have mainly been used for network monitoring and management with the goal of identifying hot network behavior, and potential attacks. Realistic implementations of traffic hitters have mainly used sketch algorithms and their variations \cite{Cormode:05,Cormode:08,Metwally:05} in order to increase memory efficiency. Liu \textit{et al. } \cite{Liu:16} have deployed network-wide flow monitoring. Sivaraman \textit{et al. } \cite{Sivaraman:17} have adapted the classical finding the top-k element problem \cite{Metwally:05} to map it efficiently to programmable switches \cite{Bosshart:13}. FPGA-based deployments have also been proposed \cite{Tong:13,Tong:16,Zazo:17}.
