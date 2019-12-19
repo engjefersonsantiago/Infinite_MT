@@ -24,8 +24,9 @@ Indeed, several research has demonstrated that network flows monopolizes the a h
 In our study, we have re-conducted experiments to determine the traffic characteristics of a up-to-date real-world data center trace.
 We have replayed a CAIDA network trace extracted from an IXP in a data center in New York~\cite{caida:19}.
 Astute readers will notice that similar analysis has been done by~\citeauthor{Spang:19} to estimate number of TCP/IP flows~\cite{Spang:19}.
-The analysed trace is 1 minute long monitoring a full-duplex \SI{40}{\giga\bit/\second} link connecting New York and S\~ao Paulo/Brazil.
-Figure~\ref{fig:traces} summarizes our observations. In our analysis, a flow is characterized by a unique five tuple $\langle$~IPv4/IPv6 Source IP address, IPv4/IPv6 destination IP address, L4 protocol, UDP/TCP source port, UDP/TCP destination port~$\rangle$ connection.
+The analysed trace is 1 minute long monitoring $\sim$\$\SI{30}{\mega\nothing} packets in a full-duplex \SI{40}{\giga\bit/\second} Ethernet link connecting New York and S\~ao Paulo/Brazil.
+Figure~\ref{fig:traces} summarizes our observations.
+In our analysis, we define a flow as a unique five tuple $\langle$~IPv4/IPv6 Source IP address, IPv4/IPv6 destination IP address, L4 protocol, UDP/TCP source port, UDP/TCP destination port~$\rangle$ connection.
 
 As we observe in Figure~\ref{fig:cdf}, Zipf's characteristic is still present in current network traffic.
 In the figure, we present the CDF, in terms of transmitted bytes, for several observation intervals, ranging from \SI{100}{\micro\second} to \SI{60}{\second}.
@@ -36,17 +37,18 @@ In Figure~\ref{fig:flow_duration}, we present the flow duration time.
 The blue curve is dominated (60\%) by single packet flows.
 These single packet flows are represented in the graph with a flow duration of zero.
 Still in the blue curve, we observe the short-lived flows dominate the trace with $\sim$90\% of all flows during less than 5 seconds.
-The orange curve in Figure~\ref{fig:flow_duration} illustrates the flow duration of flows with multiple hits in the trace.
+The orange curve in Figure~\ref{fig:flow_duration} illustrates the duration of flows with multiple hits in the trace.
 Still, short-lived flows dominate the trace with $\sim$50\% lasting less than 1 second in the trace.
 
 Figure~\ref{fig:flow_size} presents the average flow size for four statistically representative observation intervals.
 For all four measures, the first quartile, the median, and the third quartile are very similar.
-On average, short flows ($\sim$100 bytes) dominates the trace with 75\% of the flows are no bigger than 150 bytes.
+On average, short flows ($\sim$100 bytes) dominate the trace with 75\% of the flows are no bigger than 150 bytes.
 
-According to our experiments, the zipf pattern is still present on current data center traffic.
-Such characteristic favors flow caching in memory scarce programmable dataplanes.
-However, we notice that short-lived flows dominate the trace and therefore the caching policy algorithm needs fast reaction time in order to adapt to traffic changes.
-In addition, such temporal traffic characteristic will probably favor time-based cache policies (e.g. LRU).
+According to our experiments, the Zipf pattern is still present on current data center traffic.
+Such characteristic favors flow caching for memory scarce programmable dataplanes.
+However, we notice that short-lived flows dominate the trace.
+Therefore, the chosen caching policy algorithm needs fast reaction time in order to adapt to traffic changes.
+In addition, such temporal traffic characteristic will possibly favor time-aware cache policies (e.g. LRU).
 
 \section{Cache Replacement Algorithms}\label{sec:policies}
 
