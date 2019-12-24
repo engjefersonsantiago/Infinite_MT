@@ -37,7 +37,7 @@ class CacheStats
         static constexpr auto STATS_MEM_SIZE = Stats_Size;
 
         // Writter
-        virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) =0;
+        virtual void update_stats (const FiveTuple& five_tuple, const Stats_Value& updated_stats) =0;
 
         // Read the whole stats
         auto& get_stats ()
@@ -97,7 +97,7 @@ class LRUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LRUContai
 {
     public:
 
-        virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) override
+        virtual void update_stats (const FiveTuple& five_tuple, const Stats_Value& updated_stats) override
         {
             std::unique_lock lock(this->mutex_);
             if (updated_stats != 0)
@@ -137,7 +137,7 @@ class LFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LFUContai
 {
 
     public:
-        virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) override
+        virtual void update_stats (const FiveTuple& five_tuple, const Stats_Value& updated_stats) override
         {
             std::unique_lock lock(this->mutex_);
             if (updated_stats != 0)
@@ -199,7 +199,7 @@ class OPTCacheStats final : public CacheStats<Stats_Size, Stats_Value, OPTContai
 
     public:
 
-        virtual void update_stats (const FiveTuple& five_tuple, Stats_Value& updated_stats) override
+        virtual void update_stats (const FiveTuple& five_tuple, const Stats_Value& updated_stats) override
         {
         }
 };

@@ -33,7 +33,10 @@ class PacketProcessing {
         static constexpr auto LOOKUP_MEM_SIZE = Lookup_Size;
         using lookup_table_t = LookupTable<Lookup_Size, Lookup_Value>;
 
-        void process_packet (const bool run_forever, const std::size_t read_step, const CacheType cache_type)
+        void process_packet (const bool run_forever,
+                                const std::size_t read_step,
+                                const CacheType cache_type,
+                                const CounterType counter_type)
         {
 
             while (true) {
@@ -78,12 +81,13 @@ class PacketProcessing {
                 debug(print_status();)
 
                 // Update cache defined in the derived
-                update_cache_stats(match, cache_type);
+                update_cache_stats(match, cache_type, counter_type);
 
 
-                if (num_packets_%10000 == 0)
+                if (num_packets_%1000000 == 0)
                 {
                     print_status();
+                    //if (num_packets_ == 10000000) std::terminate();
                 }
                 if (!run_forever) {
                     debug(print_status();)
@@ -118,11 +122,12 @@ class PacketProcessing {
                 digest_pkt.push_message({ tuple_size_pair_.first, discrete_ts });
             } else
             {
+                // LFU and LFU modif
                 digest_pkt.push_message(tuple_size_pair_);
             }
         }
 
-        virtual void update_cache_stats(const bool match, const CacheType cache_type) =0;
+        virtual void update_cache_stats(const bool match, const CacheType cache_type, const CounterType counter_type) =0;
 
         auto& lookup_table () { return lookup_table_; }
 
@@ -168,12 +173,17 @@ class CacheL1PacketProcessing final : public PacketProcessing <Lookup_Size, Look
             punted_pkt.push_message(this->packet_timestamp_);
         }
 
-        virtual void update_cache_stats(const bool match, const CacheType cache_type) override {
+        virtual void update_cache_stats(const bool match,
+                                        const CacheType cache_type,
+                                        const CounterType counter_type) override
+        {
             if (match) {
                 if (cache_type == CacheType::LRU ||cache_type == CacheType::OPT) {
                     this->stats_table_.update_stats(this->tuple_size_pair_.first, this->discrete_ts);
-                } else if (cache_type == CacheType::LFU) {
-                    this->stats_table_.update_stats(this->tuple_size_pair_.first, this->tuple_size_pair_.second);
+                } else if (cache_type == CacheType::LFU || cache_type == CacheType::LFU_MODIF) {
+                    this->stats_table_.update_stats(this->tuple_size_pair_.first,
+                                                    (counter_type == CounterType::BYTES)
+                                                    ? this->tuple_size_pair_.second : 1ul);
                 } else {
                 }
             }
@@ -195,7 +205,9 @@ class CacheL2PacketProcessing final : public PacketProcessing <Lookup_Size, Look
         using pkt_proc_base_t = PacketProcessing <Lookup_Size, Lookup_Value, Cache_Stats, Sleep_Time>;
 
         virtual void punt_pkt_to_next_lvl (inter_thread_comm_t& punted_pkt) override {}
-        virtual void update_cache_stats(const bool match, const CacheType cache_type) override {}
+        virtual void update_cache_stats(const bool match,
+                                        const CacheType cache_type,
+                                        const CounterType counter_type) override {}
 
         // CTOR calls the base CTOR
         CacheL2PacketProcessing(inter_thread_comm_t& in_comm_pkt,
