@@ -1,0 +1,167 @@
+%\begin{tikzpicture}[node distance = 0.5cm, every node/.style={draw}, node font={\footnotesize}]
+%%software
+%\begin{scope}[every node/.style={draw, chamfered rectangle, chamfered rectangle corners=north east}]
+%	\node (globp4) {P4};
+%	\node[rectangle, right=of globp4] (compiler) {HDP compiler};
+%	\node[below= 0.5cm of compiler] (p4cpu2) { P4};
+%	\node[left= of p4cpu2] (p4cpu1) {P4};
+%	\node[left= of p4cpu1] (p4fpga1) {P4};
+%	\node[right= of p4cpu2] (p4fpga2) {P4};
+%	\node[right= of p4fpga2] (p4asic) { P4};
+%%%path for the corner of p4 codes
+%	\path[draw]  (globp4.before north east) -| (globp4.after north east)
+%							  (p4cpu2.before north east) -| (p4cpu2.after north east)
+%							  (p4cpu1.before north east) -| (p4cpu1.after north east)
+%						      (p4fpga1.before north east) -| (p4fpga1.after north east)
+%							  (p4fpga2.before north east) -| (p4fpga2.after north east)
+%							  (p4asic.before north east) -| (p4asic.after north east);
+%
+%%%compilation
+%	\begin{scope}[every node/.style={rectangle, draw, align=center}, node distance=0.25cm]
+%		\node[below= of p4cpu2] (compcpu2) { CPU\\ comp};
+%		\node[below= of p4cpu1] (compcpu1) { CPU\\ comp};
+%		\node[below= of p4fpga1] (compfpga1) { FPGA\\ comp};
+%		\node[below= of p4fpga2] (compfpga2) { FPGA\\ comp};
+%		\node[below= of p4asic] (compasic) { ASIC\\ comp};
+%	\end{scope}
+%%%processus
+%	\begin{scope}[every edge/.style={-Stealth, draw}]
+%   \coordinate (midBelowComp) at ($(compiler.south) - (0,0.25)$);
+%	\path[draw] (globp4) edge (compiler)
+%	    							  (compiler.south) edge (p4cpu2)
+%								  ($(compiler.south) - (0.2,0)$) |- ( p4cpu1.north |- midBelowComp) edge (p4cpu1)
+%                                  ($(compiler.south) - (0.4,0)$) |- ($( p4fpga1.north |- midBelowComp) + (0,0.1)$) edge (p4fpga1)
+%								 ($(compiler.south) + (0.2,0)$) |- ( p4fpga2.north |- midBelowComp) edge (p4fpga2)
+%                                  ($(compiler.south) + (0.4,0)$) |- ($( p4asic.north |- midBelowComp) + (0,0.1)$) edge (p4asic)
+%								 (p4cpu1) edge (compcpu1)
+%								 (p4cpu2) edge (compcpu2)
+%								 (p4fpga1) edge (compfpga1)
+%								 (p4fpga2) edge (compfpga2)
+%								 (p4asic) edge (compasic)
+%									;
+%	\end{scope}
+%
+%\end{scope}
+%\coordinate (midCPU) at ($(p4cpu1.east |- compcpu1.south) + (0.25cm, -0.5cm)$);
+%%%hardware
+%\begin{scope}[every node/.style={draw},]
+%	\node[left=0.25cm of midCPU, anchor=north east] (cpu1) {CPU\textsubscript{1}};
+%	\node[right=0.25cm of midCPU, anchor=north west] (cpu2) {CPU\textsubscript{2}};
+%	\node[below=of cpu1, fill=black!20] (fpga1) {FPGA\textsubscript{1}};
+%	\node[below=of cpu2] (fpga2) {FPGA\textsubscript{2}};
+%	\node[fill=black!20, minimum width=2.25cm, anchor = north] (asic) at ($(midCPU|-fpga2.south) - (0,0.5)$) {ASIC};
+%	\node[draw=none,left =0.55 of asic, align=left] (data_label) {};
+%	
+%\end{scope}
+%\node[fit=(cpu1) (cpu2) (fpga1) (fpga2) (asic) (data_label), rounded corners] (platform) {};
+%\node[draw=none, anchor=west] at (platform.west |- asic.east) {HDP};
+%\node[cloud, draw, aspect=2, inner sep=-2pt, below=0.4cm of asic] (network) {Network};
+%\begin{scope}[every edge/.style={Stealth-Stealth, draw}]
+%\path (cpu1) edge (cpu2)
+%			(cpu1) edge (fpga1)
+%			(cpu2) edge (fpga2)
+%			(fpga1.south) edge (fpga1.south |- asic.north)
+%			(fpga2.south) edge (fpga2.south |- asic.north)
+%			;
+%\end{scope}
+%\begin{scope}[every edge/.style={thick, -Latex, dashed, draw}, every path/.style={thick, dashed}]
+%		\path[draw] ($(platform.west |- compfpga1.south) - (0.1,0)$) -- ($(platform.west |- fpga1) - (0.1,0)$)  edge (fpga1)
+%								(compfpga2) -- (compfpga2 |- fpga2) edge (fpga2)
+%								(compasic) -- (compasic |- asic) edge (asic)
+%								(compcpu2) edge (compcpu2.south |- cpu2.north) 
+%								(compcpu1) edge (compcpu1.south |- cpu1.north) 
+%								;
+%	\end{scope}
+%\path[Stealth-Stealth, draw] (network) edge (asic.south)
+% 							   (network) edge ($(asic.south) + (0.2,0cm)$)
+% 							   (network) edge ($(asic.south) - (0.2,0cm)$)
+% 							   (network) edge ($(asic.south) + (0.4,0cm)$)
+% 							   (network) edge ($(asic.south) - (0.4,0cm)$);
+%	\node[draw, anchor = west, fill=black!20](control) at (network.east -| platform.east) { Control-plane};	
+%	  \path[densely dashed, Stealth-Stealth, draw] (control) -| ($(platform.south east) - (0.5cm,0)$);
+%	\node[fit = (compfpga1) (compasic) (compiler), draw, dash dot dot, thick] (comp) {};
+%	\node[draw=none, below left=0 and 0 of comp.north east, align=left] { Compilation\\ Process};
+%	\end{tikzpicture}
+%	
+%	
+
+\tikzset{%
+  block/.style    = {draw, very thick, rectangle, minimum height = 2em,
+    minimum width = 3em},
+  sum/.style      = {draw, circle, node distance = 2cm}, % Adder
+  input/.style    = {coordinate}, % Input
+  output/.style   = {coordinate} % Output
+}
+% Defining string as labels of certain blocks.
+%\newcommand{\suma}{\Large$+$}
+%\newcommand{\inte}{$\displaystyle \int$}
+%\newcommand{\derv}{\huge$\frac{d}{dt}$}
+
+\tikzstyle{block} = [draw, rectangle, 
+    minimum height=1em, minimum width=3em]
+\tikzstyle{sum} = [draw, circle, node distance=1cm]
+\tikzstyle{input} = [coordinate]
+\tikzstyle{output} = [coordinate]
+\tikzstyle{pinstyle} = [pin edge={to-,thin,black}]
+
+\begin{tikzpicture}[auto, node distance=1cm,>=latex']
+    \node [input, name=input] {};
+
+
+    \node [block, below of=input, node distance=.85cm] (cpu) {\small\textbf{CPU}};
+
+    \node [block, right=2 cm of cpu, node distance=.85cm] (cpu1) {\small\textbf{CPU}};
+    
+\draw[dotted, thick, name=mm] ($(cpu.north west)+(-2.5cm,+.2cm)$) -- ($(cpu1.north east)+(1cm,+.2cm)$);
+
+    \node [draw=none] at ($(cpu.north west)+(-1.5cm,+.55cm)$) (main) {\scriptsize{\textit{Main Memory}}};
+
+
+\draw[dotted, thick] ($(cpu.south west)+(-2.5cm,-.2cm)$) -- ($(cpu1.south east)+(1cm,-.2cm)$);
+
+    \node [draw=none] at ($(cpu.west)+(-1.5cm,-.0cm)$) (hdp) {\scriptsize{\textit{Cache Level 3}}};
+
+    \node [block, below of=cpu, node distance=.85cm] (fpga) {\small\textbf{FPGA}};
+    \node [block, below of=cpu1, node distance=.85cm] (fpga1) {\small\textbf{FPGA}};
+
+\draw[dotted, thick] ($(fpga.south west)+(-2.5cm,-.2cm)$) -- ($(fpga1.south east)+(1cm,-.2cm)$);
+
+    \node [draw=none] at ($(fpga.west)+(-1.5cm,-.0cm)$) (hdp) {\scriptsize{\textit{Cache Level 2}}};
+
+    \node [block, below of=fpga, node distance=.85cm] (asic) {\small\textbf{ASIC}};
+    \node [block, below of=fpga1, node distance=.85cm] (asic1) {\small\textbf{ASIC}};
+
+    \node [draw=none] at ($(asic.west)+(-1.5cm,-.0cm)$) (hdp) {\scriptsize{\textit{Cache Level 1}}};
+
+    \node [block,node distance=.85cm, minimum width=7em]  at ($(cpu.north)+(1.5cm,1cm)$) (controller) {\textbf{Controller}};
+
+
+	\node[cloud, draw, aspect=2, inner sep=-2pt,minimum width=5em, minimum height=3em] at ($(asic.south)+(1.5cm,-1cm)$) (network) {\textbf{Network}};
+
+    \node [output, below of=network] (output) {};
+
+    % Once the nodes are placed, connecting them is easy. 
+    \draw [thick,<->] (fpga) -- node {} (cpu);
+    \draw [thick,<->] (fpga1) -- node {} (cpu1);
+    
+    \draw [dashed, <->] (cpu.east) --+(0.25cm,0) |- node {} (asic);
+    \draw [dashed, <->] (cpu.west) --+(-0.25cm,0) |- node {} (fpga);
+    \draw [thick,<->] (fpga) -- node {} (asic);
+    \draw [very thick,<->] (asic) |- node {} (network);
+
+    \draw [dashed, <->] (cpu1.west) --+(-0.25cm,0) |- node {} (asic1);
+    \draw [dashed, <->] (cpu1.east) --+(0.25cm,0) |- node {} (fpga1);
+    \draw [thick,<->] (fpga1) -- node {} (asic1);
+    \draw [very thick,<->] (asic1) |- node {} (network);
+
+    \draw [dashed, <->] (cpu.north) |- node {} (controller.west);
+    \draw [dashed, <->] (cpu1.north) |- node {} (controller.east);
+
+
+    \draw []($(cpu.north)+(-1.0cm,.30cm)$) rectangle ($(asic.south)+(1.0cm,-.30cm)$);
+    \draw []($(cpu1.north)+(-1.0cm,.30cm)$) rectangle ($(asic1.south)+(1.0cm,-.30cm)$);
+    
+    \node [draw=none] at ($(asic.south west)+(-.15cm,-.15cm)$) (hdp) {\footnotesize{HDP}};
+    \node [draw=none] at ($(asic1.south east)+(.15cm,-.15cm)$) (hdp) {\footnotesize{HDP}};
+
+\end{tikzpicture}

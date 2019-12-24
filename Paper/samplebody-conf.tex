@@ -1,0 +1,219 @@
+\section{Introduction}\label{sec:intro}
+
+The Software-Defined Networking (SDN) paradigm has brought programmability to the once rigid network ecosystem. By allowing both control and data planes to evolve independently, SDN has opened new research avenues in networking, including data plane programming. Notably, the P4 language is a result of the SDN convergence \cite{Bosshart:14}. P4 leverages OpenFlow by allowing network administrators to program their network in a custom fashion. Thanks to P4 and recent programmable dataplanes \cite{Bosshart:13}, they can now deploy custom protocols by reprogramming network switches according to evolving needs, without deploying expensive new hardware. 
+
+
+However, current data center networks (DCNs) requirements are such \textcolor{red}{[ref]} that even state-of-the-art programmable ASICs \cite{tofino:18} cannot solely meet them. Next generation mobile communication (5G) requirements, for instance, include multi-million active sessions ($>$\SI{5}{\mega\nothing}) at terabit rates and stringently low end-to-end latency ($<$\SI{1}{\milli\second}), possibly running over custom protocols.
+
+Recently, some research has suggested using heterogeneous programmable data planes (HDPs) to alleviate data center network switch bottlenecks \cite{p4eu:18}. Indeed, using complementary and distinct packet forwarding devices increases the overall switch processing capabilities. However, research regarding HDPs is still in its infancy with many questions to be solved, including the development of heterogeneous compilers, mismatched processing capabilities and hardware resources, and match-tables management.
+
+In this work, we address the issue of match-action (M-A) table management in HDPs comprising a high speed programmable ASIC, an FPGA, and a host CPU. To that end, we borrow the cache hierarchy concept of regular computer systems. In our system, a first-level cache is the high-performance but memory limited programmable ASIC. The FPGA plays the role of second-level cache, and finally the CPU is the last-level cache. M-A caching is fairly different from regular CPU cache systems since temporal and spatial data locality are difficult to predict in network systems. 
+
+Thus, we propose a M-A cache policer split into the forwarding devices. We use online traffic hitters to estimate which M-A entries are candidates to be promoted/evicted to/from another cache level. We are inspired in previous works on flow caching \cite{casado:2008,Katta:2014,Pfaff:15} and on heuristic dataplane-based traffic hitters \cite{Sivaraman:17} aiming to maintain line-rate throughput and required cache update rate while minimizing the usage of scarce memory resources available in each device and reducing processing latency.
+
+To the best of our knowledge, our work is the first to consider a M-A cache policer for HDPs. The contributions of this work are as follows: 
+\begin{itemize}[noitemsep,topsep=0pt]
+	\item an open-source P4-based match-action cache policer for HDPs (\S\ref{sec:method});
+	\item a model to estimate the performance and overhead of a M-A cache system in an HDP (\S\ref{sec:model}); and
+	%\item a P4-based emulation prototyping platform (\S\ref{sec:emulation}). 
+	\item a P4-based emulation platform for rapid performance estimation (\S\ref{sec:emulation}); and 
+	\item a prototype comprising a programmable ASIC, an FPGA, and a CPU.
+\end{itemize}
+
+%The rest of this paper is organized as follows. Section~\ref{sec:eco_pro} presents the ecosystem this work is inserted into and states the problem that we propose to solve. Section~\ref{sec:related_works} reviews the literature, Section~\ref{sec:method} presents the proposed match-action cache policer, Section~\ref{sec:results} shows the experimental results and discussions, and Section~\ref{sec:conclusion} draws the conclusions.
+
+
+\section{Network Ecosystem and Problem Statement}\label{sec:eco_pro}
+
+%In this section, we first introduce the ecosystem in which our work is inserted into by presenting terms and definitions used in this paper. Then, we state the problem that this work proposes to solve.
+
+In this section, we first introduce the ecosystem in which our work is inserted into, and then, we state the problem that this work proposes to solve.
+
+\subsection{Network Ecosystem}\label{sec:eco}
+
+In this paper, we consider an SDN switch for a leaf-spine data center network as illustrated in Figure~\ref{fig:high_level_network}. In the figure, solid lines indicate the data plane and dashed lines refer to control plane communication. Dotted lines delimit the cache levels of an HDP. The next paragraphs describe terms and definitions used throughout this text.
+
+\begin{figure}[]
+	\centering
+	\input{arch_scheme.tex}
+	\caption{Reference DCN system}
+	\label{fig:high_level_network}
+\end{figure}
+
+\begin{description}[noitemsep,topsep=0pt,labelwidth=0pt,leftmargin=0pt]
+%\item[Packet Forwarding Device:] a device capable of forwarding packets between networks.
+\item[Heterogeneous Programmable Dataplane (HDP):] an SDN switch composed of three or more distinct packet forwarding devices programmed through a packet processing language \cite{Bosshart:13}.
+\item[Controller:] a centralized control plane entity responsible for managing SDN programmable dataplanes.
+\item[Host Switch CPU:] a local switch processor responsible for installing forwarding rules into packet forwarding devices according to instructions received from a controller through a well-known interface \cite{of:14, p4_runtime:18}. The number and types of forwarding devices in a programmable pipeline is abstracted from the controller by the host switch CPU.
+\end{description}
+
+Table~\ref{tab:requirements} list the requirements we consider for a today's data center HDP switch. Commercial programmables switches have far crossed the \SI{}{\tera\bit/\second} barrier \cite{tofino:18}. Multi \SI{100}{\giga\bit/\second} FPGA NICs are also commercially available \cite{XilinxFPGA:18,IntelFPGA:18}. Standard datacenter racks hold up to 40 servers on which hundreds of multi-tenant containers ($>$1000) \textcolor{red}{[ref]} can run. Each of these containers have dozens of active flows. In summary, one expects at least $40\times1000\times100 =$~\SI{4}{\mega\nothing} active flows per top-of-rack (leaf) switch \textcolor{red}{[ref]}. 
+
+
+\begin{table}[]
+\centering
+\caption{HDP system requirements}
+\label{tab:requirements}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Parameter}      & \textbf{Requirement}         \\\hline
+Aggregate bandwidth            & \SI{6}{\tera\bit/\second}    \\
+ASIC-FPGA bandwidth            & \SI{200}{\giga\bit/\second}  \\
+Concurrent flows               & \SI{5}{\mega\nothing}        \\
+M-A table update rate          & \SI{5}{\kilo\update/\second} \\\hline
+\end{tabular}
+\end{table}
+
+\subsection{Problem Statement}\label{problem}
+
+Heterogeneous programmable dataplanes are required to achieve the current needs of data center applications. However, devices making up an HDP differ in processing capabilities in their most varied forms. A programmable ASIC ($>$\SI{6}{\tera\bit/\second}) has high throughput at the expense of limited programmability and memory capacity ($<$\SI{100}{\mega\bit}), while an FPGA adds reconfigurability and memory abundance ($>$\SI{8}{\giga\byte}) at the cost of reduced performance ($<$\SI{1}{\tera\bit/\second}).
+
+The controller manages switches, installs forwarding rules, and collects statistics. However, this controller is unaware of the switch architecture. Thus, the switch host CPU splits these rules into each device that make up an HDP. To maximize efficiency, the host CPU exploits the characteristics of each device for forwarding rules insertion. In this way, frequently matched rules shall be installed into a high performance programmable ASIC while infrequently ones may be placed in a memory abundant, internally or externally, FPGA device. 
+
+However, entirely managing M-A cache policy at such high data rates in a Von-Neumann CPU is impractical. Thus, cache replacement algorithms need to be implemented in dataplane devices to alleviate the burden on the CPU. The switch host CPU has only to periodically monitor candidate flows for cache migration. These flow candidates can be either evicted from high performance devices or promoted from the memory abundant to the high-speed device.
+
+\section{Related Work}\label{sec:related_works}
+
+%P4 compilers for different targets. Why ASICs and FPGAs? Programmable, unmatched performance characteristics,...
+%State-of-the-art FPGAs: very-high memory bandwidth (internal, external), increased performance, programmability...
+%
+%Movement towards HDP. Bandwidth requirements and large number of flows.
+%
+%Traditional caching systems are not good match for packet processing in general. Packet processing has low temporal and spatial locality. Present the parallel CPU-GPU systems or even FPGA-CPU systems.
+%
+%Traffic-hitters have been mainly used for monitoring tasks.
+%
+%M-A caching as in \cite{Grigoryan:18} is infeasible in a high-performance switch.
+%
+%
+%\subsection{Cache Policy Mechanisms}\label{sec:related_works:cache}
+%
+%LRU, LFU?? Consensus on LRU
+%
+%LFRU
+
+
+%\subsection{Flow Caching}\label{sec:flow_caching}
+
+\textit{Flow caching} has been studied since the early times in flow-based networking. Casado \textit{et al.} \cite{casado:2008} remarked in 2008 that a hardware-based SDN switch must achieve over 99\% hit-ratio to avoid system bottlenecks due to software interaction.
+
+Since then, flow caching has been explored for both hardware and software solutions. Katta \textit{et. al} \cite{Katta:2014,Katta:2016} have addressed the issue of limited TCAM resources in hardware switches by proposing a hybrid hardware-software switch to exploit memory-abundant CPUs. The cache policy algorithm, however, is performed offline. From the software side, the Open vSwitch (OVS) has employed flow caching from its inception \cite{Pfaff:15}. In OVS, the flow cache is split in two levels, microflow and megaflow. The microflow caches at fine granularity for long lasting connections while the megaflow, at coarser granularity, takes care of short-lived flows.
+
+%The microflow caches the hash of specific header fields to identify recurring connections. While microflow caching performs well for long lasting connections it suffers when a large number of short-lived ones arrive at the switch. To deal with it, the megaflow cache implements a generic matching following the OpenFlow matching style, however, with no matching priorities. To minimize prefix ambiguity, OVS caches only disjoint megaflows. 
+
+Grigoryan and Liu have proposed a programmable FIB caching architecture \cite{Grigoryan:18}. They were inspired by the heavy-hitter implementation of \cite{Sivaraman:17} to detect and evict infrequent M-A TCAM entries. However, their approach requires data-plane based learning for cache replacement and it assumes that the switch is able to deal with non-deterministic lookup time, which can compromise performance due to pipeline stalls. 
+
+Zhang \textit{et al.} have presented B-cache, a behavior-level cache for programmable dataplanes \cite{Zhang:2018}. Similarly to Grigoryan \textit{et al.} \cite{Grigoryan:18}, the authors exploit heavy-hitters to identify hot behavior in programmable dataplanes, which in turn could be cached. Similarly, this works is infeasible in current homogeneous high-performance switches since it breaks the streaming flow in the pipeline.
+
+Kim \textit{et al.} have proposed extending the memory capacity in programmable switches by borrowing memory resources from RDMA-capable servers in data centers \cite{Kim:2018}. However, the achieved latency can be in the order of microseconds and the switch does not consider any cache policy mechanism.
+
+%\subsection{Traffic Hitters}\label{sec:related_works:hitters}
+
+\textit{Traffic Hitters} have mainly been used for network monitoring and management with the goal of identifying hot network behavior, and potential attacks. Realistic implementations of traffic hitters have mainly used sketch algorithms and their variations \cite{Cormode:05,Cormode:08,Metwally:05} in order to increase memory efficiency. Liu \textit{et al. } \cite{Liu:16} have deployed network-wide flow monitoring. Sivaraman \textit{et al. } \cite{Sivaraman:17} have adapted the classical finding the top-k element problem \cite{Metwally:05} to map it efficiently to programmable switches \cite{Bosshart:13}. FPGA-based deployments have also been proposed \cite{Tong:13,Tong:16,Zazo:17}.
+
+\section{Proposed Method}\label{sec:method}
+
+\subsection{High-Level Overview}\label{sec:method:overview}
+
+The proposed heterogeneous M-A cache policer is described in Algorithm~\ref{alg:cache_pol}. Candidates for flow migration are online detected by light/heavy hitters implemented on the ASIC and FPGA. For this, we are inspired by the work of Sivaraman \textit{et al.} \cite{Sivaraman:17} due its high performance and low memory footprint.
+
+\begin{algorithm}[!t]
+\caption{Match-action cache policer}
+\label{alg:cache_pol}
+\SetInd{0.1em}{.9em}
+\SetAlgoLined
+\footnotesize
+\SetKwProg{procedure}{Procedure}{}{end}
+\SetKwFunction{maCachePolicer}{maCachePolicer}
+\SetKwFunction{evalCacheUpdate}{evalCacheUpdate}
+\SetKwFunction{installAsicRules}{installAsicRules}%
+\SetKwFunction{detectFpgaCand}{detectFpgaCand}%
+\SetKwFunction{detectAsicVictims}{detectAsicVictims}%
+\SetKwFunction{installFpgaRules}{installFpgaRules}%
+\SetKwFunction{getCpuTimer}{getCpuTimer}%
+
+\SetKw{In}{in}%
+\SetKw{Not}{not}%
+\SetKw{Or}{or}%
+\SetKw{Continue}{continue}%
+\SetKw{True}{true}%
+\SetKwInOut{Input}{input}
+\SetKwInOut{Output}{output}
+\SetKwRepeat{Do}{while}{do}
+\Input{List of new flow entries to be added}
+\Input{List of flow entries to be removed}
+\Input{List of flow entries to be updated}
+%\Output{Optimized balanced graph}
+%\KwData{A node is a data structure that has pointers to $successors$/$predecessors$ and methods to add/remove them. Also, a node has a $level$, representing the graph level and it is unassigned at the beginning.}
+\procedure{\maCachePolicer{newCtrlEntries, delCtrlEntries, updateCtrlEntries}}{
+
+	\While{\True}{
+		\tcc{CPU timer for updating entries}
+		$cpuUpdateKernel = \getCpuTimer()$\label{alg:cache_pol:cpu_timer}
+	
+		\tcc{Evaluate FPGA frequent matches and update candidates list}
+		$fpgaCand = \detectFpgaCand()$\label{alg:cache_pol:fpga_cand}
+
+		\tcc{Evaluate ASIC infrequent matches and update victims list}
+		$asicViticms = \detectAsicVictims()$\label{alg:cache_pol:asic_victims}
+	
+		\tcc{Timely CPU update kernel}
+		\If{$cpuUpdateKernel$}{
+			\If{$newCtrlEntries \neq \emptyset$ \Or $delCtrlEntries \neq \emptyset$ \Or $updateCtrlEntries \neq \emptyset$}{
+				\If{$delCtrlEntries \in ASIC$ \Or $updateCtrlEntries \in ASIC$}{
+				\tcc{Update/remove controller rules if already installed in the ASIC}
+				$\installAsicRules(\emptyset, delCtrlEntries,$ \\\qquad $updateCtrlEntries)$\label{alg:cache_pol:delete_asic}
+				}
+				\tcc{Controller rules are always installed into the FPGA}
+				$\installFpgaRules(newCtrlEntries,$ \\\qquad $delCtrlEntries, updateCtrlEntries)$\label{alg:cache_pol:install_fpga}
+			}\Else{
+				\tcc{CPU evaluates rules migration based on flow activity and system aggregated bandwidth}
+				$newEntries, delEntries = \evalCacheUpdate(fpgaCand, asicViticms)$\label{alg:cache_pol:eval_migration}\\
+				$\installAsicRules(newEntries, delEntries, \emptyset)$\label{alg:cache_pol:install_asic}
+			}
+		}
+	}
+}
+\end{algorithm}
+
+The \texttt{maCachePolicer} procedure shown in Algorithm~\ref{alg:cache_pol} has two controller-managed inputs: $newCtrlEntries$, $delCtrlEntries$, and $updateCtrlEntries$. These inputs control insertion, deletion, and updating of rules in the switch. In our work, new rules are always inserted, deleted, and updated directly in the the FPGA, as shown by line~\ref{alg:cache_pol:install_fpga}. New entries mat eventually migrate to the ASIC according to the dynamics of the cache replacement algorithm. Deleting or updating entries is executed in the ASIC, as in line~\ref{alg:cache_pol:delete_asic}.
+
+%TODO: Consider remove/update entries in the ASIC.
+
+\texttt{detectFpgaCand} and \texttt{detectAsicVictims} are implemented in the dataplane. \texttt{detectFpgaCand} (line~\ref{alg:cache_pol:fpga_cand}) implements a heavy hitter in the FPGA to detect frequent matched flows, and therefore, candidates for flow migration. \texttt{detectAsicVictims} (line~\ref{alg:cache_pol:asic_victims}) is a light hitter detector in the ASIC that identifies candidates for cache eviction.
+
+\texttt{evalCacheUpdate} and \texttt{installAsicRules} run in the host CPU a timely-fashion. \texttt{evalCacheUpdate} (line~\ref{alg:cache_pol:eval_migration}) collects flows activity information from both FPGA and ASIC and determines which rules will be inserted/removed into/from the ASIC. Flow information is weighted by the aggregated bandwidth of each device in order to correct estimate flow rates, that are used by the \texttt{installAsicRules} (line~\ref{alg:cache_pol:install_asic}) procedure to update the ASIC M-A tables.
+
+The next subsections give more implementation details regarding the traffic hitters implementation in both ASIC and FPGA devices and the host CPU procedure for rules installing. 
+
+\subsection{Detecting Candidates for Flow Migration}\label{sec:method:detection}
+
+Need to design a minimal heavy hitter implementation to match memory and logic resources.
+
+\subsection{Collecting Candidates and Update Procedure}\label{sec:method:update}
+
+\subsection{Limitations of the Proposed Method}\label{sec:method:limitations}
+
+In this work we are interested in detecting possible candidates for flow migration entirely in the dataplane. This is due high-speed links expected in data center networks and the fast changing nature of data center network traffic; therefore, a slow control plane interaction is undesired. However, candidates migration detection in the dataplane can only be precisely detected for exact match rules due to ambiguity in ternary and LPM match rules. For example, let us consider a case where a low priority LPM rule is frequently matched in a low cache level and would therefore be a candidate for flow migration. Using our method, this rule is moved to a higher cache level as expected. Now, a high priority rule belonging to the same prefix arriving to the HDP switch will match in the high cache level. However, a specific rule installed in a lower cache level for the same prefix will be hidden, leading thus to a possibly wrong forwarding decision.   
+Such cache ambiguity is a known problem and it has been reported and addressed in earlier works \cite{Degermark:1997,Katta:2014}.
+
+\section{Preliminary Results}\label{sec:results}
+
+\subsection{Performance Model}\label{sec:model}
+
+\subsection{Experimental Setup and Dataset}\label{sec:results:setup}
+
+To validate our proposed method, we have developed a simulation prototype in P4\textsubscript{16} running on the behavioral model (bmv2)\footnote{\url{https://github.com/p4lang/behavioral-model}} to emulate both ASIC and FPGA components of an HDP. P4Runtime has been used to interact with the emulated HDP. To allow reproducibility, all source codes are open\footnote{\url{https://github.com/hidden_for_blind_review}}.
+
+For this work, we have collected data center traces produced by Facebook Altoona Data Center in 2015 \cite{Roy:15}. The traces include data from three different data center clusters: database, web, and Hadoop servers.
+
+\subsection{P4-based Emulation Platform}\label{sec:emulation}
+
+
+\subsection{Discussion}\label{sec:results:discussion}
+
+
+\section{Conclusion}\label{sec:conclusion}
+
+
+
