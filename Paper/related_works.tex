@@ -8,10 +8,10 @@ Since then, flow caching has been explored for both hardware and software soluti
 \citeauthor{Katta:2014}~\cite{Katta:2014,Katta:2016} have addressed the issue of limited TCAM resources in hardware switches by proposing a hybrid hardware-software switch to exploit memory-abundant CPUs.
 The cache policy algorithm, however, is performed offline. 
 From the software side, the Open vSwitch (OVS) has employed flow caching from its inception \cite{Pfaff:15}.
-In OVS, the flow cache is split in two levels, microflow and megaflow.
-The microflow caches at fine granularity for long lasting connections while the megaflow, at coarser granularity, takes care of short-lived flows.
+In OVS, the flow cache is split into two levels, microflow and megaflow.
+The microflow caches at fine granularity for long-lasting connections while the megaflow, at coarser granularity, takes care of short-lived flows.
 
-\citeauthor{Grigoryan:18} have proposed a programmable FIB caching architecture~\cite{Grigoryan:18}. They were inspired by the heavy-hitter implementation of \cite{Sivaraman:17} to detect and evict infrequent match-action TCAM entries. However, their approach requires data-plane based learning for cache replacement and it assumes that the switch is able to deal with non-deterministic lookup time, which can compromise performance due to pipeline stalls. 
+\citeauthor{Grigoryan:18} have proposed a programmable FIB caching architecture~\cite{Grigoryan:18}. They were inspired by the heavy-hitter implementation of \cite{Sivaraman:17} to detect and evict infrequent match-action TCAM entries. However, their approach requires data-plane based learning for cache replacement and it assumes that the switch can deal with non-deterministic lookup time, which can compromise performance due to pipeline stalls. 
 
 \citeauthor{Zhang:2018} have presented B-cache, a behavior-level cache for programmable dataplanes~\cite{Zhang:2018}. Similarly to Grigoryan \textit{et al.} \cite{Grigoryan:18}, the authors exploit heavy-hitters to identify hot behavior in programmable dataplanes, which in turn could be cached. Similarly, this works is infeasible in current homogeneous high-performance switches since it breaks the streaming flow throughout the pipeline.
 

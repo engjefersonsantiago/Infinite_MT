@@ -108,60 +108,90 @@
     \node [input, name=input] {};
 
 
-    \node [block, below of=input, node distance=.85cm] (cpu) {\small\textbf{CPU}};
+    \node [block, below of=input, node distance=.85cm] (cpu) {\small\textbf{PDD\textsubscript{N}}};
 
-    \node [block, right=2 cm of cpu, node distance=.85cm] (cpu1) {\small\textbf{CPU}};
+    \node [block, right=2 cm of cpu, node distance=.85cm] (cpu1) {\small\textbf{PDD\textsubscript{N}}};
     
-\draw[dotted, thick, name=mm] ($(cpu.north west)+(-2.5cm,+.2cm)$) -- ($(cpu1.north east)+(1cm,+.2cm)$);
+\draw[dotted, semithick, name=mm] ($(cpu.north west)+(-2.5cm,+.2cm)$) -- ($(cpu1.north east)+(1cm,+.2cm)$);
 
     \node [draw=none] at ($(cpu.north west)+(-1.5cm,+.55cm)$) (main) {\scriptsize{\textit{Main Memory}}};
 
 
-\draw[dotted, thick] ($(cpu.south west)+(-2.5cm,-.2cm)$) -- ($(cpu1.south east)+(1cm,-.2cm)$);
+\draw[dotted, semithick] ($(cpu.south west)+(-2.5cm,-.2cm)$) -- ($(cpu1.south east)+(1cm,-.2cm)$);
 
-    \node [draw=none] at ($(cpu.west)+(-1.5cm,-.0cm)$) (hdp) {\scriptsize{\textit{Cache Level 3}}};
+    \node [draw=none] at ($(cpu.west)+(-1.5cm,-.0cm)$) (hdp) {\scriptsize{\textit{Cache Level N}}};
 
-    \node [block, below of=cpu, node distance=.85cm] (fpga) {\small\textbf{FPGA}};
-    \node [block, below of=cpu1, node distance=.85cm] (fpga1) {\small\textbf{FPGA}};
+    \node [block, below of=cpu, node distance=1.75cm] (fpga) {\small\textbf{PDD\textsubscript{2}}};
 
-\draw[dotted, thick] ($(fpga.south west)+(-2.5cm,-.2cm)$) -- ($(fpga1.south east)+(1cm,-.2cm)$);
+    \node [draw=none] at ($(fpga.north)+(.0cm,.75cm)$) (dotspdd) {\textbf{$\vdots$}};
 
-    \node [draw=none] at ($(fpga.west)+(-1.5cm,-.0cm)$) (hdp) {\scriptsize{\textit{Cache Level 2}}};
+    \node [draw=none] at ($(dotspdd)+(1.5cm,-.1cm)$) (dots) {\textbf{$\dots$}};
 
-    \node [block, below of=fpga, node distance=.85cm] (asic) {\small\textbf{ASIC}};
-    \node [block, below of=fpga1, node distance=.85cm] (asic1) {\small\textbf{ASIC}};
+    \node [draw=none] at ($(dots)+(0cm,.75cm)$) (dotp) {\textbf{$\dots$}};
+
+    \node [draw=none] at ($(dots)+(0cm,-.75cm)$) (dotm) {\textbf{$\dots$}};
+
+    \node [draw=none] at ($(dotm)+(0cm,-1.0cm)$) (dotmm) {\textbf{$\dots$}};
+
+
+    \node [block, below of=cpu1, node distance=1.75cm] (fpga1) {\small\textbf{PDD\textsubscript{2}}};
+
+    \node [draw=none] at ($(fpga1.north)+(.0cm,.75cm)$) (dotspdd1) {\textbf{$\vdots$}};
+
+
+\draw[dotted, semithick] ($(fpga.north west)+(-2.5cm,+.2cm)$) -- ($(fpga1.north east)+(1cm,+.2cm)$);
+
+\draw[dotted, semithick] ($(fpga.south west)+(-2.5cm,-.2cm)$) -- ($(fpga1.south east)+(1cm,-.2cm)$);
+
+
+    \node [draw=none] at ($(fpga.west)+(-1.5cm,-.0cm)$) (ll) {\scriptsize{\textit{Cache Level 2}}};
+
+    \node [draw=none] at ($(ll.north)+(.0cm,.75cm)$) (dotscl) {\textbf{$\vdots$}};
+
+    \node [block, below of=fpga, node distance=1.0cm] (asic) {\small\textbf{PDD\textsubscript{1}}};
+
+    \node [block, below of=fpga1, node distance=1.0cm] (asic1) {\small\textbf{PDD\textsubscript{1}}};
+
+
 
     \node [draw=none] at ($(asic.west)+(-1.5cm,-.0cm)$) (hdp) {\scriptsize{\textit{Cache Level 1}}};
 
-    \node [block,node distance=.85cm, minimum width=7em]  at ($(cpu.north)+(1.5cm,1cm)$) (controller) {\textbf{Controller}};
+    \node [block,node distance=.85cm, minimum width=7em]  at ($(cpu.north)+(1.5cm,.70cm)$) (controller) {\textbf{Controller}};
 
 
-	\node[cloud, draw, aspect=2, inner sep=-2pt,minimum width=5em, minimum height=3em] at ($(asic.south)+(1.5cm,-1cm)$) (network) {\textbf{Network}};
+	\node[cloud, draw, aspect=2, inner sep=-2pt,minimum width=5em, minimum height=3em] at ($(asic.south)+(1.5cm,-.75cm)$) (network) {\textbf{Network}};
 
     \node [output, below of=network] (output) {};
 
     % Once the nodes are placed, connecting them is easy. 
-    \draw [thick,<->] (fpga) -- node {} (cpu);
-    \draw [thick,<->] (fpga1) -- node {} (cpu1);
+    %%%\draw [thick,<->] (fpga) -- node {} (cpu);
+    %%%\draw [thick,<->] (fpga1) -- node {} (cpu1);
+
+    \draw [thick,<->] (cpu) -- node {} ($(dotspdd.center)+(0.0cm,.10cm)$);
+    \draw [thick,<->] (fpga) -- node {} ($(dotspdd.south)+(0.0cm,.09cm)$);
+
+    \draw [thick,<->] (cpu1) -- node {} ($(dotspdd1.center)+(0.0cm,.10cm)$);
+    \draw [thick,<->] (fpga1) -- node {} ($(dotspdd1.south)+(0.0cm,.09cm)$);
     
-    \draw [dashed, <->] (cpu.east) --+(0.25cm,0) |- node {} (asic);
+    \draw [dashed, <->] (fpga.west) --+(-0.25cm,0) |- node {} (asic);
     \draw [dashed, <->] (cpu.west) --+(-0.25cm,0) |- node {} (fpga);
     \draw [thick,<->] (fpga) -- node {} (asic);
     \draw [very thick,<->] (asic) |- node {} (network);
 
-    \draw [dashed, <->] (cpu1.west) --+(-0.25cm,0) |- node {} (asic1);
+    \draw [dashed, <->] (fpga1.east) --+(0.25cm,0) |- node {} (asic1);
     \draw [dashed, <->] (cpu1.east) --+(0.25cm,0) |- node {} (fpga1);
     \draw [thick,<->] (fpga1) -- node {} (asic1);
     \draw [very thick,<->] (asic1) |- node {} (network);
 
-    \draw [dashed, <->] (cpu.north) |- node {} (controller.west);
-    \draw [dashed, <->] (cpu1.north) |- node {} (controller.east);
+    \draw [dashed, <->] (cpu.west)  --+(-0.25cm,0) |- node {} (controller.west);
+    \draw [dashed, <->] (cpu1.east) --+(0.25cm,0) |- node {}(controller.east);
 
 
-    \draw []($(cpu.north)+(-1.0cm,.30cm)$) rectangle ($(asic.south)+(1.0cm,-.30cm)$);
-    \draw []($(cpu1.north)+(-1.0cm,.30cm)$) rectangle ($(asic1.south)+(1.0cm,-.30cm)$);
+    \draw []($(cpu1.north)+(-.65cm,.15cm)$) rectangle ($(asic1.south)+(0.9cm,-.30cm)$);
     
-    \node [draw=none] at ($(asic.south west)+(-.15cm,-.15cm)$) (hdp) {\footnotesize{HDP}};
-    \node [draw=none] at ($(asic1.south east)+(.15cm,-.15cm)$) (hdp) {\footnotesize{HDP}};
+    \draw []($(cpu.north)+(-0.9cm,.15cm)$) rectangle ($(asic.south)+(0.65cm,-.30cm)$);
+    
+    \node [draw=none] at ($(asic.south west)+(-.075cm,-.15cm)$) (hdp) {\footnotesize{HDP\textsubscript{1}}};
+    \node [draw=none] at ($(asic1.south east)+(.075cm,-.15cm)$) (hdp) {\footnotesize{HDP\textsubscript{N}}};
 
 \end{tikzpicture}

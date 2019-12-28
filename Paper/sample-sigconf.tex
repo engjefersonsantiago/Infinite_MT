@@ -22,7 +22,7 @@
 %% in the same archive or directory.)
 %%
 %% The first command in your LaTeX source must be the \documentclass command.
-\documentclass[sigconf,natbib=false,anonymous=false]{acmart}
+\documentclass[sigconf,natbib=false,anonymous=false,screen]{acmart}
 
 % Disable / remove copyright boxes
 \setcopyright{none}
@@ -166,14 +166,18 @@
                 morecomment=[l][\color{magenta}]{\#}
 }
 
-%\setlength{\belowcaptionskip}{-6pt}
-%\setlength{\abovecaptionskip}{-0pt}
+\setlength{\belowcaptionskip}{-0pt}
+\setlength{\abovecaptionskip}{-0pt}
 
 \DeclareSIUnit{\bit}{b}
 \DeclareSIUnit{\byte}{B}
 \DeclareSIUnit{\update}{Updates}
 
 \newcommand\Hidden{No} % Yes or No
+
+%\newcommand\mycommfont[1]{\textcolor{blue}{#1}}
+%\SetCommentSty{mycommfont}
+
 
 %% Patch Captions
 %\captionsetup[figure]{labelsep=period,font=footnotesize}
@@ -201,7 +205,8 @@
 %% the next command will enable that style.
 %%\citestyle{acmauthoryear}
 
-\usepackage[style=trad-abbrv, minnames=1, maxnames=2,backend=bibtex]{biblatex} %package bib
+%\usepackage[style=trad-abbrv, minnames=1, maxnames=2,backend=bibtex]{biblatex} %package bib
+\usepackage[style=ACM-Reference-Format, minnames=1, maxnames=2,backend=bibtex]{biblatex} %package bib
 \addbibresource{sample-bibliography.bib}
 %%
 %% end of the preamble, start of the body of the document source.
@@ -271,7 +276,16 @@
 %% The abstract is a short summary of the work to be presented in the
 %% article.
 \begin{abstract}
-\lipsum[1]
+The P4 language and modern programmable dataplanes have redrawn the networking landscape as they allow fully data path programming in SDN environments.
+P4 offers an explicit imperative match-action-based programming model which is the main processing abstraction in programmable dataplanes.
+However, modern programmable dataplanes lack in memory capacity for implementing match-tables.
+Recent research has suggested mixing up different programmable dataplane devices to increase memory capacity.
+
+In this work, we studied a cache hierarchy scheme in heterogeneous programmable dataplanes to emulate a single "virtually infinite" match table.
+Our analysis started by re-characterizing an up-to-data data center trace.
+Then, following our observations we derived caching premises for match-action caching.
+Finally, we developed an open-source simulator to evaluate the viability of our proposed caching scheme.
+
 \end{abstract}
 
 %%
@@ -326,11 +340,11 @@ The authors thank the anonymous reviewers for their insightful comments. This wo
 \end{acks}
 
 
+\balance
+
 %\bibliographystyle{ACM-Reference-Format}
 %\bibliography{sample-bibliography}
 \printbibliography
-
-\balance
 
 
 %%
