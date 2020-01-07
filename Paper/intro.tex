@@ -46,7 +46,10 @@ As an example, an HDP could be made of a programmable ASIC for $PDD_1$, an  FPGA
 To that end, we borrow from the cache hierarchy concept of regular computer systems.
 %In our system, a first-level cache is a high-performance but memory limited programmable ASIC.
 %The FPGA plays the role of second-level cache, and finally the CPU is the last-level cache.
-In our proposed caching system, a first-level cache is a high-performance but memory-limited PDD. At every cache level, the performance metric $P_{k}$ is decreased, in a way where $P_{k-1} >> P_{k} >> P_{k+1}$. Memory capacity is augmented to $M_{k}$, where $M_{k-1} << M_{k} << M_{k+1}$. And, the performance ratio between two successive cache levels is characterized by a processing slowdown factor $SF$. Thus, $SF$ at a cache $k$ level is defined as $SF_{k} = \left(\frac{P_{k}}{P_{k-1}}\right)^{-1}$.
+In our proposed caching system, a first-level cache is a high-performance but memory-limited PDD.
+At every cache level, the performance metric $P_{k}$ (throughput in our case) is decreased, in a way where $P_{k-1} >> P_{k} >> P_{k+1}$.
+Memory capacity is augmented to $M_{k}$, where $M_{k-1} << M_{k} << M_{k+1}$. 
+The performance ratio between two successive cache levels is characterized by a processing slowdown factor $SF$ defined as $SF_{k} = \left(\frac{P_{k}}{P_{k-1}}\right)^{-1}$.
 
 
 However, match-action caching is fairly different from CPU caches.

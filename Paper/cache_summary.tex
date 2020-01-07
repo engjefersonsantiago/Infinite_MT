@@ -28,19 +28,19 @@ A similar analysis was done by~\citeauthor{Spang:19} to estimate the number of T
 Figure~\ref{fig:traces} summarizes our observations.
 In our analysis, we defined a flow as being a unique five-tuple $\langle$~IPv4/IPv6 Source IP address, IPv4/IPv6 destination IP address, L4 protocol, UDP/TCP source port, UDP/TCP destination port~$\rangle$ connection.
 
-As shown in Figure~\ref{fig:cdf}, the Zipf distribution characteristic is still present in current network traffic.
+\textbf{Heavy hitters}~---~As shown in Figure~\ref{fig:cdf}, the Zipf distribution characteristic is still present in current network traffic.
 The figure presents the CDF, in terms of transmitted bytes, for several observation intervals, ranging from \SI{100}{\micro\second} to \SI{60}{\second}.
 For all observation intervals longer than \SI{100}{\milli\second}, fewer than 10\% of the flows dominate more than 90\% of the traffic.
 For shorter intervals, the Zipf dominance is still present although more skewed.
 
-Figure~\ref{fig:flow_duration} presents the flow duration time.
+\textbf{Flow duration}~---~Figure~\ref{fig:flow_duration} presents the flow duration time.
 The blue curve is dominated (60\%) by single packet flows.
 Single packet flows are represented with a flow duration of zero seconds.
 Short-lived flows dominate the trace with $\sim$90\% of all flows lasting less than 5 seconds.
 The orange curve in Figure~\ref{fig:flow_duration} illustrates the duration of flows with multiple hits in the trace.
 Still, short-lived flows dominate the trace with $\sim$50\% lasting less than 1 second in the trace.
 
-Figure~\ref{fig:flow_size} presents the average flow size for four statistically representative observation intervals.
+\textbf{Flow size}~---~Figure~\ref{fig:flow_size} presents the average flow size for four statistically representative observation intervals.
 For all four measures, the first quartile, the median, and the third quartile are very similar.
 On average, small flows ($\sim$100 bytes) dominate the trace with 75\% of the flows being no larger than 150 bytes.
 
