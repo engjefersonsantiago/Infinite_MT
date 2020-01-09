@@ -17,11 +17,13 @@ static constexpr auto CACHE_L2_TYPE = (L2_CACHE_POLICY == CacheType::OPT) ? Cach
 // LFU and LFU modif have the same stats
 using cache_stats_t = std::conditional_t<L1_CACHE_POLICY == CacheType::LFU || L1_CACHE_POLICY == CacheType::LFU_MODIF, LFUCacheStats<L1_CACHE_STATS_SIZE, std::size_t>, LRUCacheStats<L1_CACHE_STATS_SIZE, std::size_t>>;
 
+using cache_l2_stats_t = MFUCacheStats<L2_CACHE_STATS_SIZE, std::size_t>;
+
 using base_l1_pkt_process_t = PacketProcessing<L1_CACHE_SIZE, std::size_t, cache_stats_t>;
 using cache_l1_t = CacheL1PacketProcessing<L1_CACHE_SIZE, std::size_t, cache_stats_t>;
 
-using base_l2_pkt_process_t = PacketProcessing<L2_CACHE_SIZE, std::size_t, cache_stats_t>;
-using cache_l2_t = CacheL2PacketProcessing<L2_CACHE_SIZE, std::size_t, cache_stats_t>;
+using base_l2_pkt_process_t = PacketProcessing<L2_CACHE_SIZE, std::size_t, cache_l2_stats_t>;
+using cache_l2_t = CacheL2PacketProcessing<L2_CACHE_SIZE, std::size_t, cache_l2_stats_t>;
 
 // Create duplicates for each policy: promotion and eviction
 using LRU_policy_t = LRUPolicy<cache_l1_t::lookup_table_t, cache_stats_t >;
@@ -37,7 +39,9 @@ using Policy = std::conditional_t<L1_CACHE_POLICY == CacheType::LFU, LFU_policy_
                                     std::conditional_t<L1_CACHE_POLICY == CacheType::OPT, OPT_policy_t,
                                     std::conditional_t<L1_CACHE_POLICY == CacheType::LRU, LRU_policy_t, Random_policy_t>>>>;
 
-using controller_t = Controller<typename cache_l1_t::lookup_table_t, typename cache_l2_t::lookup_table_t, Policy>;
+using Promo_Policy = MFUPolicy<cache_l2_t::lookup_table_t, cache_l2_stats_t>;
+
+using controller_t = Controller<typename cache_l1_t::lookup_table_t, typename cache_l2_t::lookup_table_t, Policy, Promo_Policy>;
 
 //TODO: Add Policer.
 
@@ -60,7 +64,7 @@ int main(int argc, char** argv)
     inter_thread_comm_t parse_to_l1_comm;
     inter_thread_comm_t l1_to_l2_comm;
     inter_thread_comm_t l2_to_dummy_comm;
-    inter_thread_digest_cpu l1_to_cpu_comm(0);
+    inter_thread_digest_cpu l1_to_cpu_comm(1000);
     inter_thread_digest_cpu l2_to_cpu_comm;
 
     // Parser
@@ -87,6 +91,7 @@ int main(int argc, char** argv)
             }
             if (!base_cache_l2.lookup_table().is_full() && L2_CACHE_INIT_STS == CacheInit::FULL) {
                 base_cache_l2.lookup_table().data().insert(std::make_pair(tuple, 0ul));
+                base_cache_l2.stats_table().get_stats().insert(std::make_pair(tuple, 0ul), [](){},[](){});
             }
         }
     }
@@ -95,6 +100,7 @@ int main(int argc, char** argv)
     LRU_policy_t lru_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table());
     LFU_policy_t lfu_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table(), LFU_COUNTER_TYPE);
     LFU_Modif_policy_t lfu_modif_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table(), LFU_COUNTER_TYPE);
+    MFUPolicy mfu_policy(base_cache_l2.lookup_table(),base_cache_l2.stats_table(), LFU_COUNTER_TYPE); // MPU for promotion
     Random_policy_t random_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table());
     OPT_policy_t opt_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table(),pcap_file);
     if constexpr (L1_CACHE_POLICY == CacheType::OPT)
@@ -103,12 +109,12 @@ int main(int argc, char** argv)
 
     std::tuple<LRU_policy_t, LFU_policy_t, LFU_Modif_policy_t, Random_policy_t, OPT_policy_t> policy { lru_policy, lfu_policy, lfu_modif_policy, random_policy , opt_policy };
 
-
     // Controller with LRU Policy
     controller_t controller(base_cache_l2.lookup_table().data(),
                             base_cache_l1.lookup_table(),
                             base_cache_l2.lookup_table(),
                             std::get<Policy>(policy),
+                            mfu_policy,
                             CACHE_HOST_PROC_SLOWDOWN_FACTOR);
 
     auto start = std::chrono::system_clock::now();
@@ -118,6 +124,7 @@ int main(int argc, char** argv)
     while (parse_pkts.from_pcap_file(false, parse_to_l1_comm))
     {
         base_cache_l1.process_packet(false, CACHE_L1_PROC_SLOWDOWN_FACTOR, CACHE_L1_TYPE, LFU_COUNTER_TYPE);
+        base_cache_l2.process_packet(false, CACHE_L2_PROC_SLOWDOWN_FACTOR, CACHE_L2_TYPE, LFU_COUNTER_TYPE);
         controller.process_digest(false, l1_to_cpu_comm,l2_to_cpu_comm);
     }
 

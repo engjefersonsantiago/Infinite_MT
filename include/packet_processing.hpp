@@ -45,7 +45,8 @@ class PacketProcessing {
                 discrete_ts = tmp_discrete  ;
 
                 // Exit in case of timeout
-                if (timeout) {
+                if (timeout/* && lookup_table_.LOOKUP_MEM_SIZE != -1*/) {
+                    std::cout << "Timeout----------+++++++++++++++------------------++++++++++++++--------------------\n";
                     print_status();
                     break;
                 }
@@ -67,6 +68,7 @@ class PacketProcessing {
                     punt_pkt_to_next_lvl(out_comm_pkt_);
                     digest_pkt_to_ctrl(digest_cpu_, cache_type);
                 } else {
+                    out_comm_pkt_.step++;
                     digest_cpu_.step++;
                     matched_packets_++;
                     matched_bytes_+=tuple_size_pair_.second;
@@ -84,7 +86,7 @@ class PacketProcessing {
                 update_cache_stats(match, cache_type, counter_type);
 
 
-                if (num_packets_%1000000 == 0)
+                if (num_packets_%1000 == 0)
                 {
                     print_status();
                     //if (num_packets_ == 10000000) std::terminate();
@@ -207,7 +209,17 @@ class CacheL2PacketProcessing final : public PacketProcessing <Lookup_Size, Look
         virtual void punt_pkt_to_next_lvl (inter_thread_comm_t& punted_pkt) override {}
         virtual void update_cache_stats(const bool match,
                                         const CacheType cache_type,
-                                        const CounterType counter_type) override {}
+                                        const CounterType counter_type) override
+        {        
+            if (match) {
+                //if (cache_type == CacheType::LFU || cache_type == CacheType::LFU_MODIF) {
+                    this->stats_table_.update_stats(this->tuple_size_pair_.first,
+                                                    (counter_type == CounterType::BYTES)
+                                                    ? this->tuple_size_pair_.second : 1ul);
+                //} else {
+                //}
+            }
+        }
 
         // CTOR calls the base CTOR
         CacheL2PacketProcessing(inter_thread_comm_t& in_comm_pkt,

@@ -22,7 +22,7 @@ class LookupTable {
         //using table_size_t = Lookup_Size;
         using table_value_t = Lookup_Value;
         // Constants
-        static constexpr auto LOOKUP_MEM_SIZE = Lookup_Size;
+        static constexpr auto LOOKUP_MEM_SIZE = Lookup_Size; // -1 means infinite memory
 
         auto begin() {
             std::unique_lock lock(mutex_);
@@ -68,7 +68,7 @@ class LookupTable {
 
         auto is_full() const {
             std::shared_lock lock(mutex_);
-            return lookup_table_.size() >= LOOKUP_MEM_SIZE;
+            return lookup_table_.size() >= LOOKUP_MEM_SIZE && LOOKUP_MEM_SIZE != size_t(-1);
         }
 
         auto remove (const FiveTuple& five_tuple) {

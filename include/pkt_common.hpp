@@ -156,7 +156,7 @@ struct ThreadCommunication {
     auto pull_message (Message& message, const std::size_t read_step){ 
         std::unique_lock lck {mmutex};
         if (read_step == 1) { mcond.notify_one(); }
-        if (!mcond.wait_until(lck, std::chrono::system_clock::now() + second_t(timeout_),
+        if (!mcond.wait_until(lck, std::chrono::system_clock::now() + nano_second_t(timeout_),
             [=](){ return consumed.load() && (!mqueue.empty() && !done.load()) && (step.load()%read_step == 0); })
             )
         {

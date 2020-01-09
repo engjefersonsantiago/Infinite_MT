@@ -178,6 +178,57 @@ class LFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LFUContai
         }
 };
 
+// LFU Cache stats specialization
+template<typename T>
+using MFUContainer = SortedContainer<std::pair<FiveTuple, T>>;
+
+template<size_t Stats_Size, typename Stats_Value>
+class MFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, MFUContainer<Stats_Value>>
+{
+
+    public:
+        virtual void update_stats (const FiveTuple& five_tuple, const Stats_Value& updated_stats) override
+        {
+            std::unique_lock lock(this->mutex_);
+            if (updated_stats != 0)
+            {
+                auto tuple_compare = [=](const auto& elem) {
+                    return elem.first == five_tuple;
+                };
+                auto heap_value_sort = [](auto a, auto b) { return a.second < b.second; };
+                auto value_sort = [](auto a, auto b) { return a.second > b.second; };
+                auto value_compare = [](auto a, auto b) { return (a.second > b.second) ? a : b; };
+
+                auto found = this->stats_container_.find_if(tuple_compare);
+                if (found !=  this->stats_container_.end())
+                {
+                    *found = std::make_pair(found->first, found->second + updated_stats);
+                } else
+                {
+                    this->stats_container_.insert(std::make_pair(five_tuple, updated_stats + this->stats_container_.front().second), value_sort, value_compare);
+                }
+                this->stats_container_.sort(value_sort);
+
+                //std::cout << "------------------------\n";
+                //for (auto i : this->stats_container_) {
+                //    std::cout << i.first << " , " << i.second << '\n';
+                //} 
+
+                //std::make_heap(this->stats_container_.begin(), this->stats_container_.end(), heap_value_sort); 
+                //std::sort(this->stats_container_.begin(), this->stats_container_.end(), value_sort); 
+                
+                //std::cout << "------------------------\n";
+                //for (auto i : this->stats_container_) {
+                //    std::cout << i.first << " , " << i.second << '\n';
+                //} 
+                //std::cout << this->stats_container_.back().first << '\n';
+                //int i;
+                //std::cin >> i;
+            }
+        }
+};
+
+
 // Optimal cache stats specialization
 // Calculate offline the list of flows to be evicted
 // Store teh into a queue

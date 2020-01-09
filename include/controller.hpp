@@ -15,7 +15,7 @@
 #include "packet_processing.hpp"
 #include "lookup_table.hpp"
 
-template<typename Lookup_Table_L1 , typename Lookup_Table_L2, typename Policier_t>
+template<typename Lookup_Table_L1 , typename Lookup_Table_L2, typename Policier1_t, typename Policier2_t>
 class Controller
 {
 
@@ -30,13 +30,15 @@ class Controller
         Controller(full_look_table_t& full_lookup_table,
                     Lookup_Table_L1& lookup_table_L1,
                     Lookup_Table_L2& lookup_table_L2,
-                    Policier_t& policy,
+                    Policier1_t& policy1,
+                    Policier2_t& policy2,
                     const std::size_t slowdown
                     ) :
                     full_lookup_table_(full_lookup_table),
                     lookup_table_L1_(lookup_table_L1),
                     lookup_table_L2_(lookup_table_L2),
-                    l1_policy_(policy),
+                    l1_policy_(policy1),
+                    l2_policy_(policy2),
                     slowdown_factor_(slowdown)
         {}
 
@@ -73,22 +75,25 @@ class Controller
             }
 
             // Lookup Table full ? Identify a victim for eviction
-            if (lookup_table.is_full() && (lookup_table.find(five_tuple) == lookup_table.end()))
+            if (lookup_table_L1_.is_full()/* && (lookup_table_L1_.find(five_tuple) == lookup_table_L1_.end())*/)
             {
-                if (lookup_table.find(five_tuple) == lookup_table.end())
+            
+                // Select candidate
+                five_tuple = l2_policy_.select_replacement_victim(five_tuple, size_or_timestamp);
+                if (lookup_table_L1_.find(five_tuple) == lookup_table_L1_.end())
                 {
-                    auto evicted_key = policy.select_replacement_victim(five_tuple, size_or_timestamp);
-                    auto ctrl_signal_removal = remove_entry_cache(lookup_table, evicted_key);
+                    auto evicted_key = l1_policy_.select_replacement_victim(five_tuple, size_or_timestamp);
+                    auto ctrl_signal_removal = remove_entry_cache(lookup_table_L1_, evicted_key);
                     debug(std::cout << "Remove function: " << ctrl_signal_removal << '\n';)
                     if (ctrl_signal_removal)
                     {
                         debug(std::cout << "-----------------------------------------------------------\n";)
-                        debug(std::cout << "Removing: " << evicted_key << "Current occupancy: " << lookup_table.occupancy() << '\n';)
+                        debug(std::cout << "Removing: " << evicted_key << "Current occupancy: " << lookup_table_L1_.occupancy() << '\n';)
                         debug(std::cout << "-----------------------------------------------------------\n";)
                     } else
                     {
                         std::cout << "-----------------------------------------------------------\n";
-                        std::cout << "Replacement policy failed." << evicted_key << " not present\n";
+                        std::cout << "Replacement l1_policy_ failed." << evicted_key << " not present\n";
                         std::cout << "-----------------------------------------------------------\n";
                         //int i;
                         //std::cin >> i;
@@ -104,16 +109,16 @@ class Controller
                     return elem.first == five_tuple;
                 };
 
-                auto found = policy.stats_table().get_stats().find_if(tuple_compare);
-                if (found ==  policy.stats_table().get_stats().end())
+                auto found = l1_policy_.stats_table().get_stats().find_if(tuple_compare);
+                if (found ==  l1_policy_.stats_table().get_stats().end())
                 {
-                    policy.stats_table().get_stats().insert(std::make_pair(five_tuple, size_or_timestamp), [](){}, [](){}); 
+                    l1_policy_.stats_table().get_stats().insert(std::make_pair(five_tuple, size_or_timestamp), [](){}, [](){}); 
                 }
             }
 
-
             Value_t value = 0;
             // Insert the new value.
+#if 0
             auto lookup_it = full_lookup_table_.find(five_tuple);
             if (lookup_it == full_lookup_table_.end())
             {
@@ -126,13 +131,14 @@ class Controller
                 value = lookup_it->second;
                 //std::cout << "Inserted " << five_tuple << '\n';
             }
-            if (!add_entry_cache(lookup_table, five_tuple, value))
+#endif
+            if (!add_entry_cache(lookup_table_L1_, five_tuple, value))
             {
                 std::cout << "--------------------------\n";
                 std::cout << "Insertion failed\n";
                 std::cout << "--------------------------\n";
             }
-            debug(std::cout << "Digested " << punted_pkts << " packets, Inserting: " << five_tuple << ", Step: " << step << ", Current occupancy: " << lookup_table.occupancy() << '\n';)
+            debug(std::cout << "Digested " << punted_pkts << " packets, Inserting: " << five_tuple << ", Step: " << step << ", Current occupancy: " << lookup_table_L1_.occupancy() << '\n';)
             return false;
         }
 
@@ -168,7 +174,8 @@ class Controller
         //StatsContainer<Size, Stats_Value>& stats_table_L2;
 
         // Policy
-        Policier_t l1_policy_;
+        Policier1_t l1_policy_;
+        Policier2_t l2_policy_;
 
         std::size_t l1_punted_pkts = 0;
 

@@ -353,7 +353,7 @@ class LFUModifPolicy final: public Policier<lookup_table_t,stats_table_t>
             auto selected = tuple_to_remove->first;
             *tuple_to_remove = { five_tuple, tuple_to_remove->second  +
                                  ((counter_type_ == CounterType::BYTES) ? pkt_size : 1) };
-
+#if 0
             debug(
             std::cout << "---------------------------\n";
             std::cout << "Lookup table contents\n";
@@ -373,12 +373,69 @@ class LFUModifPolicy final: public Policier<lookup_table_t,stats_table_t>
             std::cout << "Key to remove " << tuple_to_remove->first << '\n';
             std::cout << "---------------------------\n";
             )
-
+#endif
             return selected;
 
         }
 
 };
 
+template<typename lookup_table_t, typename  stats_table_t>
+class MFUPolicy final: public Policier<lookup_table_t,stats_table_t>
+{
+    private:
+        const CounterType counter_type_;
+
+    public:
+        using policer_t =  Policier<lookup_table_t, stats_table_t>;
+
+        MFUPolicy(const lookup_table_t& lookup_table,
+                        stats_table_t& stats_table,
+                        const CounterType counter_type) :
+                        policer_t(lookup_table, stats_table),
+                        counter_type_(counter_type)
+        {}
+
+        virtual FiveTuple select_replacement_victim(FiveTuple, size_t) override
+        {
+            auto value_sort = [](auto a, auto b) { return a.second > b.second; };
+            // Get the least recently used entry.
+            // TUple + value associe
+            // 1. Get stats
+            //auto tuple_to_remove = this->stats_table_.front();
+            //this->stats_table_.get_stats().data().front() = { five_tuple, tuple_to_remove.second  + pkt_size };
+            //std::make_heap(this->stats_table_.get_stats().begin(), this->stats_table_.get_stats().end(), value_sort);
+
+            auto& tuple_to_remove = this->stats_table_.get_stats().front();
+            auto selected = tuple_to_remove.first;
+            tuple_to_remove.second = 0;
+            this->stats_table_.get_stats().sort(value_sort);
+#if 0
+            debug(
+            std::cout << "---------------------------\n";
+            std::cout << "Lookup table contents\n";
+            std::cout << "---------------------------\n";
+            for(const auto& [key, _] : this->lookup_table_)
+            {
+                std::cout <<  key << '\n';
+            }
+            )
+#endif
+            std::cout << "---------------------------\n";
+            std::cout << "Stats table contents\n";
+            std::cout << "---------------------------\n";
+            for(const auto& [key, val] : this->stats_table_.get_stats().data())
+            {
+                std::cout <<  key <<  ", " << val << '\n';
+            }
+            std::cout << "---------------------------\n";
+            std::cout << "Key to remove " << tuple_to_remove.first << '\n';
+            std::cout << "---------------------------\n";
+            return selected;
+
+        }
+
+};
 
 #endif
+
