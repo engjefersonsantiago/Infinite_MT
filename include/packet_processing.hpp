@@ -25,7 +25,7 @@
 
 using namespace boost::accumulators;
 
-template<size_t Lookup_Size, typename Lookup_Value, typename Cache_Stats, size_t Sleep_Time = 0>
+template<size_t Lookup_Size, typename Lookup_Value, typename Cache_Stats, typename Promo_Stats, size_t Sleep_Time = 0>
 class PacketProcessing {
 
     public:
@@ -42,12 +42,12 @@ class PacketProcessing {
             while (true) {
                 // Wait until a message is pushed to the queue
                 auto [timeout, tmp_discrete] = in_comm_pkt_.pull_message(packet_timestamp_, read_step);
-                discrete_ts = tmp_discrete  ;
+                discrete_ts = tmp_discrete;
 
                 // Exit in case of timeout
                 if (timeout/* && lookup_table_.LOOKUP_MEM_SIZE != -1*/) {
                     std::cout << "Timeout----------+++++++++++++++------------------++++++++++++++--------------------\n";
-                    print_status();
+                    //print_status();
                     break;
                 }
 
@@ -80,19 +80,20 @@ class PacketProcessing {
                 vec_hit_ratio_(hit_ratio);
                 vec_weghted_hit_ratio_(weighted_hit_ratio);
 
+                //print_status();
                 debug(print_status();)
 
                 // Update cache defined in the derived
                 update_cache_stats(match, cache_type, counter_type);
 
 
-                if (num_packets_%1000 == 0)
+                if (num_packets_%10000 == 0)
                 {
                     print_status();
                     //if (num_packets_ == 10000000) std::terminate();
                 }
                 if (!run_forever) {
-                    debug(print_status();)
+                    //debug(print_status();)
                     break;
                 }
                 
@@ -134,6 +135,7 @@ class PacketProcessing {
         auto& lookup_table () { return lookup_table_; }
 
         auto& stats_table () { return stats_table_; }
+        auto& pop_stats_table () { return pop_stats_; }
 
         PacketProcessing(inter_thread_comm_t& in_comm_pkt,
                             inter_thread_comm_t& out_comm_pkt,
@@ -161,15 +163,17 @@ class PacketProcessing {
         accumulator_set<double, features<tag::mean, tag::variance>> vec_weghted_hit_ratio_;
         std::size_t discrete_ts = 0;
         tuple_pkt_size_pair_t tuple_size_pair_;
+        
+        Promo_Stats pop_stats_;
 
 }; // PacketProcessing
 
 
-template<size_t Lookup_Size, typename Lookup_Value, typename Cache_Stats, size_t Sleep_Time = 0>
-class CacheL1PacketProcessing final : public PacketProcessing <Lookup_Size, Lookup_Value, Cache_Stats, Sleep_Time> {
+template<size_t Lookup_Size, typename Lookup_Value, typename Cache_Stats, typename Promo_Stats, size_t Sleep_Time = 0>
+class CacheL1PacketProcessing final : public PacketProcessing <Lookup_Size, Lookup_Value, Cache_Stats, Promo_Stats, Sleep_Time> {
 
     public:
-        using pkt_proc_base_t = PacketProcessing <Lookup_Size, Lookup_Value, Cache_Stats, Sleep_Time>;
+        using pkt_proc_base_t = PacketProcessing <Lookup_Size, Lookup_Value, Cache_Stats, Promo_Stats, Sleep_Time>;
 
         virtual void punt_pkt_to_next_lvl (inter_thread_comm_t& punted_pkt) override {
             punted_pkt.push_message(this->packet_timestamp_);
@@ -186,8 +190,12 @@ class CacheL1PacketProcessing final : public PacketProcessing <Lookup_Size, Look
                     this->stats_table_.update_stats(this->tuple_size_pair_.first,
                                                     (counter_type == CounterType::BYTES)
                                                     ? this->tuple_size_pair_.second : 1ul);
-                } else {
                 }
+            } else {
+                //std::cout << "------------------------\n";
+                this->pop_stats_.update_stats(this->tuple_size_pair_.first,
+                                              (counter_type == CounterType::BYTES)
+                                              ? this->tuple_size_pair_.second : 1ul);
             }
         }
 
@@ -200,11 +208,11 @@ class CacheL1PacketProcessing final : public PacketProcessing <Lookup_Size, Look
 
 };
 
-template<size_t Lookup_Size, typename Lookup_Value, typename Cache_Stats, size_t Sleep_Time = 0>
-class CacheL2PacketProcessing final : public PacketProcessing <Lookup_Size, Lookup_Value, Cache_Stats, Sleep_Time> {
+template<size_t Lookup_Size, typename Lookup_Value, typename Cache_Stats, typename Promo_Stats, size_t Sleep_Time = 0>
+class CacheL2PacketProcessing final : public PacketProcessing <Lookup_Size, Lookup_Value, Cache_Stats, Promo_Stats, Sleep_Time> {
 
     public:
-        using pkt_proc_base_t = PacketProcessing <Lookup_Size, Lookup_Value, Cache_Stats, Sleep_Time>;
+        using pkt_proc_base_t = PacketProcessing <Lookup_Size, Lookup_Value, Cache_Stats, Promo_Stats, Sleep_Time>;
 
         virtual void punt_pkt_to_next_lvl (inter_thread_comm_t& punted_pkt) override {}
         virtual void update_cache_stats(const bool match,

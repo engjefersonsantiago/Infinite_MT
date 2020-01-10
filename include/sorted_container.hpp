@@ -113,7 +113,8 @@ class SortedContainer {
                     //else
                         data_.back() = element;
                     //data_[occupancy_-1] = element;
-                    //std::cout << back().first << '\n';
+                    //for (auto i : data_)
+                    //    std::cout << i.first << '\n';
                 }
             }
             // Sort using the predicate s

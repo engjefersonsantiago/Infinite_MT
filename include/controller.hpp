@@ -15,7 +15,7 @@
 #include "packet_processing.hpp"
 #include "lookup_table.hpp"
 
-template<typename Lookup_Table_L1 , typename Lookup_Table_L2, typename Policier1_t, typename Policier2_t>
+template<typename Lookup_Table_L1 , typename Lookup_Table_L2, typename Policier1_t>
 class Controller
 {
 
@@ -31,14 +31,12 @@ class Controller
                     Lookup_Table_L1& lookup_table_L1,
                     Lookup_Table_L2& lookup_table_L2,
                     Policier1_t& policy1,
-                    Policier2_t& policy2,
                     const std::size_t slowdown
                     ) :
                     full_lookup_table_(full_lookup_table),
                     lookup_table_L1_(lookup_table_L1),
                     lookup_table_L2_(lookup_table_L2),
                     l1_policy_(policy1),
-                    l2_policy_(policy2),
                     slowdown_factor_(slowdown)
         {}
 
@@ -79,7 +77,7 @@ class Controller
             {
             
                 // Select candidate
-                five_tuple = l2_policy_.select_replacement_victim(five_tuple, size_or_timestamp);
+                five_tuple = l1_policy_.select_promotion_candidate();
                 if (lookup_table_L1_.find(five_tuple) == lookup_table_L1_.end())
                 {
                     auto evicted_key = l1_policy_.select_replacement_victim(five_tuple, size_or_timestamp);
@@ -175,7 +173,6 @@ class Controller
 
         // Policy
         Policier1_t l1_policy_;
-        Policier2_t l2_policy_;
 
         std::size_t l1_punted_pkts = 0;
 

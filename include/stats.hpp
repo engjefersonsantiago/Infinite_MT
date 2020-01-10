@@ -205,7 +205,7 @@ class MFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, MFUContai
                     *found = std::make_pair(found->first, found->second + updated_stats);
                 } else
                 {
-                    this->stats_container_.insert(std::make_pair(five_tuple, updated_stats + this->stats_container_.front().second), value_sort, value_compare);
+                    this->stats_container_.insert(std::make_pair(five_tuple, updated_stats), value_sort, value_compare);
                 }
                 this->stats_container_.sort(value_sort);
 
