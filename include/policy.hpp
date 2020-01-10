@@ -64,7 +64,7 @@ class RandomPolicy final: public Policier<lookup_table_t,stats_table_t,promo_sta
         {
             std::random_device rd;
             std::mt19937 gen(rd());
-            std::uniform_int_distribution<> dis(0, lookup_table_t::LOOKUP_MEM_SIZE);
+            std::uniform_int_distribution<> dis(0, lookup_table_t::LOOKUP_MEM_SIZE - 1);
             return dis(gen);
         }
 

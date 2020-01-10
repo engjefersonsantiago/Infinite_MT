@@ -113,13 +113,14 @@ class LookupTable {
 //
         auto indexed_iter (std::size_t idx) const {
 //            std::shared_lock lock(mutex_);
-            //return std::next(lookup_table_.begin(), idx);
-            std::size_t i = 0;
+            auto it = lookup_table_.begin(); 
+            return *std::next(it, idx);
+            /*std::size_t i = 0;
             for (const auto it : lookup_table_) {
                 if (i++ == idx)
                     return it;
             }
-            return *lookup_table_.begin();
+            return *lookup_table_.begin();*/
         }
         
         LookupTable () {}

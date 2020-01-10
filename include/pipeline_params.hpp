@@ -40,10 +40,10 @@ static constexpr auto L2_CACHE_POLICY = CacheType::LFU;
 
 static constexpr auto LFU_COUNTER_TYPE = CounterType::BYTES;
 
-static constexpr std::size_t L1_CACHE_SIZE = 256;
+static constexpr std::size_t L1_CACHE_SIZE = 512;
 static constexpr std::size_t L2_CACHE_SIZE = -1;
 
-static constexpr std::size_t L1_CACHE_STATS_SIZE = 256;
+static constexpr std::size_t L1_CACHE_STATS_SIZE = 512;
 static constexpr std::size_t L2_CACHE_STATS_SIZE = 64;
 
 #endif
