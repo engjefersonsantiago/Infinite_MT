@@ -12,7 +12,7 @@ class SortedContainer {
         std::vector<Type> data_;
         const size_t size_;
         size_t occupancy_;
-        mutable std::shared_mutex mutex_;
+        //mutable std::shared_mutex mutex_;
 
     public:
         SortedContainer (const size_t size) :
@@ -22,7 +22,7 @@ class SortedContainer {
 
         auto erase (typename std::vector<Type>::const_iterator it)
         {
-            std::unique_lock lock(mutex_);
+ //           std::unique_lock lock(mutex_);
             {
             return data_.erase(it);
             }
@@ -30,71 +30,71 @@ class SortedContainer {
 
         auto occupancy () const
         {
-            std::unique_lock lock(mutex_);
+//            std::unique_lock lock(mutex_);
             return occupancy_;
         }
 
         auto begin() {
-            std::unique_lock lock(mutex_);
+//            std::unique_lock lock(mutex_);
             return data_.begin();
         }
         auto end() {
-            std::unique_lock lock(mutex_);
+//            std::unique_lock lock(mutex_);
             return data_.end();
         }
 
         auto begin() const {
-            std::unique_lock lock(mutex_);
+//            std::unique_lock lock(mutex_);
             return data_.begin();
         }
         auto end() const {
-            std::unique_lock lock(mutex_);
+//            std::unique_lock lock(mutex_);
             return data_.end();
         }
 
         auto clear() {
-            std::unique_lock lock(mutex_);
+//            std::unique_lock lock(mutex_);
             return data_.clear();
         }
 
         auto& front() {
-            std::unique_lock lock(mutex_);
+//            std::unique_lock lock(mutex_);
             return data_.front();
         }
         auto& back() {
-            std::unique_lock lock(mutex_);
+//            std::unique_lock lock(mutex_);
             return data_.back();
         }
 
         auto& front() const {
-            std::unique_lock lock(mutex_);
+//            std::unique_lock lock(mutex_);
             return data_.front();
         }
         auto& back() const {
-            std::unique_lock lock(mutex_);
+//            std::unique_lock lock(mutex_);
             return data_.back();
         }
 
         template<typename Compare>
         auto find_if(Compare&& c) {
-            std::unique_lock lock(mutex_);
+//            std::unique_lock lock(mutex_);
             return std::find_if(data_.begin(), data_.end(), c);
         }
 
         auto& data() {
-            std::unique_lock lock(mutex_);
+//            std::unique_lock lock(mutex_);
             return data_;
         }
 
         template<typename Sort>
         void sort (Sort&& s) {
-            std::unique_lock lock(mutex_);
+//            std::unique_lock lock(mutex_);
             std::sort(data_.begin(), data_.end(), s);
         }
 
         template<typename Sort, typename Compare>
         void insert (const Type& element, Sort&& s, Compare&& c) {
-            std::unique_lock lock(mutex_);
+            //std::unique_lock lock(mutex_);
             {
                 //std::cout << occupancy_ << '\n';
                 if (occupancy_ < size_) {

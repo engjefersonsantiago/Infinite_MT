@@ -42,31 +42,31 @@ class CacheStats
         // Read the whole stats
         auto& get_stats ()
         {
-            std::unique_lock lock(mutex_);  // Needs to be unique, cause the Dataplane should not
+//            std::unique_lock lock(mutex_);  // Needs to be unique, cause the Dataplane should not
                                             // modify the stats during controller reading
             return stats_container_;        //TODO: If using circular_buffer, not thread safe.
         }
 
         auto& back () const
         {
-            std::unique_lock lock(mutex_);
+//            std::unique_lock lock(mutex_);
             return stats_container_.back();
         }
         auto& front () const  
         {
-            std::unique_lock lock(mutex_);
+//            std::unique_lock lock(mutex_);
             return stats_container_.front();
         }
 
 
         auto& back () 
         {
-            std::unique_lock lock(mutex_);
+//            std::unique_lock lock(mutex_);
             return stats_container_.back();
         }
         auto& front () 
         {
-            std::unique_lock lock(mutex_);
+//            std::unique_lock lock(mutex_);
             return stats_container_.front();
         }
 
@@ -99,7 +99,7 @@ class LRUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LRUContai
 
         virtual void update_stats (const FiveTuple& five_tuple, const Stats_Value& updated_stats) override
         {
-            std::unique_lock lock(this->mutex_);
+//            std::unique_lock lock(this->mutex_);
             if (updated_stats != 0)
             {
                 auto tuple_compare = [=](const auto& elem) {
@@ -139,7 +139,7 @@ class LFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LFUContai
     public:
         virtual void update_stats (const FiveTuple& five_tuple, const Stats_Value& updated_stats) override
         {
-            std::unique_lock lock(this->mutex_);
+//            std::unique_lock lock(this->mutex_);
             if (updated_stats != 0)
             {
                 auto tuple_compare = [=](const auto& elem) {
@@ -189,7 +189,7 @@ class MFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, MFUContai
     public:
         virtual void update_stats (const FiveTuple& five_tuple, const Stats_Value& updated_stats) override
         {
-            std::unique_lock lock(this->mutex_);
+//            std::unique_lock lock(this->mutex_);
             if (updated_stats != 0)
             {
                 auto tuple_compare = [=](const auto& elem) {
