@@ -15,16 +15,20 @@ Thanks to P4 and recent programmable dataplanes~\cite{Bosshart:13}, network admi
 
 \begin{figure*}[]
 	\centering
-	\subfloat[Heavy hitter analysis]{
-		\includegraphics[width=0.33\textwidth]{fig_cdf.pdf}
+	\subfloat[Heavy hitter flows]{
+	\includegraphics[width=0.25\textwidth]{fig_cdf_pkt.pdf}
+	\label{fig:cdf_pkt}
+	}
+	\subfloat[Size-weighted heavy hitter flows]{
+		\includegraphics[width=0.25\textwidth]{fig_cdf.pdf}
 		\label{fig:cdf}
 	}
 	\subfloat[Flow duration]{
-		\includegraphics[width=0.33\textwidth]{fig_duration.pdf}
+		\includegraphics[width=0.25\textwidth]{fig_duration.pdf}
 		\label{fig:flow_duration}
 	}
 	\subfloat[Average flow size]{
-		\includegraphics[width=0.33\textwidth]{fig_avg_flow_size.pdf}
+		\includegraphics[width=0.25\textwidth]{fig_avg_flow_size.pdf}
 		\label{fig:flow_size}
 	}
 	\caption{CAIDA trace summary}

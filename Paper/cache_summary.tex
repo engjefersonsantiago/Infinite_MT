@@ -1,69 +1,40 @@
-%\begin{figure*}[t!]
+%\begin{figure*}[]
 %	\centering
-%	\subfloat[Heavy hitter analysis]{
-%		\includegraphics[width=0.33\textwidth]{fig_cdf.pdf}
+%	\subfloat[Heavy hitter flows]{
+%		\includegraphics[width=0.45\textwidth]{fig_cdf_pkt.pdf}
+%		\label{fig:cdf_pkt}
+%	}\qquad
+%	\subfloat[Size-weighted heavy hitter flows]{
+%		\includegraphics[width=0.45\textwidth]{fig_cdf.pdf}
 %		\label{fig:cdf}
-%	}
+%	}\\
 %	\subfloat[Flow duration]{
-%		\includegraphics[width=0.33\textwidth]{fig_duration.pdf}
+%		\includegraphics[width=0.45\textwidth]{fig_duration.pdf}
 %		\label{fig:flow_duration}
-%	}
+%	}\qquad
 %	\subfloat[Average flow size]{
-%		\includegraphics[width=0.33\textwidth]{fig_avg_flow_size.pdf}
+%		\includegraphics[width=0.45\textwidth]{fig_avg_flow_size.pdf}
 %		\label{fig:flow_size}
 %	}
 %	\caption{CAIDA trace summary}
 %	\label{fig:traces}
 %\end{figure*}
 
-\section{Learning from the Traffic}\label{sec:traffic}
+\section{Background}\label{sec:back}
 
-Network traffic has been observed to follow a Zipf distribution as a few network flows account for most of the whole network traffic~\cite{Sarrar:2012,Jin:2017}.
+\subsection{Constraints of Programmable Dataplanes}
 
-In our study, we conducted experiments to determine the traffic characteristics of an up-to-date real-world data center trace.
-We replayed a CAIDA network trace extracted from an IXP in a data center in New York dated from January 2019~\cite{caida:19}.
-The analysed trace is 1 minute long monitoring $\sim$\SI{30}{\mega\nothing} packets in a full-duplex \SI{40}{\giga\bit/\second} Ethernet link connecting New York and S\~ao Paulo/Brazil.
-A similar analysis was done by~\citeauthor{Spang:19} to estimate the number of TCP/IP flows~\cite{Spang:19}.
-
-Figure~\ref{fig:traces} summarizes our observations.
-In our analysis, we defined a flow as being a unique five-tuple $\langle$~IPv4/IPv6 Source IP address, IPv4/IPv6 destination IP address, L4 protocol, UDP/TCP source port, UDP/TCP destination port~$\rangle$ connection.
-
-\textbf{Heavy hitters}~---~As shown in Figure~\ref{fig:cdf}, the Zipf distribution characteristic is still present in current network traffic.
-The figure presents the CDF, in terms of transmitted bytes, for several observation intervals, ranging from \SI{100}{\micro\second} to \SI{60}{\second}.
-For all observation intervals longer than \SI{100}{\milli\second}, fewer than 10\% of the flows dominate more than 90\% of the traffic.
-For shorter intervals, the Zipf dominance is still present although more skewed.
-
-\textbf{Flow duration}~---~Figure~\ref{fig:flow_duration} presents the flow duration time.
-The blue curve is dominated (60\%) by single packet flows.
-Single packet flows are represented with a flow duration of zero seconds.
-Short-lived flows dominate the trace with $\sim$90\% of all flows lasting less than 5 seconds.
-The orange curve in Figure~\ref{fig:flow_duration} illustrates the duration of flows with multiple hits in the trace.
-Still, short-lived flows dominate the trace with $\sim$50\% lasting less than 1 second in the trace.
-
-\textbf{Flow size}~---~Figure~\ref{fig:flow_size} presents the average flow size for four statistically representative observation intervals.
-For all four measures, the first quartile, the median, and the third quartile are very similar.
-On average, small flows ($\sim$100 bytes) dominate the trace with 75\% of the flows being no larger than 150 bytes.
-
-According to our experiments, the expected Zipf distribution characteristic of network traffic is still present in current data center traffic.
-Such characteristic favors flow caching in memory scarce programmable dataplanes.
-However, we notice that short-lived flows dominate the trace.
-Therefore, the chosen cache policy algorithm needs a fast reaction time to quickly adapt to traffic changes.
-Besides, such temporal traffic characteristic possibly favors time-aware cache policies (e.g. LRU).
-
-\section{Cache Replacement Algorithms}\label{sec:policies}
-
-\subsection{Cache Eviction Policies}
-
-\textbf{OPT}~---~The optimal (OPT) replacement policy~\cite{Belady:66} is an oracle algorithm that relies on knowing the future traffic behavior.
+\subsection{Cache Replacement Algorithms}
+\textbf{OPT}~---~The optimal (OPT) cache replacement policy~\cite{Belady:66} is an oracle algorithm that relies on knowing the future traffic behavior.
 OPT uses this information to replace data that is further referenced in time.
 Due to that, OPT is not realistically implementable and it is commonly used to evaluate cache performance since it sets an upper performance bound for realistic caching systems.
 
-\textbf{Random}~---~Random or pseudo-random replacement policies use a stochastic random function to select a victim for eviction.
+\textbf{Random}~---~Random or pseudo-random cache replacement policies use a stochastic random function to select a victim for eviction.
 Pseudo-random cache policy has been widely adopted in ARM-based processors.
 In random policies, no history on cache misses/hits nor cache access frequency is required.
 The efficiency of a random policy is directly related to the quality of its random generator function.
 
-\textbf{LRU}~---~The LRU replacement algorithm evicts the most ancient cache entry in case of a cache miss.
+\textbf{LRU}~---~The LRU cache replacement policy evicts the most ancient cache entry in case of a cache miss.
 A possible LRU implementation uses a timestamp tag to sort cache entries by recency, as in Algorithm~\ref{algo:lru}.
 
 \begin{algorithm}[]
@@ -131,6 +102,50 @@ Otherwise, the cache entry with the lowest frequency is chosen for eviction, as 
 		}
 	}
 \end{algorithm}
+
+\section{Learning from the Traffic}\label{sec:traffic}
+
+Network traffic has been observed to follow a Zipf distribution as a few network flows account for most of the whole network traffic~\cite{Sarrar:2012,Jin:2017}.
+
+In our study, we conducted experiments to determine the traffic characteristics of an up-to-date real-world data center trace.
+We replayed a CAIDA network trace extracted from an IXP in a data center in New York dated from January 2019~\cite{caida:19}.
+The analysed trace is 1 minute long monitoring $\sim$\SI{30}{\mega\nothing} packets in a full-duplex \SI{40}{\giga\bit/\second} Ethernet link connecting New York and S\~ao Paulo/Brazil.
+A similar analysis was done by~\citeauthor{Spang:19} to estimate the number of TCP/IP flows~\cite{Spang:19}.
+
+Figure~\ref{fig:traces} summarizes our observations.
+In our analysis, we defined a flow as being a unique five-tuple $\langle$~IPv4/IPv6 Source IP address, IPv4/IPv6 destination IP address, L4 protocol, UDP/TCP source port, UDP/TCP destination port~$\rangle$ connection.
+
+\textbf{Heavy hitters}~---~As shown in Figure~\ref{fig:cdf_pkt} and Figure~\ref{fig:cdf}, the Zipf distribution characteristic is still present in current network traffic.
+Both figures present the CDF, in terms of packet hits and byte hits, for several observation intervals, ranging from \SI{100}{\micro\second} to \SI{60}{\second}.
+Although both curves are Zipfian-like, the exponent that characterizes the distributions in Figure~\ref{fig:cdf} is higher.
+For all observation intervals longer than \SI{100}{\milli\second}, fewer than 10\% of the flows dominate more than 90\% of the traffic.
+For shorter intervals, the Zipf dominance is still present although more skewed.
+
+\textbf{Flow duration}~---~Figure~\ref{fig:flow_duration} presents the flow duration time.
+The blue curve is dominated (60\%) by single packet flows.
+Single packet flows are represented with a flow duration of zero seconds.
+Short-lived flows dominate the trace with $\sim$90\% of all flows lasting less than 5 seconds.
+The orange curve in Figure~\ref{fig:flow_duration} illustrates the duration of flows with multiple hits in the trace.
+Still, short-lived flows dominate the trace with $\sim$50\% lasting less than 1 second in the trace.
+
+\textbf{Flow size}~---~Figure~\ref{fig:flow_size} presents the average flow size for four statistically representative observation intervals.
+For all four measures, the first quartile, the median, and the third quartile are very similar.
+On average, small flows ($\sim$100 bytes) dominate the trace with 75\% of the flows being no larger than 150 bytes.
+
+According to our experiments, the expected Zipf distribution characteristic of network traffic is still present in current data center traffic.
+Such characteristic favors flow caching in memory scarce programmable dataplanes.
+However, the heavy-hitter analyses show that transmitted byte-based heavy hitters are more dominant than packet-based ones.
+Thus, frequency-based cache policies (e.g. LFU) must consider the actual packet size in their frequency counters.
+In addition to that, we notice that short-lived flows dominate the trace.
+Therefore, the chosen cache policy algorithm needs a fast reaction time to quickly adapt to traffic changes.
+Besides, such temporal traffic characteristic possibly favors time-aware cache policies (e.g. LRU).
+
+\section{Network-aware Cache Policies}\label{sec:policies}
+As traditional cache replacement positions may not be suitable in network scenarios, we this section we introduce network-aware cache policies.
+Based on the real traffic analysis, we first present cache eviction policies.
+Then, we present cache promotion policies aiming at maximizing cache performance.
+
+\subsection{Cache Eviction}
 
 \textbf{WLFU}~---~\textit{Vanilla} implementations of LFU perform poorly with real-world network traces~\cite{Kim:09}.
 \textit{Vanilla} LFU considers all cache hits with equal weight, which is not realistic in network communications because larger packets incur in greater network efficiency compared to small ones.
@@ -239,7 +254,7 @@ Otherwise, OWLFU modifies OLFU by incrementing the current packet size to the vi
 }
 \end{algorithm}
 
-\subsection{Cache Promotion Policies}
+\subsection{Cache Promotion}
 Describe here why the need of a cache promotion policy and which ones we studied.
 
 \section{Evaluating Cache Perfomance}\label{sec:cache_results}
@@ -302,7 +317,7 @@ To enable reproducibility, we open-sourced our codes\footnote{\url{https://githu
 	\end{tabular}
 \end{table}
 
-\subsection{Results}
+\subsection{Simulation Results}
 Figure~\ref{fig:hit_ratio} presents the results for our experiments when no promotion policy is implemented.
 
 As already reported in~\cite{Kim:09}, \textit{vanilla} LFU performs poorly with real-world network traffic.
@@ -322,3 +337,13 @@ TODO: Check and run OPT simulations.
 TODO: Comment the SF effect.
 
 TODO: Evaluate the promotion policy.
+
+\subsection{Discussion and Implementation Feasibility}
+
+Although LRU and LFU derivations present the best simulation results, these cache policies are unfeasible in high-performance programmable dataplanes.
+First, in term of memory consumption, both replacement classes require $O(N)$ extra information to select cache victims.
+This is undesirable because memory is scarce in network switches and must be reserved for profitable applications.
+Second, both algorithms require sorting data either by frequency or time, a costly and non-scalable operation as it requires at least $O(N~log(N))$ comparisons.
+
+Implementing a random replacement policy in programmable dataplanes has no additional hardware cost as it may be implemented in software.
+In addition, the simulation results show the cache hit ratio based on a random replacement policy is less than 10\% lower than LRU and OWLFU.
