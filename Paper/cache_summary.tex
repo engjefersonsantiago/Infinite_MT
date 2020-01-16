@@ -113,8 +113,8 @@ Otherwise, the cache entry with the lowest frequency is chosen for eviction.%, a
 Single chip homogeneous programmable dataplanes expose a clear trade-off on performance and memory resources.
 
 State-of-the-art PISA-based programmable ASIC switches process packets at multi-terabit rates.
-However, these switches have no more than few hundreds of \SI{}{\mega\byte} of internal memory which is shared between lookup operations and for user-defined stateful processing (e.g. metering, load-balancing).
-Moreover, as these devices guarantee very low fixed processing latency, programmers are not allowed to express loops or recursion that cannot be unrolled throughout physical pipeline stages.
+However, these switches have no more than few hundreds of \SI{}{\mega\byte} of internal memory which is shared between lookup operations and user-defined stateful processing (e.g. metering, load-balancing).
+Moreover, as these devices need to guarantee a very low fixed processing latency, programmers are not allowed to express loops or recursion that cannot be unrolled throughout physical pipeline stages.
 Indeed, neither loops nor recursion are part of the P4 semantics.
 
 The aforementioned constraints limit the feasibility of online cache policy algorithms.
