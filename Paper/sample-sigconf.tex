@@ -175,6 +175,8 @@
 
 \newcommand\Hidden{No} % Yes or No
 
+\usepackage{changepage}
+
 %\newcommand\mycommfont[1]{\textcolor{blue}{#1}}
 %\SetCommentSty{mycommfont}
 
@@ -205,8 +207,8 @@
 %% the next command will enable that style.
 %%\citestyle{acmauthoryear}
 
-\usepackage[style=trad-abbrv, minnames=1, maxnames=2,backend=bibtex]{biblatex} %package bib
-%\usepackage[style=ACM-Reference-Format, minnames=1, maxnames=2,backend=bibtex]{biblatex} %package bib
+%\usepackage[style=trad-abbrv, minnames=1, maxnames=2,backend=bibtex]{biblatex} %package bib
+\usepackage[style=ACM-Reference-Format, minnames=1, maxnames=2,backend=bibtex]{biblatex} %package bib
 \addbibresource{sample-bibliography.bib}
 %%
 %% end of the preamble, start of the body of the document source.
@@ -215,6 +217,7 @@
 %%
 %% The "title" command has an optional parameter,
 %% allowing the author to define a "short title" to be used in page headers.
+%To Infinity and Beyond: 
 \title{Virtually Infinite Match Tables on Programmable Dataplanes}
 
 %%
@@ -257,11 +260,11 @@
 }
 \email{pierre.langlois@polymtl.ca}
 
-\author{Ludovic Beliveau}
-\affiliation{
-	\institution{Kaloom Inc., Montr\'{e}al, Canada}
-}
-\email{ludovic@kaloom.com}
+%\author{Ludovic Beliveau}
+%\affiliation{
+%	\institution{Kaloom Inc., Montr\'{e}al, Canada}
+%}
+%\email{ludovic@kaloom.com}
 
 
 %%

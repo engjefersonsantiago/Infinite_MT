@@ -1,20 +1,125 @@
-%\begin{figure*}[t!]
-%	\centering
-%	\subfloat[Heavy hitter analysis]{
-%		\includegraphics[width=0.33\textwidth]{fig_cdf.pdf}
-%		\label{fig:cdf}
+\begin{figure*}[]
+  \begin{adjustwidth}{-0.45cm}{}
+	\centering
+	\subfloat[Heavy hitter flows]{
+	\includegraphics[width=0.25\textwidth]{fig_cdf_pkt.pdf}
+	\label{fig:cdf_pkt}
+	}
+	\subfloat[Size-weighted heavy hitter flows]{
+		\includegraphics[width=0.25\textwidth]{fig_cdf.pdf}
+		\label{fig:cdf}
+	}
+	\subfloat[Flow duration]{
+		\includegraphics[width=0.25\textwidth]{fig_duration.pdf}
+		\label{fig:flow_duration}
+	}
+	\subfloat[Average flow size]{
+		\includegraphics[width=0.25\textwidth]{fig_avg_flow_size.pdf}
+		\label{fig:flow_size}
+	}
+	\caption{CAIDA trace summary}
+	\label{fig:traces}
+	\end{adjustwidth}
+\end{figure*}
+
+\section{Background}\label{sec:back}
+This works proposes "infinitely" extending memory for high performance heterogeneous programmable dataplanes.
+This is done by employing a cache hierarchy supported by network aware cache policies.
+This section first recaps traditional cache policies. 
+Then, we review the constraints of current programmable dataplanes.
+
+\subsection{Cache Replacement Algorithms}
+\textbf{OPT}~---~The optimal (OPT) cache replacement policy~\cite{Belady:66} is an oracle algorithm that relies on knowing the future traffic behavior.
+OPT uses this information to replace data that is further referenced in time.
+Due to that, OPT is not realistically implementable and it is commonly used to evaluate cache performance since it sets an upper performance bound for realistic caching systems.
+
+\textbf{Random}~---~Random or pseudo-random cache replacement policies use a stochastic random function to select a victim for eviction.
+Pseudo-random cache policy has been widely adopted in ARM-based processors.
+In random policies, no history on cache misses/hits nor cache access frequency is required.
+The efficiency of a random policy is directly related to the quality of its random generator function.
+
+\textbf{LRU}~---~The LRU cache replacement policy evicts the most ancient cache entry in case of a cache miss.
+A possible LRU implementation uses a timestamp tag to sort cache entries by recency.%, as in Algorithm~\ref{algo:lru}.
+
+%\begin{algorithm}[]
+%	\caption{LRU policy}
+%	\label{algo:lru}
+%	\SetInd{0.1em}{.9em}
+%	\SetAlgoLined
+%	\footnotesize
+%	\SetKwProg{procedure}{Procedure}{}{end}
+%	\SetKwFunction{minTimestampEntry}{minTimestampEntry}
+%	\SetKwFunction{findEntry}{findEntry}
+%	\SetKwFunction{lruPolicy}{lruPolicy}
+%	\SetKwInOut{Input}{input}
+%	\SetKw{In}{in}%
+%	\SetKw{Not}{not}%
+%	\SetKw{Or}{or}%
+%	\SetKw{Continue}{continue}%
+%	\SetKw{True}{true}%
+%	\Input{Cache memory: list of $\langle$\texttt{entry, timestamp}$\rangle$ pairs}
+%	\Input{Possible cache entry}
+%	\Input{Packet timestamp}
+%	\procedure{\lruPolicy{cache, possible\_entry, current\_timestamp}}{
+%		\If(\hfill\tcp*[h]{Cache hit}){possible\_entry \In cache}{
+%			entry\_found =  \findEntry{cache, possible\_entry}\hfill\tcp{Hit pointer}
+%			entry\_found$\rightarrow$timestamp  = current\_timestamp
+%		}
+%		\Else(\hfill\tcp*[h]{Cache Miss}){
+%			victim = \minTimestampEntry{cache}\hfill\tcp{Victim pointer}			
+%			*victim = $\langle$possible\_entry, current\_timestamp$\rangle$
+%		}
 %	}
-%	\subfloat[Flow duration]{
-%		\includegraphics[width=0.33\textwidth]{fig_duration.pdf}
-%		\label{fig:flow_duration}
+%\end{algorithm}
+
+\textbf{LFU}~---~Contrarily to LRU, LFU uses hit frequency rather than the access time to evict entries.
+LFU uses a frequency counter to sort cache entries by frequency.
+In case of a hit, the frequency counter is incremented.
+Otherwise, the cache entry with the lowest frequency is chosen for eviction.%, as in Algorithm~\ref{algo:lfu}.
+%
+%\begin{algorithm}[]
+%	\caption{LFU policy}
+%	\label{algo:lfu}
+%	\SetInd{0.1em}{.9em}
+%	\SetAlgoLined
+%	\footnotesize
+%	\SetKwProg{procedure}{Procedure}{}{end}
+%	\SetKwFunction{lfuPolicy}{lfuPolicy}
+%	\SetKwFunction{findEntry}{findEntry}
+%	\SetKwFunction{minFrequencyEntry}{minFrequencyEntry}
+%	\SetKwInOut{Input}{input}
+%	\SetKw{In}{in}%
+%	\SetKw{Not}{not}%
+%	\SetKw{Or}{or}%
+%	\SetKw{Continue}{continue}%
+%	\SetKw{True}{true}%
+%	\Input{Cache memory: list of $\langle$\texttt{entry, counter}$\rangle$ pairs}
+%	\Input{Possible cache entry}
+%	\procedure{\lfuPolicy{cache, possible\_entry}}{
+%		\If(\hfill\tcp*[h]{Cache hit}){possible\_entry \In cache}{
+%			entry\_found = \findEntry{cache, possible\_entry}\hfill\tcp{Hit pointer}
+%			entry\_found$\rightarrow$counter  += 1
+%		}
+%		\Else(\hfill\tcp*[h]{Cache miss}){
+%			victim =  \minFrequencyEntry{cache}\hfill\tcp{Victim pointer}
+%			*victim = $\langle$possible\_entry, 1$\rangle$
+%		}
 %	}
-%	\subfloat[Average flow size]{
-%		\includegraphics[width=0.33\textwidth]{fig_avg_flow_size.pdf}
-%		\label{fig:flow_size}
-%	}
-%	\caption{CAIDA trace summary}
-%	\label{fig:traces}
-%\end{figure*}
+%\end{algorithm}
+
+
+\subsection{Constraints of Programmable Dataplanes}
+
+Single chip homogeneous programmable dataplanes expose a clear trade-off on performance and memory resources.
+
+State-of-the-art PISA-based programmable ASIC switches process packets at multi-terabit rates.
+However, these switches have no more than few hundreds of \SI{}{\mega\byte} of internal memory which is shared between lookup operations and user-defined stateful processing (e.g. metering, load-balancing).
+Moreover, as these devices need to guarantee a very low fixed processing latency, programmers are not allowed to express loops or recursion that cannot be unrolled throughout physical pipeline stages.
+Indeed, neither loops nor recursion are part of the P4 semantics.
+
+The aforementioned constraints limit the feasibility of online cache policy algorithms.
+Both LRU and LFU require extra information to select cache victims which increases memory usage.
+Also, these cache policies require large data sorting , which is difficult to implement (if possible) in programmable PISA switches.
 
 \section{Learning from the Traffic}\label{sec:traffic}
 
@@ -28,8 +133,9 @@ A similar analysis was done by~\citeauthor{Spang:19} to estimate the number of T
 Figure~\ref{fig:traces} summarizes our observations.
 In our analysis, we defined a flow as being a unique five-tuple $\langle$~IPv4/IPv6 Source IP address, IPv4/IPv6 destination IP address, L4 protocol, UDP/TCP source port, UDP/TCP destination port~$\rangle$ connection.
 
-\textbf{Heavy hitters}~---~As shown in Figure~\ref{fig:cdf}, the Zipf distribution characteristic is still present in current network traffic.
-The figure presents the CDF, in terms of transmitted bytes, for several observation intervals, ranging from \SI{100}{\micro\second} to \SI{60}{\second}.
+\textbf{Heavy hitters}~---~As shown in Figure~\ref{fig:cdf_pkt} and Figure~\ref{fig:cdf}, the Zipf distribution characteristic is still present in current network traffic.
+Both figures present the CDF, in terms of packet hits and byte hits, for several observation intervals, ranging from \SI{100}{\micro\second} to \SI{60}{\second}.
+Although both curves are Zipfian-like, the exponent that characterizes the distributions in Figure~\ref{fig:cdf} is higher.
 For all observation intervals longer than \SI{100}{\milli\second}, fewer than 10\% of the flows dominate more than 90\% of the traffic.
 For shorter intervals, the Zipf dominance is still present although more skewed.
 
@@ -46,91 +152,18 @@ On average, small flows ($\sim$100 bytes) dominate the trace with 75\% of the fl
 
 According to our experiments, the expected Zipf distribution characteristic of network traffic is still present in current data center traffic.
 Such characteristic favors flow caching in memory scarce programmable dataplanes.
-However, we notice that short-lived flows dominate the trace.
+However, the heavy-hitter analyses show that transmitted byte-based heavy hitters are more dominant than packet-based ones.
+Thus, frequency-based cache policies (e.g. LFU) must consider the actual packet size in their frequency counters.
+In addition to that, we notice that short-lived flows dominate the trace.
 Therefore, the chosen cache policy algorithm needs a fast reaction time to quickly adapt to traffic changes.
 Besides, such temporal traffic characteristic possibly favors time-aware cache policies (e.g. LRU).
 
-\section{Cache Replacement Algorithms}\label{sec:policies}
+\section{Network-aware Cache Policies}\label{sec:policies}
+As traditional cache replacement positions may not be suitable in network scenarios, we this section we introduce network-aware cache policies.
+Based on the real traffic analysis, we first present cache eviction policies.
+Then, we present cache promotion policies aiming at maximizing cache performance.
 
-\subsection{Cache Eviction Policies}
-
-\textbf{OPT}~---~The optimal (OPT) replacement policy~\cite{Belady:66} is an oracle algorithm that relies on knowing the future traffic behavior.
-OPT uses this information to replace data that is further referenced in time.
-Due to that, OPT is not realistically implementable and it is commonly used to evaluate cache performance since it sets an upper performance bound for realistic caching systems.
-
-\textbf{Random}~---~Random or pseudo-random replacement policies use a stochastic random function to select a victim for eviction.
-Pseudo-random cache policy has been widely adopted in ARM-based processors.
-In random policies, no history on cache misses/hits nor cache access frequency is required.
-The efficiency of a random policy is directly related to the quality of its random generator function.
-
-\textbf{LRU}~---~The LRU replacement algorithm evicts the most ancient cache entry in case of a cache miss.
-A possible LRU implementation uses a timestamp tag to sort cache entries by recency, as in Algorithm~\ref{algo:lru}.
-
-\begin{algorithm}[]
-	\caption{LRU policy}
-	\label{algo:lru}
-	\SetInd{0.1em}{.9em}
-	\SetAlgoLined
-	\footnotesize
-	\SetKwProg{procedure}{Procedure}{}{end}
-	\SetKwFunction{minTimestampEntry}{minTimestampEntry}
-	\SetKwFunction{findEntry}{findEntry}
-	\SetKwFunction{lruPolicy}{lruPolicy}
-	\SetKwInOut{Input}{input}
-	\SetKw{In}{in}%
-	\SetKw{Not}{not}%
-	\SetKw{Or}{or}%
-	\SetKw{Continue}{continue}%
-	\SetKw{True}{true}%
-	\Input{Cache memory: list of $\langle$\texttt{entry, timestamp}$\rangle$ pairs}
-	\Input{Possible cache entry}
-	\Input{Packet timestamp}
-	\procedure{\lruPolicy{cache, possible\_entry, current\_timestamp}}{
-		\If(\hfill\tcp*[h]{Cache hit}){possible\_entry \In cache}{
-			entry\_found =  \findEntry{cache, possible\_entry}\hfill\tcp{Hit pointer}
-			entry\_found$\rightarrow$timestamp  = current\_timestamp
-		}
-		\Else(\hfill\tcp*[h]{Cache Miss}){
-			victim = \minTimestampEntry{cache}\hfill\tcp{Victim pointer}			
-			*victim = $\langle$possible\_entry, current\_timestamp$\rangle$
-		}
-	}
-\end{algorithm}
-
-\textbf{LFU}~---~Contrarily to LRU, LFU uses hit frequency rather than the access time to evict entries.
-LFU uses a frequency counter to sort cache entries by frequency.
-In case of a hit, the frequency counter is incremented.
-Otherwise, the cache entry with the lowest frequency is chosen for eviction, as in Algorithm~\ref{algo:lfu}.
-
-\begin{algorithm}[]
-	\caption{LFU policy}
-	\label{algo:lfu}
-	\SetInd{0.1em}{.9em}
-	\SetAlgoLined
-	\footnotesize
-	\SetKwProg{procedure}{Procedure}{}{end}
-	\SetKwFunction{lfuPolicy}{lfuPolicy}
-	\SetKwFunction{findEntry}{findEntry}
-	\SetKwFunction{minFrequencyEntry}{minFrequencyEntry}
-	\SetKwInOut{Input}{input}
-	\SetKw{In}{in}%
-	\SetKw{Not}{not}%
-	\SetKw{Or}{or}%
-	\SetKw{Continue}{continue}%
-	\SetKw{True}{true}%
-	\Input{Cache memory: list of $\langle$\texttt{entry, counter}$\rangle$ pairs}
-	\Input{Possible cache entry}
-	\procedure{\lfuPolicy{cache, possible\_entry}}{
-		\If(\hfill\tcp*[h]{Cache hit}){possible\_entry \In cache}{
-			entry\_found = \findEntry{cache, possible\_entry}\hfill\tcp{Hit pointer}
-			entry\_found$\rightarrow$counter  += 1
-		}
-		\Else(\hfill\tcp*[h]{Cache miss}){
-			victim =  \minFrequencyEntry{cache}\hfill\tcp{Victim pointer}
-			*victim = $\langle$possible\_entry, 1$\rangle$
-		}
-	}
-\end{algorithm}
+\subsection{Cache Eviction}
 
 \textbf{WLFU}~---~\textit{Vanilla} implementations of LFU perform poorly with real-world network traces~\cite{Kim:09}.
 \textit{Vanilla} LFU considers all cache hits with equal weight, which is not realistic in network communications because larger packets incur in greater network efficiency compared to small ones.
@@ -239,7 +272,7 @@ Otherwise, OWLFU modifies OLFU by incrementing the current packet size to the vi
 }
 \end{algorithm}
 
-\subsection{Cache Promotion Policies}
+\subsection{Cache Promotion}
 Describe here why the need of a cache promotion policy and which ones we studied.
 
 \section{Evaluating Cache Perfomance}\label{sec:cache_results}
@@ -247,27 +280,27 @@ Describe here why the need of a cache promotion policy and which ones we studied
 \begin{figure*}[]
 \centering
 \subfloat[Hit Ratio. $SF=1\times$]{
-\includegraphics[width=0.33\textwidth]{../scripts/hit_ratio_sf1.pdf}
+\includegraphics[width=0.32\textwidth]{../scripts/hit_ratio_sf1.pdf}
 \label{fig:hit_ratio_sf1}
 }
 \subfloat[Hit Ratio. $SF=10\times$]{
-\includegraphics[width=0.33\textwidth]{../scripts/hit_ratio_sf10.pdf}
+\includegraphics[width=0.32\textwidth]{../scripts/hit_ratio_sf10.pdf}
 \label{fig:hit_ratio_sf10}
 }
 \subfloat[Hit Ratio. $SF=100\times$]{
-\includegraphics[width=0.33\textwidth]{../scripts/hit_ratio_sf100.pdf}
+\includegraphics[width=0.32\textwidth]{../scripts/hit_ratio_sf100.pdf}
 \label{fig:hit_ratio_sf100}
 }\\
 \subfloat[Size Weighted Hit Ratio. $SF=1\times$]{
-\includegraphics[width=0.33\textwidth]{../scripts/weighted_hit_ratio_sf1.pdf}
+\includegraphics[width=0.32\textwidth]{../scripts/weighted_hit_ratio_sf1.pdf}
 \label{fig:weighted_hit_ratio_sf1}
 }
 \subfloat[Size Weighted Hit Ratio. $SF=10\times$]{
-\includegraphics[width=0.33\textwidth]{../scripts/weighted_hit_ratio_sf10.pdf}
+\includegraphics[width=0.32\textwidth]{../scripts/weighted_hit_ratio_sf10.pdf}
 \label{fig:weighted_hit_ratio_sf10}
 }
 \subfloat[Size Weighted Hit Ratio. $SF=100\times$]{
-\includegraphics[width=0.33\textwidth]{../scripts/weighted_hit_ratio_sf100.pdf}
+\includegraphics[width=0.32\textwidth]{../scripts/weighted_hit_ratio_sf100.pdf}
 \label{fig:weighted_hit_ratio_sf100}
 }
 \caption{Cache performance evaluation}
@@ -295,14 +328,14 @@ To enable reproducibility, we open-sourced our codes\footnote{\url{https://githu
 		\hline
 		\textbf{Parameter}       & \textbf{Value}   \\
 		\hline
-		Cache policy            & LRU, (O)(W)LFU, Random			    \\
+		Eviction policy            & LRU, (O)(W)LFU, Random			    \\
 		Cache Size              & 64 to \SI{8}{\kilo\nothing} entries  \\
 		Slowdown Factor         & 1$\times$, 10$\times$, 100$\times$        \\
 		\hline
 	\end{tabular}
 \end{table}
 
-\subsection{Results}
+\subsection{Simulation Results}
 Figure~\ref{fig:hit_ratio} presents the results for our experiments when no promotion policy is implemented.
 
 As already reported in~\cite{Kim:09}, \textit{vanilla} LFU performs poorly with real-world network traffic.
@@ -322,3 +355,13 @@ TODO: Check and run OPT simulations.
 TODO: Comment the SF effect.
 
 TODO: Evaluate the promotion policy.
+
+\subsection{Discussion and Implementation Feasibility}
+
+Although LRU and LFU derivations present the best simulation results, these cache policies are unfeasible in high-performance programmable dataplanes.
+First, in term of memory consumption, both replacement classes require $O(N)$ extra information to select cache victims.
+This is undesirable because memory is scarce in network switches and must be reserved for profitable applications.
+Second, both algorithms require sorting data either by frequency or time, a costly and non-scalable operation as it requires at least $O(N~log(N))$ comparisons.
+
+Implementing a random replacement policy in programmable dataplanes has no additional hardware cost as it may be implemented in software.
+In addition, the simulation results show the cache hit ratio based on a random replacement policy is less than 10\% lower than LRU and OWLFU.

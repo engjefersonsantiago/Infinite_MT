@@ -6,34 +6,9 @@ Notably, the P4 language is a result of the SDN convergence~\cite{Bosshart:14}.
 P4 leverages OpenFlow by allowing network admins to program their network in a custom fashion.
 Thanks to P4 and recent programmable dataplanes~\cite{Bosshart:13}, network admins can now deploy custom protocols by simply reprogramming the network switches according to their evolving needs, without the need to deploy expensive new hardware. 
 
-\begin{figure}[]
-	\centering
-	\input{arch_scheme.tex}
-	\caption{Reference caching system}
-	\label{fig:high_level_network}
-\end{figure}
-
-\begin{figure*}[]
-	\centering
-	\subfloat[Heavy hitter analysis]{
-		\includegraphics[width=0.33\textwidth]{fig_cdf.pdf}
-		\label{fig:cdf}
-	}
-	\subfloat[Flow duration]{
-		\includegraphics[width=0.33\textwidth]{fig_duration.pdf}
-		\label{fig:flow_duration}
-	}
-	\subfloat[Average flow size]{
-		\includegraphics[width=0.33\textwidth]{fig_avg_flow_size.pdf}
-		\label{fig:flow_size}
-	}
-	\caption{CAIDA trace summary}
-	\label{fig:traces}
-\end{figure*}
-
 
 However, current requirements of data center networks are such that even state-of-the-art programmable ASICs switches cannot solely meet them.
-For instance, 5G mobile communication requires multi-million active sessions ($>$\SI{5}{\mega\nothing}) at terabit rates, stringently low end-to-end latency ($<$\SI{1}{\milli\second}), and likely, new P4-defined custom protocols.
+For instance, 5G mobile communication requires multi-million active sessions ($>$\SI{5}{\mega\nothing}) at terabit rates, stringently low end-to-end latency ($<$\SI{1}{\milli\second}), and likely, P4-defined custom protocols.
 
 We recently suggested using heterogeneous programmable dataplanes (HDPs) to alleviate data center network switch bottlenecks~\cite{p4eu:18}.
 Indeed, using complementary and distinct packet forwarding devices increases the overall switch processing capabilities.
@@ -64,7 +39,7 @@ As a consequence, traditional computer caching schemes cannot be directly applie
 
 To properly characterize the aforementioned issues, we evaluated the feasibility of such an HDP caching system by characterizing an up-to-date data center network traffic to understand its temporal locality.
 Following the traffic analysis, we conducted cache simulations to choose realistic cache policies to be implemented in HDPs.
-Finally, we evaluated which cache policies are optimized for current programmable dataplanes and how they can be described in P4.
+Finally, we evaluated which cache policies are optimized for current programmable dataplanes.% and how they can be described in P4.
 
 To the best of our knowledge, this work is the first to consider match-action table management for HDPs.
 The contributions of this work are as follows: 
@@ -75,3 +50,10 @@ The contributions of this work are as follows:
 	\item an evaluation of cache policies in the context of programmable dataplanes~(\S\ref{sec:policies}); and
 	\item a model to estimate the performance and overhead of a match-action caching system in an HDP~(\S\ref{sec:cache_results}).
 \end{itemize}
+
+\begin{figure}[]
+	\centering
+	\input{arch_scheme.tex}
+	\caption{Reference caching system}
+	\label{fig:high_level_network}
+\end{figure}
