@@ -88,17 +88,17 @@ class LRUPolicy final: public Policier<lookup_table_t,stats_table_t>
 
         virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t timestamp) override
         {
-            auto value_sort = [](auto a, auto b) { return a.second < b.second; };
             // Get the least recently used entry.
-            // TUple + value associe
-            // 1. Get stats
-            //auto tuple_to_remove = this->stats_table_.front();
-            //this->stats_table_.get_stats().data().front() = { five_tuple, tuple_to_remove.second  + pkt_size };
-            //std::make_heap(this->stats_table_.get_stats().begin(), this->stats_table_.get_stats().end(), value_sort);
+            auto tuple_to_remove = this->stats_table_.get_stats().highest_order();
+            auto selected = tuple_to_remove->key;
 
-            auto tuple_to_remove = std::min_element(this->stats_table_.get_stats().begin(), this->stats_table_.get_stats().end(), value_sort);
-            auto selected = tuple_to_remove->first;
-            *tuple_to_remove = { five_tuple, timestamp };
+            this->stats_table_.get_stats().replace(
+                tuple_to_remove,
+                {
+                    five_tuple,
+                    timestamp
+                }
+            );
 
             debug(
             std::cout << "---------------------------\n";
@@ -111,17 +111,16 @@ class LRUPolicy final: public Policier<lookup_table_t,stats_table_t>
             std::cout << "---------------------------\n";
             std::cout << "Stats table contents\n";
             std::cout << "---------------------------\n";
-            for(const auto& [key, val] : this->stats_table_.get_stats().data())
+            for(const auto& [key, val] : this->stats_table_.get_stats())
             {
                 std::cout <<  key <<  ", " << val << '\n';
             }
             std::cout << "---------------------------\n";
-            std::cout << "Key to remove " << tuple_to_remove->first << '\n';
+            std::cout << "Key to remove " << selected << '\n';
             std::cout << "---------------------------\n";
             )
 
             return selected;
-
         }
 
 
@@ -162,7 +161,7 @@ class OPTPolicy final : public Policier<lookup_table_t,stats_table_t>
             while (reader.getNextPacket(rawPacket)) {
                 pcpp::Packet parsedPacket(&rawPacket);
                 // Create Five Tuple
-                const auto& [five_tuple,size] = create_five_tuple_from_packet(parsedPacket);
+                const auto& [five_tuple, size] = create_five_tuple_from_packet(parsedPacket);
                 // Enqueue FiveTuple
                 five_tuple_history[five_tuple].first = 0;
                 five_tuple_history[five_tuple].second.push_back(++pkts);
@@ -179,7 +178,6 @@ class OPTPolicy final : public Policier<lookup_table_t,stats_table_t>
             //}
             )
             std::cout << "------ End Content of the five tuple history ------\n";
-
 
         }
 
@@ -258,7 +256,6 @@ class OPTPolicy final : public Policier<lookup_table_t,stats_table_t>
 
         }
 
-
     private:
         size_t current_packet_timestamp;
         fivetuple_history_t five_tuple_history;
@@ -284,17 +281,17 @@ class LFUPolicy final: public Policier<lookup_table_t,stats_table_t>
 
         virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t pkt_size) override
         {
-            auto value_sort = [](auto a, auto b) { return a.second < b.second; };
-            // Get the least recently used entry.
-            // TUple + value associe
-            // 1. Get stats
-            //auto tuple_to_remove = this->stats_table_.front();
-            //this->stats_table_.get_stats().data().front() = { five_tuple, tuple_to_remove.second  + pkt_size };
-            //std::make_heap(this->stats_table_.get_stats().begin(), this->stats_table_.get_stats().end(), value_sort);
+            // Get the least frequently used entry.
+            auto tuple_to_remove = this->stats_table_.get_stats().highest_order();
+            auto selected = tuple_to_remove->key;
 
-            auto tuple_to_remove = std::min_element(this->stats_table_.get_stats().begin(), this->stats_table_.get_stats().end(), value_sort);
-            auto selected = tuple_to_remove->first;
-            *tuple_to_remove = { five_tuple, ((counter_type_ == CounterType::BYTES) ? pkt_size : 1) };
+            this->stats_table_.get_stats().replace(
+                tuple_to_remove,
+                {
+                    five_tuple,
+                    ((counter_type_ == CounterType::BYTES) ? pkt_size : 1)
+                }
+            );
 
             debug(
             std::cout << "---------------------------\n";
@@ -307,12 +304,12 @@ class LFUPolicy final: public Policier<lookup_table_t,stats_table_t>
             std::cout << "---------------------------\n";
             std::cout << "Stats table contents\n";
             std::cout << "---------------------------\n";
-            for(const auto& [key, val] : this->stats_table_.get_stats().data())
+            for(const auto& [key, val] : this->stats_table_.get_stats())
             {
                 std::cout <<  key <<  ", " << val << '\n';
             }
             std::cout << "---------------------------\n";
-            std::cout << "Key to remove " << tuple_to_remove->first << '\n';
+            std::cout << "Key to remove " << selected << '\n';
             std::cout << "---------------------------\n";
             )
 
@@ -321,7 +318,6 @@ class LFUPolicy final: public Policier<lookup_table_t,stats_table_t>
         }
 
 };
-
 
 template<typename lookup_table_t, typename  stats_table_t>
 class LFUModifPolicy final: public Policier<lookup_table_t,stats_table_t>
@@ -341,18 +337,16 @@ class LFUModifPolicy final: public Policier<lookup_table_t,stats_table_t>
 
         virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t pkt_size) override
         {
-            auto value_sort = [](auto a, auto b) { return a.second < b.second; };
-            // Get the least recently used entry.
-            // TUple + value associe
-            // 1. Get stats
-            //auto tuple_to_remove = this->stats_table_.front();
-            //this->stats_table_.get_stats().data().front() = { five_tuple, tuple_to_remove.second  + pkt_size };
-            //std::make_heap(this->stats_table_.get_stats().begin(), this->stats_table_.get_stats().end(), value_sort);
-
-            auto tuple_to_remove = std::min_element(this->stats_table_.get_stats().begin(), this->stats_table_.get_stats().end(), value_sort);
-            auto selected = tuple_to_remove->first;
-            *tuple_to_remove = { five_tuple, tuple_to_remove->second  +
-                                 ((counter_type_ == CounterType::BYTES) ? pkt_size : 1) };
+            // Get the least frequently used entry.
+            auto tuple_to_remove = this->stats_table_.get_stats().highest_order();
+            auto selected = tuple_to_remove->key;
+            this->stats_table_.get_stats().replace(
+                tuple_to_remove,
+                {
+                    five_tuple,
+                    tuple_to_remove->value + ((counter_type_ == CounterType::BYTES) ? pkt_size : 1)
+                }
+            );
 
             debug(
             std::cout << "---------------------------\n";
@@ -365,17 +359,16 @@ class LFUModifPolicy final: public Policier<lookup_table_t,stats_table_t>
             std::cout << "---------------------------\n";
             std::cout << "Stats table contents\n";
             std::cout << "---------------------------\n";
-            for(const auto& [key, val] : this->stats_table_.get_stats().data())
+            for(const auto& [key, val] : this->stats_table_.get_stats())
             {
                 std::cout <<  key <<  ", " << val << '\n';
             }
             std::cout << "---------------------------\n";
-            std::cout << "Key to remove " << tuple_to_remove->first << '\n';
+            std::cout << "Key to remove " << selected << '\n';
             std::cout << "---------------------------\n";
             )
 
             return selected;
-
         }
 
 };

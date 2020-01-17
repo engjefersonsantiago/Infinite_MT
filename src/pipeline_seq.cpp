@@ -83,7 +83,7 @@ int main(int argc, char** argv)
         for (const auto& tuple : unique_tuples) {
             if (!base_cache_l1.lookup_table().is_full() && L1_CACHE_INIT_STS == CacheInit::FULL) {
                 base_cache_l1.lookup_table().data().insert(std::make_pair(tuple, 0ul));
-                base_cache_l1.stats_table().get_stats().insert(std::make_pair(tuple, 0ul), [](){},[](){});
+                base_cache_l1.stats_table().get_stats().insert({ tuple, 0ul });
             }
             if (!base_cache_l2.lookup_table().is_full() && L2_CACHE_INIT_STS == CacheInit::FULL) {
                 base_cache_l2.lookup_table().data().insert(std::make_pair(tuple, 0ul));

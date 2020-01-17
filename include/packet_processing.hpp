@@ -75,8 +75,6 @@ class PacketProcessing {
 
                 const auto hit_ratio =  matched_packets_/double(num_packets_);
                 const auto weighted_hit_ratio =  matched_bytes_/double(num_bytes_);
-                vec_hit_ratio_(hit_ratio);
-                vec_weghted_hit_ratio_(weighted_hit_ratio);
 
                 debug(print_status();)
 
@@ -87,13 +85,12 @@ class PacketProcessing {
                 if (num_packets_%1000000 == 0)
                 {
                     print_status();
-                    //if (num_packets_ == 10000000) std::terminate();
                 }
                 if (!run_forever) {
                     debug(print_status();)
                     break;
                 }
-                
+
                 if constexpr (Sleep_Time) {
                     std::this_thread::sleep_for(nano_second_t(Sleep_Time));
                 }
@@ -105,12 +102,8 @@ class PacketProcessing {
             const std::string full = ((lookup_table_.is_full()) ? "full" : "not full");
             std::cout << "Total packets: " << num_packets_ << '\n';
             std::cout << "Total matches: " << matched_packets_ << '\n';
-            std::cout << "Normalized Hit Ratio: " << matched_packets_/double(num_packets_) << '\n';
-            std::cout << "AVG Hit Ratio: " << mean(vec_hit_ratio_) << ", cache " << full<<'\n';
-            std::cout << "Variance Hit Ratio: " << variance(vec_hit_ratio_) << ", cache " << full<<'\n';
-            std::cout << "Weighted Normalized Hit Ratio: " << matched_bytes_/double(num_bytes_) << '\n';
-            std::cout << "Weighted AVG Hit Ratio: " << mean(vec_weghted_hit_ratio_) << ", cache " << full<<'\n';
-            std::cout << "Weighted Variance Hit Ratio: " << variance(vec_weghted_hit_ratio_) << ", cache " << full<<'\n';
+            std::cout << "Normalized Hit Ratio: " << matched_packets_/double(num_packets_) << ", cache " << full << '\n';
+            std::cout << "Weighted Normalized Hit Ratio: " << matched_bytes_/double(num_bytes_) << ", cache " << full << '\n';
         }
 
         virtual void punt_pkt_to_next_lvl (inter_thread_comm_t& punted_pkt)=0;
@@ -118,7 +111,7 @@ class PacketProcessing {
         // TODO: Send to policer in case of a cache miss
         void digest_pkt_to_ctrl (inter_thread_digest_cpu& digest_pkt, CacheType cache_type) {
             if(cache_type == CacheType::OPT || cache_type == CacheType::LRU)
-            { 
+            {
                 digest_pkt.push_message({ tuple_size_pair_.first, discrete_ts });
             } else
             {
@@ -155,8 +148,6 @@ class PacketProcessing {
         std::size_t num_bytes_ = 0;
         std::size_t matched_packets_ = 0;
         std::size_t matched_bytes_ = 0;
-        accumulator_set<double, features<tag::mean, tag::variance>> vec_hit_ratio_;
-        accumulator_set<double, features<tag::mean, tag::variance>> vec_weghted_hit_ratio_;
         std::size_t discrete_ts = 0;
         tuple_pkt_size_pair_t tuple_size_pair_;
 

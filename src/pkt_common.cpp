@@ -1,7 +1,8 @@
 #include <arpa/inet.h>
 #include "pkt_common.hpp"
 
-std::ostream& operator<<(std::ostream& os, const FiveTuple& five_tuple) {
+std::ostream& operator<<(std::ostream& os, const FiveTuple& five_tuple)
+{
     os << "{ " << five_tuple.src_addr << ", "
         << five_tuple.dst_addr << ", "
         << (int)five_tuple.protocol << ", "
@@ -10,29 +11,39 @@ std::ostream& operator<<(std::ostream& os, const FiveTuple& five_tuple) {
     return os;
 }
 
+std::size_t hash_value(const FiveTuple& tuple)
+{
+    return std::hash<FiveTuple>()(tuple);
+}
+
 // Helper functions
-tuple_pkt_size_pair_t create_five_tuple_from_packet (pcpp::Packet& parsedPacket) {
+tuple_pkt_size_pair_t create_five_tuple_from_packet (pcpp::Packet& parsedPacket)
+{
     // 5 tuple
     FiveTuple five_tuple;
     size_t pkt_size = 0;
 
 
     // verify the packet is L4
-    if (parsedPacket.isPacketOfType(pcpp::TCP) || parsedPacket.isPacketOfType(pcpp::UDP)) {
+    if (parsedPacket.isPacketOfType(pcpp::TCP) || parsedPacket.isPacketOfType(pcpp::UDP))
+    {
 
         // Extract L4 fields to build the 5 tuple
-        if (parsedPacket.isPacketOfType(pcpp::TCP)) {
+        if (parsedPacket.isPacketOfType(pcpp::TCP))
+        {
             auto tcp_layer = parsedPacket.getLayerOfType<pcpp::TcpLayer>();
             five_tuple.src_port = htons(tcp_layer->getTcpHeader()->portSrc);
             five_tuple.dst_port = htons(tcp_layer->getTcpHeader()->portDst);
-        } else {
+        } else
+        {
             auto udp_layer = parsedPacket.getLayerOfType<pcpp::UdpLayer>();
             five_tuple.src_port = htons(udp_layer->getUdpHeader()->portSrc);
             five_tuple.dst_port = htons(udp_layer->getUdpHeader()->portDst);
         }
 
         // Extract L3 fields to build the remaining of the 5 tuple
-        if (parsedPacket.isPacketOfType(pcpp::IPv6)) {
+        if (parsedPacket.isPacketOfType(pcpp::IPv6))
+        {
             auto ipv6_layer = parsedPacket.getLayerOfType<pcpp::IPv6Layer>();
             five_tuple.src_addr = ipv6_layer->getSrcIpAddress().toString();
             five_tuple.dst_addr = ipv6_layer->getDstIpAddress().toString();
@@ -40,7 +51,8 @@ tuple_pkt_size_pair_t create_five_tuple_from_packet (pcpp::Packet& parsedPacket)
             // Because the IPv6 PayloadLength does not take into account the IPv6 header itself, we
             // add 40 bytes, the IPV6 header size, to measure the same amount of information over an IPv4 header.
             pkt_size = htons(ipv6_layer->getIPv6Header()->payloadLength) + 40; // create a constant here
-        } else {
+        } else
+        {
             auto ipv4_layer = parsedPacket.getLayerOfType<pcpp::IPv4Layer>();
             five_tuple.src_addr = ipv4_layer->getSrcIpAddress().toString();
             five_tuple.dst_addr = ipv4_layer->getDstIpAddress().toString();
@@ -61,7 +73,7 @@ std::unordered_set<FiveTuple> filter_unique_tuples_from_trace (const std::string
     while (reader.getNextPacket(rawPacket)) {
         // Push Packet
         pcpp::Packet packet(&rawPacket);
-        const auto& [tuple, size] = create_five_tuple_from_packet(packet);
+        const auto& [tuple, _] = create_five_tuple_from_packet(packet);
         if (five_tuples.find(tuple) == five_tuples.end()) {
             five_tuples.insert(tuple);
         }

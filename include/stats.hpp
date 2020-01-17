@@ -19,6 +19,8 @@
 
 #include "pkt_common.hpp"
 #include "sorted_container.hpp"
+#include "multi_index_sorted_container.hpp"
+
 /*
 *
 * Stats Class Used by a Cache.
@@ -40,140 +42,67 @@ class CacheStats
         virtual void update_stats (const FiveTuple& five_tuple, const Stats_Value& updated_stats) =0;
 
         // Read the whole stats
-        auto& get_stats ()
-        {
-            std::unique_lock lock(mutex_);  // Needs to be unique, cause the Dataplane should not
-                                            // modify the stats during controller reading
-            return stats_container_;        //TODO: If using circular_buffer, not thread safe.
-        }
-
-        auto& back () const
-        {
-            std::unique_lock lock(mutex_);
-            return stats_container_.back();
-        }
-        auto& front () const  
-        {
-            std::unique_lock lock(mutex_);
-            return stats_container_.front();
-        }
-
-
-        auto& back () 
-        {
-            std::unique_lock lock(mutex_);
-            return stats_container_.back();
-        }
-        auto& front () 
-        {
-            std::unique_lock lock(mutex_);
-            return stats_container_.front();
-        }
-
-        // Clear available thru container.clear()
+        auto& get_stats () { return stats_container_; }
 
         // CTOR
         CacheStats () {}
-        CacheStats (const Stats_Container& stats_container) : 
-            stats_container_(stats_container),
-            capacity_(stats_container.size())
-        {}
 
     protected:
         // Think about a generic container for the stats...
-        Stats_Container stats_container_ { Stats_Size };
-        mutable std::shared_mutex mutex_;
-        size_t capacity_ = 0;
+        Stats_Container stats_container_;
 
 };
 
 // LRU Cache stats specialization
-template<typename T>
-using LRUContainer = SortedContainer<std::pair<FiveTuple, T>>;
+template<std::size_t N, typename T>
+using LRUContainer = MultiIndexSortedContainer<N, FiveTuple, T, std::less<T>>;
 
 // Duplicate code betwen LFU and LRU... Improve it
 template<size_t Stats_Size, typename Stats_Value>
-class LRUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LRUContainer<Stats_Value>> 
+class LRUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LRUContainer<Stats_Size, Stats_Value>>
 {
     public:
 
         virtual void update_stats (const FiveTuple& five_tuple, const Stats_Value& updated_stats) override
         {
-            std::unique_lock lock(this->mutex_);
             if (updated_stats != 0)
             {
-                auto tuple_compare = [=](const auto& elem) {
-                    return elem.first == five_tuple;
-                };
-                auto value_sort = [](auto a, auto b) { return a.second < b.second; };
-                auto value_compare = [](auto a, auto b) { return (a.second < b.second) ? a : b; };
-
-                auto found = this->stats_container_.find_if(tuple_compare);
+                auto found = this->stats_container_.find(five_tuple);
                 if (found !=  this->stats_container_.end())
                 {
-                    *found = std::make_pair(found->first, updated_stats);
+                    //std::cout << "B Modified: " <<  this->stats_container_.size() << '\n';
+                    this->stats_container_.modify(found, updated_stats);
+                    //std::cout << "A Modified: " <<  this->stats_container_.size() << '\n';
                 } else
                 {
-                    this->stats_container_.insert(std::make_pair(five_tuple, updated_stats), value_sort, value_compare);
+                    this->stats_container_.insert({ five_tuple, updated_stats } );
                 }
-                //this->stats_container_.sort(value_sort);
-                //std::cout << "------------------------\n";
-                //for (auto i : this->stats_container_) {
-                //    std::cout << i.first << " , " << i.second << '\n';
-                //} 
-                //std::cout << this->stats_container_.back().first << '\n';
-                //int i;
-                //std::cin >> i;
             }
         }
 };
 
 // LFU Cache stats specialization
-template<typename T>
-using LFUContainer = SortedContainer<std::pair<FiveTuple, T>>;
+template<std::size_t N, typename T>
+using LFUContainer = MultiIndexSortedContainer<N, FiveTuple, T, std::less<T>>;
 
 template<size_t Stats_Size, typename Stats_Value>
-class LFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LFUContainer<Stats_Value>>
+class LFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LFUContainer<Stats_Size, Stats_Value>>
 {
-
     public:
         virtual void update_stats (const FiveTuple& five_tuple, const Stats_Value& updated_stats) override
         {
-            std::unique_lock lock(this->mutex_);
             if (updated_stats != 0)
             {
-                auto tuple_compare = [=](const auto& elem) {
-                    return elem.first == five_tuple;
-                };
-                auto heap_value_sort = [](auto a, auto b) { return a.second > b.second; };
-                auto value_sort = [](auto a, auto b) { return a.second < b.second; };
-                auto value_compare = [](auto a, auto b) { return (a.second < b.second) ? a : b; };
-
-                auto found = this->stats_container_.find_if(tuple_compare);
+                auto found = this->stats_container_.find(five_tuple);
                 if (found !=  this->stats_container_.end())
                 {
-                    *found = std::make_pair(found->first, found->second + updated_stats);
+                    //std::cout << "B Modified: " <<  this->stats_container_.size() << '\n';
+                    this->stats_container_.modify(found, found->value + updated_stats);
+                    //std::cout << "A Modified: " <<  this->stats_container_.size() << '\n';
                 } else
                 {
-                    this->stats_container_.insert(std::make_pair(five_tuple, updated_stats + this->stats_container_.front().second), value_sort, value_compare);
+                    this->stats_container_.insert({ five_tuple, updated_stats });
                 }
-                //this->stats_container_.sort(value_sort);
-
-                //std::cout << "------------------------\n";
-                //for (auto i : this->stats_container_) {
-                //    std::cout << i.first << " , " << i.second << '\n';
-                //} 
-
-                //std::make_heap(this->stats_container_.begin(), this->stats_container_.end(), heap_value_sort); 
-                //std::sort(this->stats_container_.begin(), this->stats_container_.end(), value_sort); 
-                
-                //std::cout << "------------------------\n";
-                //for (auto i : this->stats_container_) {
-                //    std::cout << i.first << " , " << i.second << '\n';
-                //} 
-                //std::cout << this->stats_container_.back().first << '\n';
-                //int i;
-                //std::cin >> i;
             }
         }
 };

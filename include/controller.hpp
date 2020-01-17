@@ -68,12 +68,12 @@ class Controller
             //std::cout << "------------- " << timeout << ", " << step << " ------------------\n";
             // Exit in case of timeout
             if (timeout)
-            { 
-                return true; 
+            {
+                return true;
             }
 
             // Lookup Table full ? Identify a victim for eviction
-            if (lookup_table.is_full() && (lookup_table.find(five_tuple) == lookup_table.end()))
+            if (lookup_table.is_full())
             {
                 if (lookup_table.find(five_tuple) == lookup_table.end())
                 {
@@ -94,23 +94,30 @@ class Controller
                         //std::cin >> i;
                     }
                 } else {
+                    debug(
                     std::cout << "-----------------------------------------------------------\n";
                     std::cout << "Entry already in the lookup table." << five_tuple << '\n';
                     std::cout << "-----------------------------------------------------------\n";
-                }
-            } else {
-                //
-                auto tuple_compare = [=](const auto& elem) {
-                    return elem.first == five_tuple;
-                };
-
-                auto found = policy.stats_table().get_stats().find_if(tuple_compare);
-                if (found ==  policy.stats_table().get_stats().end())
-                {
-                    policy.stats_table().get_stats().insert(std::make_pair(five_tuple, size_or_timestamp), [](){}, [](){}); 
+                    )
                 }
             }
 
+
+            if (!lookup_table.is_full() && lookup_table.find(five_tuple) == lookup_table.end())
+            {
+                auto found = policy.stats_table().get_stats().find(five_tuple);
+                if (found == policy.stats_table().get_stats().end())
+                {
+                    if (!policy.stats_table().get_stats().insert({ five_tuple, size_or_timestamp }))
+                    {
+                        std::cout << "Failed\n";
+                    } else
+                    {
+                        std::cout << "Success\n";
+                    }
+                    std::cout << five_tuple << ", Hash: " << hash_value(five_tuple) << ", Size: " << policy.stats_table().get_stats().size() << '\n';
+                }
+            }
 
             Value_t value = 0;
             // Insert the new value.
@@ -140,7 +147,7 @@ class Controller
                                 inter_thread_digest_cpu& l2_digest_pkt)
         {
 
-            while (true) 
+            while (true)
             {
                 // L1 digest processing
                 // Returns in case of a timeout
