@@ -107,6 +107,32 @@ class LFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LFUContai
         }
 };
 
+// LFU Cache stats specialization
+template<std::size_t N, typename T>
+using NFUContainer = MultiIndexSortedContainer<N, FiveTuple, T, std::greater<T>>;
+
+template<size_t Stats_Size, typename Stats_Value>
+class NFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, NFUContainer<Stats_Size, Stats_Value>>
+{
+    public:
+        virtual void update_stats (const FiveTuple& five_tuple, const Stats_Value& updated_stats) override
+        {
+            if (updated_stats != 0)
+            {
+                auto found = this->stats_container_.find(five_tuple);
+                if (found !=  this->stats_container_.end())
+                {
+                    //std::cout << "B Modified: " <<  this->stats_container_.size() << '\n';
+                    this->stats_container_.modify(found, found->value + updated_stats);
+                    //std::cout << "A Modified: " <<  this->stats_container_.size() << '\n';
+                } else
+                {
+                    this->stats_container_.insert({ five_tuple, updated_stats });
+                }
+            }
+        }
+};
+
 // Optimal cache stats specialization
 // Calculate offline the list of flows to be evicted
 // Store teh into a queue

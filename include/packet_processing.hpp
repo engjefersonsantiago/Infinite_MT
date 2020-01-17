@@ -171,7 +171,7 @@ class CacheL1PacketProcessing final : public PacketProcessing <Lookup_Size, Look
             if (match) {
                 if (cache_type == CacheType::LRU ||cache_type == CacheType::OPT) {
                     this->stats_table_.update_stats(this->tuple_size_pair_.first, this->discrete_ts);
-                } else if (cache_type == CacheType::LFU || cache_type == CacheType::LFU_MODIF) {
+                } else if (cache_type == CacheType::LFU || cache_type == CacheType::OLFU) {
                     this->stats_table_.update_stats(this->tuple_size_pair_.first,
                                                     (counter_type == CounterType::BYTES)
                                                     ? this->tuple_size_pair_.second : 1ul);

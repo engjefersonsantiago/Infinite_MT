@@ -9,8 +9,9 @@ enum class CacheType
     OPT,
     LRU,
     LFU,
-    LFU_MODIF,
-    LRFU,
+    OLFU,
+    NRU,
+    NFU,
     RANDOM
 };
 
@@ -34,7 +35,7 @@ static constexpr std::size_t CACHE_HOST_PROC_SLOWDOWN_FACTOR = 10;
 static constexpr auto L1_CACHE_INIT_STS = CacheInit::EMPTY;
 static constexpr auto L2_CACHE_INIT_STS = CacheInit::EMPTY;
 
-static constexpr auto L1_CACHE_POLICY = CacheType::LFU;
+static constexpr auto L1_CACHE_POLICY = CacheType::OLFU;
 static constexpr auto L2_CACHE_POLICY = CacheType::LFU;
 
 static constexpr auto LFU_COUNTER_TYPE = CounterType::PKTS;

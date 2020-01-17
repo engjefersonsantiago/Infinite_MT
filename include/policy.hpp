@@ -33,6 +33,7 @@ class Policier{
         virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t timestamp) =0;
 
         auto& stats_table () { return stats_table_; }
+        const auto& lookup_table () const { return lookup_table_; }
 
     protected:
         const lookup_table_t& lookup_table_;
@@ -320,7 +321,7 @@ class LFUPolicy final: public Policier<lookup_table_t,stats_table_t>
 };
 
 template<typename lookup_table_t, typename  stats_table_t>
-class LFUModifPolicy final: public Policier<lookup_table_t,stats_table_t>
+class OLFUPolicy final: public Policier<lookup_table_t,stats_table_t>
 {
     private:
         const CounterType counter_type_;
@@ -328,7 +329,7 @@ class LFUModifPolicy final: public Policier<lookup_table_t,stats_table_t>
     public:
         using policer_t =  Policier<lookup_table_t, stats_table_t>;
 
-        LFUModifPolicy(const lookup_table_t& lookup_table,
+        OLFUPolicy (const lookup_table_t& lookup_table,
                         stats_table_t& stats_table,
                         const CounterType counter_type) :
                         policer_t(lookup_table, stats_table),
@@ -373,5 +374,57 @@ class LFUModifPolicy final: public Policier<lookup_table_t,stats_table_t>
 
 };
 
+template<typename lookup_table_t, typename  stats_table_t>
+class NRUPolicy final: public Policier<lookup_table_t,stats_table_t>
+{
+
+    public:
+        using policer_t =  Policier<lookup_table_t, stats_table_t>;
+
+        NRUPolicy(const lookup_table_t& lookup_table,
+                        stats_table_t& stats_table) :
+                        policer_t(lookup_table, stats_table)
+        {}
+
+        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t timestamp) override
+        {
+            // Search for a not recent used entry.
+            FiveTuple selected;
+
+            for (const auto& entries : this->lookup_table())
+            {
+                if(this->stats_table_.get_stats().find(entries.first)
+                        == this->stats_table_.get_stats().end())
+                {
+                    selected = entries.first;
+                    break;
+                }
+            }
+
+            debug(
+            std::cout << "---------------------------\n";
+            std::cout << "Lookup table contents\n";
+            std::cout << "---------------------------\n";
+            for(const auto& [key, _] : this->lookup_table_)
+            {
+                std::cout <<  key << '\n';
+            }
+            std::cout << "---------------------------\n";
+            std::cout << "Stats table contents\n";
+            std::cout << "---------------------------\n";
+            for(const auto& [key, val] : this->stats_table_.get_stats())
+            {
+                std::cout <<  key <<  ", " << val << '\n';
+            }
+            std::cout << "---------------------------\n";
+            std::cout << "Key to remove " << selected << '\n';
+            std::cout << "---------------------------\n";
+            )
+
+            return selected;
+        }
+
+
+};
 
 #endif
