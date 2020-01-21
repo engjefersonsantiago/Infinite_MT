@@ -109,10 +109,10 @@ class LFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LFUContai
 
 // LFU Cache stats specialization
 template<std::size_t N, typename T>
-using NFUContainer = MultiIndexSortedContainer<N, FiveTuple, T, std::greater<T>>;
+using NXUContainer = MultiIndexSortedContainer<N, FiveTuple, T, std::greater<T>>;
 
 template<size_t Stats_Size, typename Stats_Value>
-class NFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, NFUContainer<Stats_Size, Stats_Value>>
+class NXUCacheStats final : public CacheStats<Stats_Size, Stats_Value, NXUCacheStats<Stats_Size, Stats_Value>>
 {
     public:
         virtual void update_stats (const FiveTuple& five_tuple, const Stats_Value& updated_stats) override

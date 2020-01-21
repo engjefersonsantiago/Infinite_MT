@@ -110,7 +110,7 @@ class PacketProcessing {
 
         // TODO: Send to policer in case of a cache miss
         void digest_pkt_to_ctrl (inter_thread_digest_cpu& digest_pkt, CacheType cache_type) {
-            if(cache_type == CacheType::OPT || cache_type == CacheType::LRU)
+            if(cache_type == CacheType::OPT || cache_type == CacheType::LRU || cache_type == CacheType::NRU)
             {
                 digest_pkt.push_message({ tuple_size_pair_.first, discrete_ts });
             } else

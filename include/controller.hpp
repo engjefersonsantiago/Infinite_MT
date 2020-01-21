@@ -103,22 +103,6 @@ class Controller
             }
 
 
-            if (!lookup_table.is_full() && lookup_table.find(five_tuple) == lookup_table.end())
-            {
-                auto found = policy.stats_table().get_stats().find(five_tuple);
-                if (found == policy.stats_table().get_stats().end())
-                {
-                    if (!policy.stats_table().get_stats().insert({ five_tuple, size_or_timestamp }))
-                    {
-                        std::cout << "Failed\n";
-                    } else
-                    {
-                        std::cout << "Success\n";
-                    }
-                    std::cout << five_tuple << ", Hash: " << hash_value(five_tuple) << ", Size: " << policy.stats_table().get_stats().size() << '\n';
-                }
-            }
-
             Value_t value = 0;
             // Insert the new value.
             auto lookup_it = full_lookup_table_.find(five_tuple);
@@ -140,6 +124,25 @@ class Controller
                 std::cout << "--------------------------\n";
             }
             debug(std::cout << "Digested " << punted_pkts << " packets, Inserting: " << five_tuple << ", Step: " << step << ", Current occupancy: " << lookup_table.occupancy() << '\n';)
+
+            if (!lookup_table.is_full()/* && lookup_table.find(five_tuple) == lookup_table.end()*/)
+            {
+                auto found = policy.stats_table().get_stats().find(five_tuple);
+                if (found == policy.stats_table().get_stats().end())
+                {
+                    if (!policy.stats_table().get_stats().insert({ five_tuple, size_or_timestamp }))
+                    {
+                        std::cout << "Failed\n";
+                    } else
+                    {
+                        std::cout << "Success\n";
+                    }
+                    std::cout << five_tuple << ", Hash: " << hash_value(five_tuple) << ", Size: " << policy.stats_table().get_stats().size() << '\n';
+                    std::cout << five_tuple << "Look Size: " << lookup_table.data().size() << '\n';
+                }
+            }
+
+     
             return false;
         }
 

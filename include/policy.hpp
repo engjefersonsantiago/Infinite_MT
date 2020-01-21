@@ -375,18 +375,18 @@ class OLFUPolicy final: public Policier<lookup_table_t,stats_table_t>
 };
 
 template<typename lookup_table_t, typename  stats_table_t>
-class NRUPolicy final: public Policier<lookup_table_t,stats_table_t>
+class NXUPolicy final: public Policier<lookup_table_t,stats_table_t>
 {
 
     public:
         using policer_t =  Policier<lookup_table_t, stats_table_t>;
 
-        NRUPolicy(const lookup_table_t& lookup_table,
+        NXUPolicy(const lookup_table_t& lookup_table,
                         stats_table_t& stats_table) :
                         policer_t(lookup_table, stats_table)
         {}
 
-        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t timestamp) override
+        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t) override
         {
             // Search for a not recent used entry.
             FiveTuple selected;
