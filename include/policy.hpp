@@ -16,37 +16,54 @@
 // Interface avec le controller.
 // Policy doit pouvoir s
 
-// Policier is specialized for a given politic.
+// Policer is specialized for a given policy.
 // Currently assume that L1 cache enries are updated following a cache miss.
 
-template<typename lookup_table_t, typename  stats_table_t>
-class Policier{
+template<typename lookup_table_t, typename  stats_table_t, typename promo_stats_table_t>
+class Policer{
 
     public:
 
-        Policier(const lookup_table_t& lookup_table,
-                    stats_table_t& stats_table) :
+        Policer(const lookup_table_t& lookup_table,
+                    stats_table_t& stats_table,
+                    promo_stats_table_t& promo_stats_table) :
                     lookup_table_{lookup_table},
-                    stats_table_{stats_table}
-        {}
+                    stats_table_{stats_table},
+                    promo_stats_table_{promo_stats_table} {}
 
         virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t timestamp) =0;
 
         auto& stats_table () { return stats_table_; }
         const auto& lookup_table () const { return lookup_table_; }
 
+        FiveTuple select_promotion_candidate() {
+            auto tuple_to_promote = this->promo_stats_table_.get_stats().highest_order();
+            auto selected = tuple_to_promote->key;
+            promo_stats_table_.get_stats().erase(tuple_to_promote);
+            return selected;
+
+        }
+        //FiveTuple select_promotion_candidate() {
+        //    auto ret =  promo_stats_table_.get_stats().front().first;
+        //    promo_stats_table_.get_stats().front().second = 0;
+        //    return ret;
+        //}
+        
+        auto& promo_stats_table () { return promo_stats_table_; }
+
     protected:
         const lookup_table_t& lookup_table_;
         stats_table_t& stats_table_;
+        promo_stats_table_t& promo_stats_table_;
 
 };
 
-template<typename lookup_table_t, typename  stats_table_t>
-class RandomPolicy final: public Policier<lookup_table_t,stats_table_t>
+template<typename lookup_table_t, typename  stats_table_t, typename promo_stats_table_t>
+class RandomPolicy final: public Policer<lookup_table_t,stats_table_t,promo_stats_table_t>
 {
 
     public:
-        using policer_t = Policier<lookup_table_t, stats_table_t>;
+        using policer_t = Policer<lookup_table_t, stats_table_t,promo_stats_table_t>;
 
     private:
 
@@ -55,15 +72,16 @@ class RandomPolicy final: public Policier<lookup_table_t,stats_table_t>
         {
             std::random_device rd;
             std::mt19937 gen(rd());
-            std::uniform_int_distribution<> dis(0, lookup_table_t::LOOKUP_MEM_SIZE);
+            std::uniform_int_distribution<> dis(0, lookup_table_t::LOOKUP_MEM_SIZE - 1);
             return dis(gen);
         }
 
     public:
 
         RandomPolicy(const lookup_table_t& lookup_table,
-                        stats_table_t& stats_table) :
-                        policer_t(lookup_table, stats_table)
+                        stats_table_t& stats_table,
+                        promo_stats_table_t& promo_stats_table) :
+                        policer_t(lookup_table, stats_table, promo_stats_table)
         {}
 
         virtual FiveTuple select_replacement_victim(FiveTuple , size_t) override
@@ -75,16 +93,17 @@ class RandomPolicy final: public Policier<lookup_table_t,stats_table_t>
         }
 };
 
-template<typename lookup_table_t, typename  stats_table_t>
-class LRUPolicy final: public Policier<lookup_table_t,stats_table_t>
+template<typename lookup_table_t, typename  stats_table_t, typename promo_stats_table_t>
+class LRUPolicy final: public Policer<lookup_table_t,stats_table_t,promo_stats_table_t>
 {
 
     public:
-        using policer_t =  Policier<lookup_table_t, stats_table_t>;
+        using policer_t =  Policer<lookup_table_t, stats_table_t,promo_stats_table_t>;
 
         LRUPolicy(const lookup_table_t& lookup_table,
-                        stats_table_t& stats_table) :
-                        policer_t(lookup_table, stats_table)
+                        stats_table_t& stats_table,
+                        promo_stats_table_t& promo_stats_table) :
+                        policer_t(lookup_table, stats_table, promo_stats_table)
         {}
 
         virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t timestamp) override
@@ -129,17 +148,20 @@ class LRUPolicy final: public Policier<lookup_table_t,stats_table_t>
 
 // Opt Policy uses a ordered list of further seem flows
 // These flows need to be evicted
-template<typename lookup_table_t, typename  stats_table_t>
-class OPTPolicy final : public Policier<lookup_table_t,stats_table_t>
+template<typename lookup_table_t, typename  stats_table_t, typename promo_stats_table_t>
+class OPTPolicy final : public Policer<lookup_table_t,stats_table_t,promo_stats_table_t>
 {
     //TODO: validate when we enqueue that the current timestamp is also pushed. Need a global visibility on the timestamp (i.e. a scheduler!)
     public:
-        using policer_t =  Policier<lookup_table_t, stats_table_t>;
+        using policer_t =  Policer<lookup_table_t, stats_table_t,promo_stats_table_t>;
         using fivetuple_history_t = std::unordered_map<FiveTuple, std::pair<std::size_t, std::vector<std::size_t>>>;
 
         OPTPolicy(const lookup_table_t& lookup_table,
-                        stats_table_t& stats_table, const std::string& file ) :
-                        policer_t(lookup_table, stats_table),  file_name{file}
+                        stats_table_t& stats_table,
+                        promo_stats_table_t& promo_stats_table,
+                         const std::string& file) :
+                        policer_t(lookup_table, stats_table, promo_stats_table), 
+                        file_name{file}
         {
              //build_five_tuple_history();
         }
@@ -264,19 +286,20 @@ class OPTPolicy final : public Policier<lookup_table_t,stats_table_t>
 
 };
 
-template<typename lookup_table_t, typename  stats_table_t>
-class LFUPolicy final: public Policier<lookup_table_t,stats_table_t>
+template<typename lookup_table_t, typename  stats_table_t, typename promo_stats_table_t>
+class LFUPolicy final: public Policer<lookup_table_t,stats_table_t,promo_stats_table_t>
 {
     private:
         const CounterType counter_type_;
 
     public:
-        using policer_t =  Policier<lookup_table_t, stats_table_t>;
+        using policer_t =  Policer<lookup_table_t, stats_table_t,promo_stats_table_t>;
 
         LFUPolicy(const lookup_table_t& lookup_table,
                         stats_table_t& stats_table,
+                        promo_stats_table_t& promo_stats_table,
                         const CounterType counter_type) :
-                        policer_t(lookup_table, stats_table),
+                        policer_t(lookup_table, stats_table, promo_stats_table),
                         counter_type_(counter_type)
         {}
 
@@ -320,19 +343,20 @@ class LFUPolicy final: public Policier<lookup_table_t,stats_table_t>
 
 };
 
-template<typename lookup_table_t, typename  stats_table_t>
-class OLFUPolicy final: public Policier<lookup_table_t,stats_table_t>
+template<typename lookup_table_t, typename  stats_table_t, typename promo_stats_table_t>
+class OLFUPolicy final: public Policer<lookup_table_t,stats_table_t,promo_stats_table_t>
 {
     private:
         const CounterType counter_type_;
 
     public:
-        using policer_t =  Policier<lookup_table_t, stats_table_t>;
+        using policer_t =  Policer<lookup_table_t, stats_table_t,promo_stats_table_t>;
 
         OLFUPolicy (const lookup_table_t& lookup_table,
                         stats_table_t& stats_table,
+                        promo_stats_table_t& promo_stats_table,
                         const CounterType counter_type) :
-                        policer_t(lookup_table, stats_table),
+                        policer_t(lookup_table, stats_table, promo_stats_table),
                         counter_type_(counter_type)
         {}
 
@@ -374,16 +398,17 @@ class OLFUPolicy final: public Policier<lookup_table_t,stats_table_t>
 
 };
 
-template<typename lookup_table_t, typename  stats_table_t>
-class NXUPolicy final: public Policier<lookup_table_t,stats_table_t>
+template<typename lookup_table_t, typename  stats_table_t, typename promo_stats_table_t>
+class NXUPolicy final: public Policer<lookup_table_t,stats_table_t,promo_stats_table_t>
 {
 
     public:
-        using policer_t =  Policier<lookup_table_t, stats_table_t>;
+        using policer_t =  Policer<lookup_table_t, stats_table_t,promo_stats_table_t>;
 
         NXUPolicy(const lookup_table_t& lookup_table,
-                        stats_table_t& stats_table) :
-                        policer_t(lookup_table, stats_table)
+                        stats_table_t& stats_table,
+                        promo_stats_table_t& promo_stats_table) :
+                        policer_t(lookup_table, stats_table, promo_stats_table)
         {}
 
         virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t) override

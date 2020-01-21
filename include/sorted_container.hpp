@@ -6,7 +6,7 @@
 #ifndef __SORTED_CONTAINER__
 #define __SORTED_CONTAINER__
 
-template<typename Type>
+template<size_t Size, typename Type>
 class SortedContainer {
     private:
         std::vector<Type> data_;
@@ -15,10 +15,10 @@ class SortedContainer {
         mutable std::shared_mutex mutex_;
 
     public:
-        SortedContainer (const size_t size) :
+        SortedContainer () :
             //data_(size),
             data_{},
-            size_(size), occupancy_(0) {}
+            size_(Size), occupancy_(0) {}
 
         auto erase (typename std::vector<Type>::const_iterator it)
         {

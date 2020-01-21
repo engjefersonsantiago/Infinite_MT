@@ -75,6 +75,12 @@ class Controller
             // Lookup Table full ? Identify a victim for eviction
             if (lookup_table.is_full())
             {
+                // Select candidate
+                if (PROMOTION_POLICY != PromotionPolicy::NONE)
+                {
+                    five_tuple = l1_policy_.select_promotion_candidate();
+                }
+
                 if (lookup_table.find(five_tuple) == lookup_table.end())
                 {
                     auto evicted_key = policy.select_replacement_victim(five_tuple, size_or_timestamp);

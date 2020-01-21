@@ -32,7 +32,7 @@
 template<size_t Stats_Size, typename Stats_Value, typename Stats_Container>
 class CacheStats
 {
-
+    
     public:
         using stats_tuple = std::pair<FiveTuple, Stats_Value>;
         // Constants
@@ -107,12 +107,12 @@ class LFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, LFUContai
         }
 };
 
-// LFU Cache stats specialization
+// NRU/NFU/MFU Cache stats specialization
 template<std::size_t N, typename T>
 using NXUContainer = MultiIndexSortedContainer<N, FiveTuple, T, std::greater<T>>;
 
 template<size_t Stats_Size, typename Stats_Value>
-class NXUCacheStats final : public CacheStats<Stats_Size, Stats_Value, NXUCacheStats<Stats_Size, Stats_Value>>
+class NXUCacheStats final : public CacheStats<Stats_Size, Stats_Value, NXUContainer<Stats_Size, Stats_Value>>
 {
     public:
         virtual void update_stats (const FiveTuple& five_tuple, const Stats_Value& updated_stats) override
@@ -122,29 +122,69 @@ class NXUCacheStats final : public CacheStats<Stats_Size, Stats_Value, NXUCacheS
                 auto found = this->stats_container_.find(five_tuple);
                 if (found !=  this->stats_container_.end())
                 {
-                    //std::cout << "B Modified: " <<  this->stats_container_.size() << '\n';
                     this->stats_container_.modify(found, found->value + updated_stats);
-                    //std::cout << "A Modified: " <<  this->stats_container_.size() << '\n';
                 } else
                 {
-                    this->stats_container_.insert({ five_tuple, updated_stats });
+                    this->stats_container_.insert(
+                            {
+                                five_tuple,
+                                (PROMOTION_POLICY == PromotionPolicy::OMFU && this->stats_container_.size() > 0)
+                                    ? this->stats_container_.lowest_order()->value + updated_stats
+                                    : updated_stats 
+                            }
+                        );
                 }
             }
         }
 };
 
+// LFU Cache stats specialization
+template<std::size_t N, typename T>
+using MFUContainer = SortedContainer<N, std::pair<FiveTuple, T>>;
+
+template<size_t Stats_Size, typename Stats_Value>
+class MFUCacheStats final : public CacheStats<Stats_Size, Stats_Value, MFUContainer<Stats_Size,Stats_Value>>
+{
+
+    public:
+        virtual void update_stats (const FiveTuple& five_tuple, const Stats_Value& updated_stats) override
+        {
+            if (updated_stats != 0)
+            {
+                auto tuple_compare = [=](const auto& elem) {
+                    return elem.first == five_tuple;
+                };
+                auto heap_value_sort = [](auto a, auto b) { return a.second < b.second; };
+                auto value_sort = [](auto a, auto b) { return a.second > b.second; };
+                auto value_compare = [](auto a, auto b) { return (a.second > b.second) ? a : b; };
+
+                auto found = this->stats_container_.find_if(tuple_compare);
+                if (found !=  this->stats_container_.end())
+                {
+                    *found = std::make_pair(found->first, found->second + updated_stats);
+                } else
+                {
+                    this->stats_container_.insert(std::make_pair(five_tuple, updated_stats), value_sort, value_compare);
+                }
+                this->stats_container_.sort(value_sort);
+
+            }
+        }
+};
+
+
+
 // Optimal cache stats specialization
 // Calculate offline the list of flows to be evicted
 // Store teh into a queue
-template<typename T>
-using OPTContainer = SortedContainer<std::pair<FiveTuple, T>>;
+template<std::size_t N, typename T>
+using OPTContainer = SortedContainer<N, std::pair<FiveTuple, T>>;
 
 template<size_t Stats_Size, typename Stats_Value>
-class OPTCacheStats final : public CacheStats<Stats_Size, Stats_Value, OPTContainer<Stats_Value>>
+class OPTCacheStats final : public CacheStats<Stats_Size, Stats_Value, OPTContainer<Stats_Size, Stats_Value>>
 {
     public:
-        using cache_stats_t = CacheStats<Stats_Size, Stats_Value, OPTContainer<Stats_Value>>;
-        using opt_container_t = OPTContainer<Stats_Value>;
+        using opt_container_t = OPTContainer<Stats_Size, Stats_Value>;
 
     private:
         opt_container_t optimal_replace_list () const {
