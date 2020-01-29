@@ -1,26 +1,51 @@
-\begin{figure*}[]
-  \begin{adjustwidth}{-0.45cm}{}
-	\centering
-	\subfloat[Heavy hitter flows]{
-	\includegraphics[width=0.25\textwidth]{fig_cdf_pkt.pdf}
-	\label{fig:cdf_pkt}
-	}
-	\subfloat[Size-weighted heavy hitter flows]{
-		\includegraphics[width=0.25\textwidth]{fig_cdf.pdf}
-		\label{fig:cdf}
-	}
-	\subfloat[Flow duration]{
-		\includegraphics[width=0.25\textwidth]{fig_duration.pdf}
-		\label{fig:flow_duration}
-	}
-	\subfloat[Average flow size]{
-		\includegraphics[width=0.25\textwidth]{fig_avg_flow_size.pdf}
-		\label{fig:flow_size}
-	}
-	\caption{CAIDA trace summary}
-	\label{fig:traces}
-	\end{adjustwidth}
-\end{figure*}
+%\begin{figure*}[]
+%  \begin{adjustwidth}{-0.6cm}{}
+%	\centering
+%	\subfloat[Heavy hitter flows]{
+%		\includegraphics[width=0.26\textwidth]{fig_cdf_pkt.pdf}
+%		\label{fig:cdf_pkt}
+%	}%\qquad
+%	\subfloat[Size-weighted heavy hitter flows]{
+%		\includegraphics[width=0.26\textwidth]{fig_cdf.pdf}
+%		\label{fig:cdf}
+%	}%\\
+%	\subfloat[Flow duration]{
+%		\includegraphics[width=0.26\textwidth]{fig_duration.pdf}
+%		\label{fig:flow_duration}
+%	}%\qquad
+%	\subfloat[Average flow size]{
+%		\includegraphics[width=0.26\textwidth]{fig_avg_flow_size.pdf}
+%		\label{fig:flow_size}
+%	}
+%	\caption{CAIDA trace summary}
+%	\label{fig:traces}
+%	\end{adjustwidth}
+%\end{figure*}
+
+%\begin{figure*}[]
+%	%	\begin{adjustwidth}{-0.6cm}{}
+%	\centering
+%	\subfloat[Heavy hitter flows]{
+%		\includegraphics[width=0.4\textwidth]{fig_cdf_pkt.pdf}
+%		\label{fig:cdf_pkt}
+%	}\qquad
+%	\subfloat[Size-weighted heavy hitter flows]{
+%		\includegraphics[width=0.4\textwidth]{fig_cdf.pdf}
+%		\label{fig:cdf}
+%	}\\
+%	\subfloat[Flow duration]{
+%		\includegraphics[width=0.4\textwidth]{fig_duration.pdf}
+%		\label{fig:flow_duration}
+%	}\qquad
+%	\subfloat[Average flow size]{
+%		\includegraphics[width=0.4\textwidth]{fig_avg_flow_size.pdf}
+%		\label{fig:flow_size}
+%	}
+%	\caption{CAIDA trace summary}
+%	\label{fig:traces}
+%	%	\end{adjustwidth}
+%\end{figure*}
+
 
 \section{Background}\label{sec:back}
 This works proposes "infinitely" extending memory for high performance heterogeneous programmable dataplanes.
@@ -144,12 +169,41 @@ The blue curve is dominated (60\%) by single packet flows.
 Single packet flows are represented with a flow duration of zero seconds.
 Short-lived flows dominate the trace with $\sim$90\% of all flows lasting less than 5 seconds.
 The orange curve in Figure~\ref{fig:flow_duration} illustrates the duration of flows with multiple hits in the trace.
-Still, short-lived flows dominate the trace with $\sim$50\% lasting less than 1 second in the trace.
+Still, short-lived flows dominate the trace with $\sim$50\% lasting less than 1 second.% in the trace.
 
 \textbf{Flow size}~---~Figure~\ref{fig:flow_size} presents the average flow size for four statistically representative observation intervals.
 For all four measures, the first quartile, the median, and the third quartile are very similar.
 On average, small flows ($\sim$100 bytes) dominate the trace with 75\% of the flows being no larger than 150 bytes.
-
+\begin{algorithm}[t]
+	\caption{WLFU policy}
+	\label{algo:wlfu}
+	\SetInd{0.1em}{.9em}
+	\SetAlgoLined
+	\footnotesize
+	\SetKwProg{procedure}{Procedure}{}{end}
+	\SetKwFunction{wlfuPolicy}{wlfuPolicy}
+	\SetKwFunction{findEntry}{findEntry}
+	\SetKwFunction{minFrequencyEntry}{minFrequencyEntry}
+	\SetKwInOut{Input}{input}
+	\SetKw{In}{in}%
+	\SetKw{Not}{not}%
+	\SetKw{Or}{or}%
+	\SetKw{Continue}{continue}%
+	\SetKw{True}{true}%
+	\Input{Cache memory: list of $\langle$\texttt{entry, counter}$\rangle$ pairs}
+	\Input{Possible cache entry}
+	\Input{Packet Size}
+	\procedure{\wlfuPolicy{cache, possible\_entry, pkt\_size}}{
+		\If(\hfill\tcp*[h]{Cache hit}){possible\_entry \In cache}{
+			entry\_found =  \findEntry{cache, possible\_entry}\hfill\tcp{Hit pointer}
+			entry\_found$\rightarrow$counter  += pkt\_size\hfill\tcp{Increment size counter}
+		}
+		\Else(\tcp*[h]{Cache miss}){
+			victim =  \minFrequencyEntry{cache}\hfill\tcp{Victim pointer}
+			*victim = $\langle$possible\_entry, pkt\_size$\rangle$
+		}
+	}
+\end{algorithm}
 According to our experiments, the expected Zipf distribution characteristic of network traffic is still present in current data center traffic.
 Such characteristic favors flow caching in memory scarce programmable dataplanes.
 However, the heavy-hitter analyses show that transmitted byte-based heavy hitters are more dominant than packet-based ones.
@@ -158,55 +212,53 @@ In addition to that, we notice that short-lived flows dominate the trace.
 Therefore, the chosen cache policy algorithm needs a fast reaction time to quickly adapt to traffic changes.
 Besides, such temporal traffic characteristic possibly favors time-aware cache policies (e.g. LRU).
 
-\section{Network-aware Cache Policies}\label{sec:policies}
+\section{Traffic-aware Cache Policies}\label{sec:policies}
 As traditional cache replacement positions may not be suitable in network scenarios, we this section we introduce network-aware cache policies.
 Based on the real traffic analysis, we first present cache eviction policies.
 Then, we present cache promotion policies aiming at maximizing cache performance.
 
-\subsection{Cache Eviction}
+\subsection{Cache Eviction}\label{sec:evi}
 
 \textbf{WLFU}~---~\textit{Vanilla} implementations of LFU perform poorly with real-world network traces~\cite{Kim:09}.
 \textit{Vanilla} LFU considers all cache hits with equal weight, which is not realistic in network communications because larger packets incur in greater network efficiency compared to small ones.
-Thus, Weighted LFU (WLFU) leverages \textit{vanilla} LFU by considering the packet size in its frequency counters.
+Thus, Weighted LFU (WLFU) leverages LFU by considering the packet size in its frequency counters.
 A possible implementation of WLFU is illustrated in Algorithm~\ref{algo:wlfu}.
-
-\begin{algorithm}[]
-\caption{WLFU policy}
-\label{algo:wlfu}
-\SetInd{0.1em}{.9em}
-\SetAlgoLined
-\footnotesize
-\SetKwProg{procedure}{Procedure}{}{end}
-\SetKwFunction{wlfuPolicy}{wlfuPolicy}
-\SetKwFunction{findEntry}{findEntry}
-\SetKwFunction{minFrequencyEntry}{minFrequencyEntry}
-\SetKwInOut{Input}{input}
-\SetKw{In}{in}%
-\SetKw{Not}{not}%
-\SetKw{Or}{or}%
-\SetKw{Continue}{continue}%
-\SetKw{True}{true}%
-\Input{Cache memory: list of $\langle$\texttt{entry, counter}$\rangle$ pairs}
-\Input{Possible cache entry}
-\Input{Packet Size}
-\procedure{\wlfuPolicy{cache, possible\_entry, pkt\_size}}{
-	\If(\hfill\tcp*[h]{Cache hit}){possible\_entry \In cache}{
-		entry\_found =  \findEntry{cache, possible\_entry}\hfill\tcp{Hit pointer}
-		entry\_found$\rightarrow$counter  += pkt\_size\hfill\tcp{Increment size counter}
-	}
-	\Else(\tcp*[h]{Cache miss}){
-		victim =  \minFrequencyEntry{cache}\hfill\tcp{Victim pointer}
-		*victim = $\langle$possible\_entry, pkt\_size$\rangle$
-	}
-}
-\end{algorithm}
+%\begin{algorithm}[t]
+%\caption{WLFU policy}
+%\label{algo:wlfu}
+%\SetInd{0.1em}{.9em}
+%\SetAlgoLined
+%\footnotesize
+%\SetKwProg{procedure}{Procedure}{}{end}
+%\SetKwFunction{wlfuPolicy}{wlfuPolicy}
+%\SetKwFunction{findEntry}{findEntry}
+%\SetKwFunction{minFrequencyEntry}{minFrequencyEntry}
+%\SetKwInOut{Input}{input}
+%\SetKw{In}{in}%
+%\SetKw{Not}{not}%
+%\SetKw{Or}{or}%
+%\SetKw{Continue}{continue}%
+%\SetKw{True}{true}%
+%\Input{Cache memory: list of $\langle$\texttt{entry, counter}$\rangle$ pairs}
+%\Input{Possible cache entry}
+%\Input{Packet Size}
+%\procedure{\wlfuPolicy{cache, possible\_entry, pkt\_size}}{
+%	\If(\hfill\tcp*[h]{Cache hit}){possible\_entry \In cache}{
+%		entry\_found =  \findEntry{cache, possible\_entry}\hfill\tcp{Hit pointer}
+%		entry\_found$\rightarrow$counter  += pkt\_size\hfill\tcp{Increment size counter}
+%	}
+%	\Else(\tcp*[h]{Cache miss}){
+%		victim =  \minFrequencyEntry{cache}\hfill\tcp{Victim pointer}
+%		*victim = $\langle$possible\_entry, pkt\_size$\rangle$
+%	}
+%}
+%\end{algorithm}
 
 \textbf{OLFU}~---~Optmistic LFU (OLFU) is a proposition to overcome the limitations of \textit{vanilla} LFU for flow caching.
 OLFU is an LFU derivation that gives a chance for a cache promotion candidate to remain in cache regardless of its \textit{actual} hit frequency.
-In OLFU, the cache policer behaves as the \textit{vanilla} LFU in case of a cache hit.
+In OLFU, the cache policer behaves as the LFU in case of a cache hit.
 Otherwise, instead of re-initializing the frequency counter, the new cache entry takes control of the victim's counter, as shown in Algorithm~\ref{algo:olfu}.
-
-\begin{algorithm}[]
+\begin{algorithm}[t]
 \caption{OLFU policy}
 \label{algo:olfu}
 \SetInd{0.1em}{.9em}
@@ -236,11 +288,9 @@ Otherwise, instead of re-initializing the frequency counter, the new cache entry
 }
 \end{algorithm}
 
-
 \textbf{OWLFU}~---~To optimize cache efficiency, OWLFU combines the OLFU and WLFU cache policies.
 In case of a hit, OWLFU behaves as WLFU.
 Otherwise, OWLFU modifies OLFU by incrementing the current packet size to the victim frequency counter, as in Algorithm~\ref{algo:owlfu}.
-
 \begin{algorithm}[]
 \caption{OWLFU policy}
 \label{algo:owlfu}
@@ -272,41 +322,58 @@ Otherwise, OWLFU modifies OLFU by incrementing the current packet size to the vi
 }
 \end{algorithm}
 
-\subsection{Cache Promotion}
-Describe here why the need of a cache promotion policy and which ones we studied.
-
-\section{Evaluating Cache Perfomance}\label{sec:cache_results}
-
 \begin{figure*}[]
-\centering
-\subfloat[Hit Ratio. $SF=1\times$]{
-\includegraphics[width=0.32\textwidth]{../scripts/hit_ratio_sf1.pdf}
-\label{fig:hit_ratio_sf1}
-}
-\subfloat[Hit Ratio. $SF=10\times$]{
-\includegraphics[width=0.32\textwidth]{../scripts/hit_ratio_sf10.pdf}
-\label{fig:hit_ratio_sf10}
-}
-\subfloat[Hit Ratio. $SF=100\times$]{
-\includegraphics[width=0.32\textwidth]{../scripts/hit_ratio_sf100.pdf}
-\label{fig:hit_ratio_sf100}
-}\\
-\subfloat[Size Weighted Hit Ratio. $SF=1\times$]{
-\includegraphics[width=0.32\textwidth]{../scripts/weighted_hit_ratio_sf1.pdf}
-\label{fig:weighted_hit_ratio_sf1}
-}
-\subfloat[Size Weighted Hit Ratio. $SF=10\times$]{
-\includegraphics[width=0.32\textwidth]{../scripts/weighted_hit_ratio_sf10.pdf}
-\label{fig:weighted_hit_ratio_sf10}
-}
-\subfloat[Size Weighted Hit Ratio. $SF=100\times$]{
-\includegraphics[width=0.32\textwidth]{../scripts/weighted_hit_ratio_sf100.pdf}
-\label{fig:weighted_hit_ratio_sf100}
-}
-\caption{Cache performance evaluation}
-\label{fig:hit_ratio}
+	\centering
+	\subfloat[Hit Ratio. $SF=1\times$]{
+		\includegraphics[width=0.33\textwidth]{../scripts/hit_ratio_sf1.pdf}
+		\label{fig:hit_ratio_sf1}
+	}
+	\subfloat[Hit Ratio. $SF=10\times$]{
+		\includegraphics[width=0.33\textwidth]{../scripts/hit_ratio_sf10.pdf}
+		\label{fig:hit_ratio_sf10}
+	}
+	\subfloat[Hit Ratio. $SF=100\times$]{
+		\includegraphics[width=0.33\textwidth]{../scripts/hit_ratio_sf100.pdf}
+		\label{fig:hit_ratio_sf100}
+	}\\
+	\subfloat[Size Weighted Hit Ratio. $SF=1\times$]{
+		\includegraphics[width=0.33\textwidth]{../scripts/weighted_hit_ratio_sf1.pdf}
+		\label{fig:weighted_hit_ratio_sf1}
+	}
+	\subfloat[Size Weighted Hit Ratio. $SF=10\times$]{
+		\includegraphics[width=0.33\textwidth]{../scripts/weighted_hit_ratio_sf10.pdf}
+		\label{fig:weighted_hit_ratio_sf10}
+	}
+	\subfloat[Size Weighted Hit Ratio. $SF=100\times$]{
+		\includegraphics[width=0.33\textwidth]{../scripts/weighted_hit_ratio_sf100.pdf}
+		\label{fig:weighted_hit_ratio_sf100}
+	}
+	\caption{Cache performance evaluation when no promotion policy implemented}
+	\label{fig:hit_ratio}
 \end{figure*}
 
+
+\subsection{Cache Promotion}
+Due to traffic dynamics and programmable dataplane constraints, heuristic cache promotion policies are required for flow caching.
+Thus, we present two policies based on the traffic observations.
+
+\textbf{WMFU}~---~Heavy hitters are dominant in current data center traffic.
+As a consequence, selecting heavy hitters that generate cache misses are potential candidates for cache promotion.
+Thus, Weighted Most Frequently Used (WMFU) is a traffic aware promotion policy derived from MFU.
+In classic MFU, frequent items are tracked for cache eviction.
+Hence, WMFU modifies MFU by considering the packet size in its frequency counters.
+Missed flows with higher counters are thus marked for cache promotion.
+
+\textbf{OWMFU}~---~Optimistic WMFU is the OWLFU counterparts presented in \S\ref{sec:evi}.
+OWMFU optimistically speculates that frequent hitters will continue hitting in the near future.
+Similarly to WMFU, most frequent missed flows are selected for cache promotion.
+
+
+
+\section{Evaluating Cache Performance}\label{sec:cache_results}
+In this section, we present the simulation results for a HDP caching system.
+Thus, we discuss the viability of such a caching system.
+Finally, we discuss the limitations of our approach.
 
 \subsection{Experimental Setup}
 Table~\ref{tab:setup} presents the simulation parameters used to evaluate a two-level caching system as in Figure~\ref{fig:high_level_network}
@@ -329,6 +396,7 @@ To enable reproducibility, we open-sourced our codes\footnote{\url{https://githu
 		\textbf{Parameter}       & \textbf{Value}   \\
 		\hline
 		Eviction policy            & LRU, (O)(W)LFU, Random			    \\
+		Promotion policy            & None, (O)WMFU			    \\
 		Cache Size              & 64 to \SI{8}{\kilo\nothing} entries  \\
 		Slowdown Factor         & 1$\times$, 10$\times$, 100$\times$        \\
 		\hline
@@ -350,18 +418,56 @@ Indeed, OLFU introduces a pseudo-temporal variable to the LFU policy because it 
 Last, OWLFU performs best in almost all scenarios.
 This is nonetheless expected since it combines the strengths of OLFU and WLFU.
 
-TODO: Check and run OPT simulations.
+%TODO: Check and run OPT simulations.
+%TODO: Comment the SF effect.
+Figure~\ref{fig:promo_fig} presents the impact of heuristic cache promotion. 
+We evaluated two cache promotion policies: WMFU and OWMFU. These policies were combined with other three cache eviction policies: random, LRU, and OWLFU.
+We fixed the cache size to \SI{8}{\kilo\nothing} entries and we ran simulations with $SF=10\times$ and $SF=100\times$ because heuristic cache promotion is only applicable when $SF>1\times$.
 
-TODO: Comment the SF effect.
+\begin{figure*}[]
+	\centering
+	\subfloat[Hit Ratio.]{
+		\includegraphics[width=0.43\textwidth]{../scripts/promo.pdf}
+		\label{fig:promo}
+	}\qquad
+	\subfloat[Size Weighted Hit Ratio.]{
+		\includegraphics[width=0.43\textwidth]{../scripts/promo_weighted.pdf}
+		\label{fig:promo_weighted}
+	}
+	\caption{Cache performance evaluation when promotion policies are implemented}
+	\label{fig:promo_fig}
+\end{figure*}
 
-TODO: Evaluate the promotion policy.
+The simulation shows a noticeable increase (+10\%) in the cache hit ratio for when a random-based eviction policy is implemented.
+Moreover, the results also suggest that there is no significant gain when LRU and LFU derivations are used.
 
-\subsection{Discussion and Implementation Feasibility}
+\subsection{Discussions}
 
 Although LRU and LFU derivations present the best simulation results, these cache policies are unfeasible in high-performance programmable dataplanes.
 First, in term of memory consumption, both replacement classes require $O(N)$ extra information to select cache victims.
 This is undesirable because memory is scarce in network switches and must be reserved for profitable applications.
 Second, both algorithms require sorting data either by frequency or time, a costly and non-scalable operation as it requires at least $O(N~log(N))$ comparisons.
+An alternative would be sorting the data in software, however, the increasing data rates of current programmable dataplanes make this unfeasible.  
 
 Implementing a random replacement policy in programmable dataplanes has no additional hardware cost as it may be implemented in software.
 In addition, the simulation results show the cache hit ratio based on a random replacement policy is less than 10\% lower than LRU and OWLFU.
+
+Contrary to LRU and LFU, implementing cache promotion policies in the data plane is viable.
+MFU and its derivations presented can be considered as a subclass of the classic top-k hot items problem.
+Detecting top-k hot items have been already demonstrated in P4 targeting current programmable dataplanes with a sublinear memory consumption~\cite{Sivaraman:17}.
+
+\subsection{Limitations}\label{sec:method:limitations}
+
+In this work, we are interested in detecting possible candidates for flow migration in the data plane.
+This is due high-speed links in data center networks and the fast changing nature of data center network traffic; therefore, a slow control plane interaction is undesired.
+However, candidates migration detection in the data plane can only be precisely detected for exact match rules due to ambiguity in ternary and LPM rules.
+For example, let us consider a case where a low priority LPM rule is frequently matched in a low cache level and would therefore be a candidate for flow migration.
+Using our method, this rule is moved to a higher cache level as expected.
+Now, a high priority rule belonging to the same prefix arriving to the HDP switch will match in the high cache level.
+However, a specific rule installed in a lower cache level for the same prefix will be hidden, leading thus to a possibly wrong forwarding decision.   
+Such cache ambiguity is a known problem and it has been reported and addressed in earlier works~\cite{Degermark:1997,Katta:2014}.
+
+In addition, the eviction and promotion cache policies evaluated in this work were fine-tuned based on a actual traffic analysis.
+This analysis showed that the traffic followed a Zipf distribution.
+Employing the caching strategy proposed in this work in other traffic scenarios has not yet been explored.
+As a consequence, our methods may not be viable in different traffic distributions. 

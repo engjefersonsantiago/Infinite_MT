@@ -17,6 +17,37 @@ However, research regarding HDPs is still in its infancy with many open question
 In this work, we address the issue of distributed match-action table management in HDPs comprising two or more programmable dataplane devices (PDDs), as illustrated in Figure~\ref{fig:high_level_network}.
 As an example, an HDP could be made of a programmable ASIC for $PDD_1$, an  FPGA for $PDD_2$, and, a local CPU for $PDD_3$.
 
+\begin{figure}[]
+	\centering
+	\input{arch_scheme.tex}
+	\caption{Reference caching system}
+	\label{fig:high_level_network}
+\end{figure}
+
+\begin{figure*}[]
+	\begin{adjustwidth}{-0.6cm}{}
+		\centering
+		\subfloat[Heavy hitter flows]{
+			\includegraphics[width=0.26\textwidth]{fig_cdf_pkt.pdf}
+			\label{fig:cdf_pkt}
+		}%\qquad
+		\subfloat[Size-weighted heavy hitter flows]{
+			\includegraphics[width=0.26\textwidth]{fig_cdf.pdf}
+			\label{fig:cdf}
+		}%\\
+		\subfloat[Flow duration]{
+			\includegraphics[width=0.26\textwidth]{fig_duration.pdf}
+			\label{fig:flow_duration}
+		}%\qquad
+		\subfloat[Average flow size]{
+			\includegraphics[width=0.26\textwidth]{fig_avg_flow_size.pdf}
+			\label{fig:flow_size}
+		}
+		\caption{CAIDA trace summary}
+		\label{fig:traces}
+	\end{adjustwidth}
+\end{figure*}
+
 
 To that end, we borrow from the cache hierarchy concept of regular computer systems.
 %In our system, a first-level cache is a high-performance but memory limited programmable ASIC.
@@ -51,9 +82,4 @@ The contributions of this work are as follows:
 	\item a model to estimate the performance and overhead of a match-action caching system in an HDP~(\S\ref{sec:cache_results}).
 \end{itemize}
 
-\begin{figure}[]
-	\centering
-	\input{arch_scheme.tex}
-	\caption{Reference caching system}
-	\label{fig:high_level_network}
-\end{figure}
+
