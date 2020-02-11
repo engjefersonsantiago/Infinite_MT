@@ -156,7 +156,7 @@ The analysed trace is 1 minute long monitoring $\sim$\SI{30}{\mega\nothing} pack
 A similar analysis was done by~\citeauthor{Spang:19} to estimate the number of TCP/IP flows~\cite{Spang:19}.
 
 Figure~\ref{fig:traces} summarizes our observations.
-In our analysis, we defined a flow as being a unique five-tuple $\langle$~IPv4/IPv6 Source IP address, IPv4/IPv6 destination IP address, L4 protocol, UDP/TCP source port, UDP/TCP destination port~$\rangle$ connection.
+In our analysis, we defined a flow as being a unique five-tuple $\langle$~SrcIP, DstIP, protocol, SrcPort, DstPort~$\rangle$\footnote{We consider IPv4, IPv6, UDP, and TCP in our five-tuple definition.} connection.
 
 \textbf{Heavy hitters}~---~As shown in Figure~\ref{fig:cdf_pkt} and Figure~\ref{fig:cdf}, the Zipf distribution characteristic is still present in current network traffic.
 Both figures present the CDF, in terms of packet hits and byte hits, for several observation intervals, ranging from \SI{100}{\micro\second} to \SI{60}{\second}.
@@ -223,6 +223,7 @@ Then, we present cache promotion policies aiming at maximizing cache performance
 \textit{Vanilla} LFU considers all cache hits with equal weight, which is not realistic in network communications because larger packets incur in greater network efficiency compared to small ones.
 Thus, Weighted LFU (WLFU) leverages LFU by considering the packet size in its frequency counters.
 A possible implementation of WLFU is illustrated in Algorithm~\ref{algo:wlfu}.
+Note that as frequency counters are always increasing, periodically flushes (omitted in the pseudocode) are required.
 %\begin{algorithm}[t]
 %\caption{WLFU policy}
 %\label{algo:wlfu}
@@ -257,7 +258,7 @@ A possible implementation of WLFU is illustrated in Algorithm~\ref{algo:wlfu}.
 \textbf{OLFU}~---~Optmistic LFU (OLFU) is a proposition to overcome the limitations of \textit{vanilla} LFU for flow caching.
 OLFU is an LFU derivation that gives a chance for a cache promotion candidate to remain in cache regardless of its \textit{actual} hit frequency.
 In OLFU, the cache policer behaves as the LFU in case of a cache hit.
-Otherwise, instead of re-initializing the frequency counter, the new cache entry takes control of the victim's counter, as shown in Algorithm~\ref{algo:olfu}.
+Otherwise, instead of re-initializing the frequency counter, the new cache entry takes control of the victim's counter, as shown in Algorithm~\ref{algo:olfu} that omits the flushing logic.
 \begin{algorithm}[t]
 \caption{OLFU policy}
 \label{algo:olfu}
@@ -279,7 +280,7 @@ Otherwise, instead of re-initializing the frequency counter, the new cache entry
 \procedure{\olfuPolicy{cache, possible\_entry}}{
 	\If(\hfill\tcp*[h]{Cache hit}){possible\_entry \In cache}{
 		entry\_found =  \findEntry{cache, possible\_entry}\hfill\tcp{Hit pointer}
-		entry\_found$\rightarrow$counter  += 1
+		entry\_found$\rightarrow$counter += 1
 	}
 	\Else(\hfill\tcp*[h]{Cache miss}){
 		victim = \minFrequencyEntry{cache}\hfill\tcp{Victim pointer}
@@ -443,18 +444,28 @@ Moreover, the results also suggest that there is no significant gain when LRU an
 
 \subsection{Discussions}
 
-Although LRU and LFU derivations present the best simulation results, these cache policies are unfeasible in high-performance programmable dataplanes.
+Although LRU and LFU derivations show the best simulation results, these cache policies are infeasible in high-performance programmable dataplanes.
 First, in term of memory consumption, both replacement classes require $O(N)$ extra information to select cache victims.
 This is undesirable because memory is scarce in network switches and must be reserved for profitable applications.
 Second, both algorithms require sorting data either by frequency or time, a costly and non-scalable operation as it requires at least $O(N~log(N))$ comparisons.
-An alternative would be sorting the data in software, however, the increasing data rates of current programmable dataplanes make this unfeasible.  
+Moreover, such parallel sorting would require N-port read memory, which is not available in current programmable dataplanes.
+An alternative would be sorting the data in software, however, the increasing data rates of current programmable dataplanes make this infeasible.  
+
+An alternative naive software approach for implementing LRU caches is using doubly linked lists.
+This approach is also infeasible in current programmable dataplanes.
+The main reason is due to the feed-forward pipeline organization which prevents back propagation of data from a stage $S_{i}$ to $S_{i-1}$.
+Singly linked lists could however be used for implementing a LRU cache.
+The most recent element would be placed at the head of the list while other elements are moved towards the tail.
+If the most recent element is already in the list, the data moving stops at its position, otherwise, it continues down to the tail.
+Such implementation is possible in programmable dataplanes, however, it is still infeasible due to the limited number of pipeline stages (commonly fixed at 32 stages).
+Multiple parallel singly linked lists are possible but the scalability is as well limited.
 
 Implementing a random replacement policy in programmable dataplanes has no additional hardware cost as it may be implemented in software.
 In addition, the simulation results show the cache hit ratio based on a random replacement policy is less than 10\% lower than LRU and OWLFU.
 
 Contrary to LRU and LFU, implementing cache promotion policies in the data plane is viable.
-MFU and its derivations presented can be considered as a subclass of the classic top-k hot items problem.
-Detecting top-k hot items have been already demonstrated in P4 targeting current programmable dataplanes with a sublinear memory consumption~\cite{Sivaraman:17}.
+MFU and its derivations presented can be considered as a subclass of the classic top-k hot items problem~\cite{Metwally:2005}.
+Detecting top-k hot items have been already demonstrated in P4~\cite{Sivaraman:17} and Domino~\cite{SivaramanDomino:2016} targeting current programmable dataplanes with sublinear memory consumption.
 
 \subsection{Limitations}\label{sec:method:limitations}
 
@@ -467,7 +478,11 @@ Now, a high priority rule belonging to the same prefix arriving to the HDP switc
 However, a specific rule installed in a lower cache level for the same prefix will be hidden, leading thus to a possibly wrong forwarding decision.   
 Such cache ambiguity is a known problem and it has been reported and addressed in earlier works~\cite{Degermark:1997,Katta:2014}.
 
-In addition, the eviction and promotion cache policies evaluated in this work were fine-tuned based on a actual traffic analysis.
+In addition, the eviction and promotion cache policies evaluated in this work were fine-tuned based on an actual real-world data center network trace.
 This analysis showed that the traffic followed a Zipf distribution.
 Employing the caching strategy proposed in this work in other traffic scenarios has not yet been explored.
-As a consequence, our methods may not be viable in different traffic distributions. 
+As a consequence, our methods and propositions may not be viable in different traffic distributions.
+
+The performance analysis in this paper has considered only a 2-level cache.
+However, a N-level cache can be generalized as a $N-1~\times$ 2-level caches.
+Thus, the conducted 2-level cache performance investigation is relevant for setting a upper bound hit ration analysis, even though we agree that a full caching system may expose other limitations, such as multi-level control plane interaction.
