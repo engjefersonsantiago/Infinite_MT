@@ -392,15 +392,15 @@ To enable reproducibility, we open-sourced our codes\footnote{\url{https://githu
 	\centering
 	\caption{Experimental Parameters}
 	\label{tab:setup}
-	\begin{tabular}{|l|l|}
-		\hline
+	\begin{tabular}{l|l}
+		\toprule
 		\textbf{Parameter}       & \textbf{Value}   \\
-		\hline
+		\midrule
 		Eviction policy            & LRU, (O)(W)LFU, Random			    \\
 		Promotion policy            & None, (O)WMFU			    \\
 		Cache Size              & 64 to \SI{8}{\kilo\nothing} entries  \\
 		Slowdown Factor         & 1$\times$, 10$\times$, 100$\times$        \\
-		\hline
+		\bottomrule
 	\end{tabular}
 \end{table}
 
