@@ -25,7 +25,7 @@ As an example, an HDP could be made of a programmable ASIC for $PDD_1$, an  FPGA
 \end{figure}
 
 \begin{figure*}[]
-	\begin{adjustwidth}{-0.6cm}{}
+	\begin{adjustwidth}{-0.80cm}{}
 		\centering
 		\subfloat[Heavy hitter flows]{
 			\includegraphics[width=0.26\textwidth]{fig_cdf_pkt.pdf}
@@ -53,16 +53,16 @@ To that end, we borrow from the cache hierarchy concept of regular computer syst
 %In our system, a first-level cache is a high-performance but memory limited programmable ASIC.
 %The FPGA plays the role of second-level cache, and finally the CPU is the last-level cache.
 In our proposed caching system, a first-level cache is a high-performance but memory-limited PDD.
-At every cache level, the performance metric $P_{k}$ (throughput in our case) is decreased, in a way where $P_{k-1} >> P_{k} >> P_{k+1}$.
-Memory capacity is augmented to $M_{k}$, where $M_{k-1} << M_{k} << M_{k+1}$. 
-The performance ratio between two successive cache levels is characterized by a processing slowdown factor $SF$ defined as $SF_{k} = \left(\frac{P_{k}}{P_{k-1}}\right)^{-1}$.
+At every cache level, the performance metric $P_{k}$ (throughput in our case) is decreased, in a way where $P_{k-1} > P_{k} > P_{k+1}$.
+Memory capacity is augmented to $M_{k}$, where $M_{k-1} < M_{k} < M_{k+1}$. 
+The performance ratio between two successive cache levels is characterized by a processing slowdown factor $SF$ defined as $SF_{k} = \frac{P_{k-1}}{P_{k}}$.
 
 
 However, match-action caching is fairly different from CPU caches.
 First, temporal and spatial data locality is less predictable in network systems.
 Second, memory is scarce and the processing flexibility is limited in network switches, thus, complex cache policies may not be suitable.
 Third, due to dynamic traffic changes, a cache system needs to rapidly adapt to diversified workloads.
-As a consequence, traditional computer caching schemes cannot be directly applied in heterogeneous match table caching systems. 
+As a consequence, traditional computer caching schemes may not be suitable in the context of heterogeneous match table caching systems. 
 
 %Thus, we propose a match-action cache policer split into the forwarding devices.
 %We use online traffic hitters to estimate which match-action entries are candidates to be promoted/evicted to/from another cache level.

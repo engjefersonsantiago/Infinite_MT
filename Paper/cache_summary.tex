@@ -142,9 +142,21 @@ However, these switches have no more than few hundreds of \SI{}{\mega\byte} of i
 Moreover, as these devices need to guarantee a very low fixed processing latency, programmers are not allowed to express loops or recursion that cannot be unrolled throughout physical pipeline stages.
 Indeed, neither loops nor recursion are part of the P4 semantics.
 
+On current programmable dataplanes, forwarding rules are installed by an external x86-like host CPU as they do not yet support table updates in the data plane.
+Hence, there is no consensus w.r.t the maximum achieved match table update rate as many factors can influence it.
+\citeauthor{Jin:2017} have reported an update rate in the order of \SI{10}{\kilo\update/\second}.
+A first impacting factor is the host CPU load in which we have little control.
+The match type also contributes for the update rate.
+In our work, we are only interested in exact match (EM) caching. 
+EM tables are typically implemented as Cuckoo hash tables~\cite{Kirsch:2009,Bosshart:14}.
+Cuckoo hash tables recursively move entries across hash tables to solve hash collisions when inserting a new table entry.
+As the table load factor increases, several entries may be re-placed which effectively decreases update rate.
+Finally, the key and action size also impact the update rate.
+
 The aforementioned constraints limit the feasibility of online cache policy algorithms.
 Both LRU and LFU require extra information to select cache victims which increases memory usage.
 Also, these cache policies require large data sorting , which is difficult to implement (if possible) in programmable PISA switches.
+Finally, the match table update rate may sacrifice the reaction time of caching algorithms.
 
 \section{Learning from the Traffic}\label{sec:traffic}
 
@@ -213,7 +225,7 @@ Therefore, the chosen cache policy algorithm needs a fast reaction time to quick
 Besides, such temporal traffic characteristic possibly favors time-aware cache policies (e.g. LRU).
 
 \section{Traffic-aware Cache Policies}\label{sec:policies}
-As traditional cache replacement positions may not be suitable in network scenarios, we this section we introduce network-aware cache policies.
+As traditional cache replacement positions may not be suitable in network scenarios, in this section we introduce network-aware cache policies.
 Based on the real traffic analysis, we first present cache eviction policies.
 Then, we present cache promotion policies aiming at maximizing cache performance.
 
@@ -377,7 +389,7 @@ Thus, we discuss the viability of such a caching system.
 Finally, we discuss the limitations of our approach.
 
 \subsection{Experimental Setup}
-Table~\ref{tab:setup} presents the simulation parameters used to evaluate a two-level caching system as in Figure~\ref{fig:high_level_network}
+Table~\ref{tab:setup} presents the simulation parameters used to evaluate a two-level caching system as in Figure~\ref{fig:high_level_network}.
 We simulated the cache performance by emulating different cache policer slowdown factor ($SF$).
 Note, that for a two-level caching scheme, $SF$ also represents the cache policer reaction time.
 As performance metrics, we reported the cache hit ratio and the traffic size weighted hit ratio.
@@ -444,10 +456,10 @@ Moreover, the results also suggest that there is no significant gain when LRU an
 
 \subsection{Discussions}
 
-Although LRU and LFU derivations show the best simulation results, these cache policies are infeasible in high-performance programmable dataplanes.
+Although LRU and LFU derivations show the best simulation results, these cache policies may be difficult to implement in high-performance programmable dataplanes.
 First, in term of memory consumption, both replacement classes require $O(N)$ extra information to select cache victims.
 This is undesirable because memory is scarce in network switches and must be reserved for profitable applications.
-Second, both algorithms require sorting data either by frequency or time, a costly and non-scalable operation as it requires at least $O(N~log(N))$ comparisons.
+Second, both algorithms require sorting data either by frequency or time, a costly and non-scalable operation as it requires at least $O(N~log(N))$ comparisons and has $O(log(N))$ time complexity.
 Moreover, such parallel sorting would require N-port read memory, which is not available in current programmable dataplanes.
 An alternative would be sorting the data in software, however, the increasing data rates of current programmable dataplanes make this infeasible.  
 

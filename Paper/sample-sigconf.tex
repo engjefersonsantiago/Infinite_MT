@@ -166,8 +166,8 @@
                 morecomment=[l][\color{magenta}]{\#}
 }
 
-%\setlength{\belowcaptionskip}{-0pt}
-%\setlength{\abovecaptionskip}{-0pt}
+\setlength{\belowcaptionskip}{-0pt}
+\setlength{\abovecaptionskip}{-0pt}
 
 \DeclareSIUnit{\bit}{b}
 \DeclareSIUnit{\byte}{B}
@@ -176,6 +176,8 @@
 \newcommand\Hidden{No} % Yes or No
 
 \usepackage{changepage}
+
+
 
 %\newcommand\mycommfont[1]{\textcolor{blue}{#1}}
 %\SetCommentSty{mycommfont}
@@ -209,6 +211,20 @@
 
 %\usepackage[style=trad-abbrv, minnames=1, maxnames=2,backend=bibtex]{biblatex} %package bib
 \usepackage[style=ACM-Reference-Format, mincitenames=1, maxcitenames=2,backend=bibtex]{biblatex} %package bib
+
+\renewbibmacro*{name:andothers}{% Based on name:andothers from biblatex.def
+	\ifboolexpr{
+		test {\ifnumequal{\value{listcount}}{\value{liststop}}}
+		and
+		test \ifmorenames
+	}
+	{\ifnumgreater{\value{liststop}}{1}
+		{\finalandcomma}
+		{}%
+		\andothersdelim\bibstring[\emph]{andothers}}
+	{}
+}
+
 \addbibresource{sample-bibliography.bib}
 %%
 %% end of the preamble, start of the body of the document source.
@@ -285,7 +301,7 @@ However, modern programmable dataplanes lack the memory capacity to implement la
 Recent research has suggested mixing up different programmable dataplane devices to increase memory capacity.
 
 This work presents cache hierarchy scheme in heterogeneous programmable dataplanes to emulate a single "virtually infinite" match table.
-Thus, we start our analysis by characterizing an up-to-data data center trace.
+Thus, we start our analysis by characterizing an up-to-date data center trace.
 Then, following our observations, we derive the caching premises for match-action caching.
 Finally, we develop an open-source simulator to evaluate the viability of our proposed caching scheme.
 
