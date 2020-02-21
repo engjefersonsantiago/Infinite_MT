@@ -133,7 +133,7 @@ Otherwise, the cache entry with the lowest frequency is chosen for eviction.%, a
 %\end{algorithm}
 
 
-\subsection{Constraints of Programmable Dataplanes}
+\subsection{Constraints of Programmable Dataplanes}\label{sec:constraints}
 
 Single chip homogeneous programmable dataplanes expose a clear trade-off on performance and memory resources.
 
@@ -422,7 +422,7 @@ Figure~\ref{fig:hit_ratio} presents the results for our experiments when no prom
 As already reported in~\cite{Kim:09}, \textit{vanilla} LFU performs poorly with real-world network traffic.
 Also, we confirmed the good performance of LRU-based policies with up-to-date data center traffic. 
 The random policy achieves a relative good cache performance considering the small overhead for implementing it.
-Random policy hit ratio lags behind the classic LRU by no more than 10 percentage points.
+Random policy hit ratio lags behind the classic LRU by no more than 10\%.
 
 All modified versions of LFU significantly improve the cache performance compared to the \textit{vanilla} LFU.
 WLFU observes a sharp increase in its hit ratio as the cache size increases.
@@ -434,7 +434,8 @@ This is nonetheless expected since it combines the strengths of OLFU and WLFU.
 %TODO: Check and run OPT simulations.
 %TODO: Comment the SF effect.
 Figure~\ref{fig:promo_fig} presents the impact of heuristic cache promotion. 
-We evaluated two cache promotion policies: WMFU and OWMFU. These policies were combined with other three cache eviction policies: random, LRU, and OWLFU.
+We evaluated two cache promotion policies: WMFU and OWMFU.
+These policies were combined with other three cache eviction policies: random, LRU, and OWLFU.
 We fixed the cache size to \SI{8}{\kilo\nothing} entries and we ran simulations with $SF=10\times$ and $SF=100\times$ because heuristic cache promotion is only applicable when $SF>1\times$.
 
 \begin{figure*}[]
@@ -459,7 +460,7 @@ Moreover, the results also suggest that there is no significant gain when LRU an
 Although LRU and LFU derivations show the best simulation results, these cache policies may be difficult to implement in high-performance programmable dataplanes.
 First, in term of memory consumption, both replacement classes require $O(N)$ extra information to select cache victims.
 This is undesirable because memory is scarce in network switches and must be reserved for profitable applications.
-Second, both algorithms require sorting data either by frequency or time, a costly and non-scalable operation as it requires at least $O(N~log(N))$ comparisons and has $O(log(N))$ time complexity.
+Second, both algorithms require sorting data either by frequency or time, a costly and non-scalable operation as it requires at least $O(N~log(N))$ comparisons with $O(log(N))$ time complexity.
 Moreover, such parallel sorting would require N-port read memory, which is not available in current programmable dataplanes.
 An alternative would be sorting the data in software, however, the increasing data rates of current programmable dataplanes make this infeasible.  
 
@@ -479,22 +480,35 @@ Contrary to LRU and LFU, implementing cache promotion policies in the data plane
 MFU and its derivations presented can be considered as a subclass of the classic top-k hot items problem~\cite{Metwally:2005}.
 Detecting top-k hot items have been already demonstrated in P4~\cite{Sivaraman:17} and Domino~\cite{SivaramanDomino:2016} targeting current programmable dataplanes with sublinear memory consumption.
 
+Although we are mainly interested in the data plane aspects of match table caching, the control plane component also plays an important role.
+Considering the constraints discussed in~\S\ref{sec:constraints}, the control plane ability in detecting and installing match table entries may expose a performance bottleneck, as reported by \citeauthor{Miao:2017} when designing a stateful load balancer~\cite{Miao:2017}.
+\citeauthor{Miao:2017} have found that the software overhead was related to the CPU load for hash calculations, not the in the PCIe CPU-switch communication.
+However, a match table cache scheme have more stringent requirements in terms of match table update rate considering the observed flows lifetime.
+Thus, CPU-switch communication may still have a significant impact on performance for heterogeneous flow caching as the different HDP components are likely to have mismatched communication interfaces.
+
+
 \subsection{Limitations}\label{sec:method:limitations}
 
-In this work, we are interested in detecting possible candidates for flow migration in the data plane.
-This is due high-speed links in data center networks and the fast changing nature of data center network traffic; therefore, a slow control plane interaction is undesired.
-However, candidates migration detection in the data plane can only be precisely detected for exact match rules due to ambiguity in ternary and LPM rules.
+\textbf{Prefix shadowing}~---~In this work, we are interested in detecting possible candidates for flow migration in the data plane.
+This is due high-speed links in data center networks and the fast changing nature of data center network traffic; therefore, a slow control plane interaction must be minimized.
+However, candidates migration detection in the data plane can only be precisely detected for exact match rules due to shadowing effect in ternary and LPM rules.
 For example, let us consider a case where a low priority LPM rule is frequently matched in a low cache level and would therefore be a candidate for flow migration.
 Using our method, this rule is moved to a higher cache level as expected.
 Now, a high priority rule belonging to the same prefix arriving to the HDP switch will match in the high cache level.
-However, a specific rule installed in a lower cache level for the same prefix will be hidden, leading thus to a possibly wrong forwarding decision.   
+However, a specific rule installed in a lower cache level for the same prefix will be shadowed, leading thus to a possibly wrong forwarding decision.   
 Such cache ambiguity is a known problem and it has been reported and addressed in earlier works~\cite{Degermark:1997,Katta:2014}.
 
-In addition, the eviction and promotion cache policies evaluated in this work were fine-tuned based on an actual real-world data center network trace.
+\textbf{Simulator Limits}~---~The eviction and promotion cache policies evaluated in this work were fine-tuned based on an actual real-world data center network trace.
 This analysis showed that the traffic followed a Zipf distribution.
 Employing the caching strategy proposed in this work in other traffic scenarios has not yet been explored.
 As a consequence, our methods and propositions may not be viable in different traffic distributions.
 
 The performance analysis in this paper has considered only a 2-level cache.
-However, a N-level cache can be generalized as a $N-1~\times$ 2-level caches.
-Thus, the conducted 2-level cache performance investigation is relevant for setting a upper bound hit ration analysis, even though we agree that a full caching system may expose other limitations, such as multi-level control plane interaction.
+However, a N-level cache can be generalized as a (N~$-$~1) independent 2-level caches.
+Thus, the conducted 2-level cache performance investigation is relevant for setting a upper bound hit ratio analysis, even though we agree that a full caching system may expose other limitations, such as multi-level control plane interaction.
+
+In our simulator, all table update metrics (communication, table insertion times, CPU load) are enveloped in an unified $SF$ metric.
+Although $SF$ attempts to mimic performance gaps, in a real hardware it may not be realistic.
+For example, our simulator considers a perfect EM table disregarding \textit{actual} hardware implementations in which a single table insertion may trigger many table modifications, which increases CPU load and communication overhead.
+Finally, our simulator does not support batching for neither table insertion nor when gathering eviction/promotion policy counters.
+
