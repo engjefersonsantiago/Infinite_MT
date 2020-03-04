@@ -8,14 +8,14 @@ Thanks to P4 and recent programmable dataplanes~\cite{Bosshart:13}, network admi
 
 
 However, current requirements of data center networks are such that even state-of-the-art programmable ASICs switches cannot solely meet them.
-For instance, 5G mobile communication requires multi-million active sessions ($>$\SI{5}{\mega\nothing}) at terabit rates, stringently low end-to-end latency ($<$\SI{1}{\milli\second}), and likely, P4-defined custom protocols.
+For instance, 5G mobile communications imply multi-million active sessions ($>$\SI{5}{\mega\nothing}) at terabit rates, stringently low end-to-end latency ($<$\SI{1}{\milli\second}), and likely, P4-defined custom protocols.
 
 We recently suggested using heterogeneous programmable dataplanes (HDPs) to alleviate data center network switch bottlenecks~\cite{p4eu:18}.
 Indeed, using complementary and distinct packet forwarding devices increases the overall switch processing capabilities.
 However, research regarding HDPs is still in its infancy with many open questions, such as heterogeneous compilers, the issue of mismatched processing capabilities among devices, and distributed match-tables management.
 
 In this work, we address the issue of distributed match-action table management in HDPs comprising two or more programmable dataplane devices (PDDs), as illustrated in Figure~\ref{fig:high_level_network}.
-As an example, an HDP could be made of a programmable ASIC for $PDD_1$, an  FPGA for $PDD_2$, and, a local CPU for $PDD_3$.
+As an example, an HDP could be made of a programmable ASIC for $PDD_1$, an  FPGA for $PDD_2$, and a local CPU for $PDD_3$.
 
 \begin{figure}[]
 	\centering
@@ -49,12 +49,12 @@ As an example, an HDP could be made of a programmable ASIC for $PDD_1$, an  FPGA
 \end{figure*}
 
 
-To that end, we borrow from the cache hierarchy concept of regular computer systems.
+To that end, we borrow from the cache hierarchy concept of computer systems.
 %In our system, a first-level cache is a high-performance but memory limited programmable ASIC.
 %The FPGA plays the role of second-level cache, and finally the CPU is the last-level cache.
 In our proposed caching system, a first-level cache is a high-performance but memory-limited PDD.
-At every cache level, the performance metric $P_{k}$ (throughput in our case) is decreased, in a way where $P_{k-1} > P_{k} > P_{k+1}$.
-Memory capacity is augmented to $M_{k}$, where $M_{k-1} < M_{k} < M_{k+1}$. 
+At every cache level, the performance metric $P_{k}$ (throughput in our case) is decreased, such that $P_{k} > P_{k+1}$.
+Memory capacity is augmented to $M_{k}$, with $M_{k} < M_{k+1}$. 
 The performance ratio between two successive cache levels is characterized by a processing slowdown factor $SF$ defined as $SF_{k} = \frac{P_{k-1}}{P_{k}}$.
 
 
@@ -69,8 +69,8 @@ As a consequence, traditional computer caching schemes may not be suitable in th
 %We are inspired in previous works on flow caching \cite{casado:2008,Katta:2014,Pfaff:15} and on heuristic dataplane-based traffic hitters \cite{Sivaraman:17} aiming to maintain line-rate throughput and required cache update rate while minimizing the usage of scarce memory resources available in each device and reducing processing latency.
 
 To properly characterize the aforementioned issues, we evaluated the feasibility of such an HDP caching system by characterizing an up-to-date data center network traffic to understand its temporal locality.
-Following the traffic analysis, we conducted cache simulations to choose realistic cache policies to be implemented in HDPs.
-Finally, we evaluated which cache policies are optimized for current programmable dataplanes.% and how they can be described in P4.
+Following the traffic analysis, we conducted cache simulations to evaluate and compare realistic cache policies to be implemented in HDPs.
+Finally, we evaluated which cache policies are tailored for current programmable dataplanes.% and how they can be described in P4.
 
 To the best of our knowledge, this work is the first to consider match-action table management for HDPs.
 The contributions of this work are as follows: 

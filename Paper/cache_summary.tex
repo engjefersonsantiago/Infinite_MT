@@ -59,7 +59,7 @@ OPT uses this information to replace data that is further referenced in time.
 Due to that, OPT is not realistically implementable and it is commonly used to evaluate cache performance since it sets an upper performance bound for realistic caching systems.
 
 \textbf{Random}~---~Random or pseudo-random cache replacement policies use a stochastic random function to select a victim for eviction.
-Pseudo-random cache policy has been widely adopted in ARM-based processors.
+The pseudo-random cache policy has been widely adopted in ARM-based processors.
 In random policies, no history on cache misses/hits nor cache access frequency is required.
 The efficiency of a random policy is directly related to the quality of its random generator function.
 
@@ -140,11 +140,12 @@ Single-chip homogeneous programmable dataplanes expose a clear trade-off on perf
 State-of-the-art PISA-based programmable ASIC switches process packets at multi-terabit rates.
 However, these switches have no more than a few hundreds of \SI{}{\mega\byte} of internal memory which is shared between lookup operations and user-defined stateful processing (e.g. metering, load-balancing).
 Moreover, as these devices need to guarantee a very low fixed processing latency, programmers are not allowed to express loops or recursion that cannot be unrolled throughout physical pipeline stages.
-Indeed, neither loops nor recursion is part of the P4 semantics.
+Indeed, neither loops nor recursion are part of the P4 semantics.
 
 On current programmable dataplanes, forwarding rules are installed by an external x86-like host CPU as they do not yet support table updates in the data plane.
 Hence, there is no consensus w.r.t the maximum achieved match table update rate as many factors can influence it.
-\citeauthor{Jin:2017} have reported an update rate in the order of \SI{10}{\kilo\update/\second}.
+\citeauthor{Jin:2017} have reported an update rate in the order of \SI{10}{\kilo\update/\second}
+~\cite{Jin:2017}.
 A first impacting factor is the host CPU load in which we have little control.
 The match type also contributes to the update rate.
 In our work, we are only interested in the exact match (EM) rule caching. 
@@ -155,24 +156,24 @@ Finally, the key and action sizes also impact the update rate.
 
 The aforementioned constraints limit the feasibility of online cache policy algorithms.
 Both LRU and LFU require extra information to select cache victims which increase memory usage.
-Also, these cache policies require large data sorting, which is difficult to implement (if possible) in programmable PISA switches.
+Also, these cache policies require sorting large volumes of data, which is difficult to implement (if possible) in programmable PISA switches.
 Finally, the match table update rate may sacrifice the reaction time of caching algorithms.
 
 \section{Learning from the Traffic}\label{sec:traffic}
 
-Network traffic has been observed to follow a Zipf distribution as few network flows account for most of the whole network traffic~\cite{Sarrar:2012, Jin:2017}.
+Network traffic has been observed to follow a Zipf distribution, with a few network flows accounting for most of the network traffic~\cite{Sarrar:2012, Jin:2017}.
 
 In our study, we conducted experiments to determine the traffic characteristics of an up-to-date real-world data center trace.
-We replayed a CAIDA network trace extracted from an IXP in a data center in New York dated from January 2019~\cite{caida:19}.
+We replayed a CAIDA network trace extracted from an IXP in a New York city data center dated from January 2019~\cite{caida:19}.
 The analysed trace is 1 minute long monitoring $\sim$\SI{30}{\mega\nothing} packets in a full-duplex \SI{40}{\giga\bit/\second} Ethernet link connecting New York and S\~ao Paulo/Brazil.
 A similar analysis was done by~\citeauthor{Spang:19} to estimate the number of TCP/IP flows~\cite{Spang:19}.
 
 Figure~\ref{fig:traces} summarizes our observations.
-In our analysis, we defined flow as being a unique five-tuple $\langle$~SrcIP, DstIP, protocol, SrcPort, DstPort~$\rangle$\footnote{We consider IPv4, IPv6, UDP, and TCP in our five-tuple definition.} connection.
+In our analysis, we defined a flow as being a unique five-tuple $\langle$~SrcIP, DstIP, protocol, SrcPort, DstPort~$\rangle$\footnote{We consider IPv4, IPv6, UDP, and TCP in our five-tuple definition.} connection.
 
 \textbf{Heavy hitters}~---~As shown in Figure~\ref{fig:cdf_pkt} and Figure~\ref{fig:cdf}, the Zipf distribution characteristic is still present in current network traffic.
 Both figures present the CDF, in terms of packet hits and byte hits, for several observation intervals, ranging from \SI{100}{\micro\second} to \SI{60}{\second}.
-Although both curves are Zipfian-like, the exponent that characterizes the distributions in Figure~\ref{fig:cdf} is higher.
+Although both curves are Zipf-like, the exponent that characterizes the distributions in Figure~\ref{fig:cdf} is higher.
 For all observation intervals longer than \SI{100}{\milli\second}, fewer than 10\% of the flows dominate more than 90\% of the traffic.
 For shorter intervals, the Zipf dominance is still present although more skewed.
 
@@ -216,13 +217,14 @@ On average, small flows ($\sim$100 bytes) dominate the trace with 75\% of the fl
 		}
 	}
 \end{algorithm}
-According to our experiments, the expected Zipf distribution characteristic of network traffic is still present in current data center traffic.
-Such characteristic favors flow caching in memory scarce programmable dataplanes.
+
+According to our experiments, the expected Zipf distribution characteristics of network traffic is still present in current data center traffic.
+Such characteristics favor flow caching in memory scarce programmable dataplanes.
 However, the heavy-hitter analyses show that transmitted byte-based heavy hitters are more dominant than packet-based ones.
 Thus, frequency-based cache policies (e.g. LFU) must consider the actual packet size in their frequency counters.
 In addition to that, we notice that short-lived flows dominate the trace.
 Therefore, the chosen cache policy algorithm needs a fast reaction time to quickly adapt to traffic changes.
-Besides, such temporal traffic characteristic possibly favors time-aware cache policies (e.g. LRU).
+Besides, such temporal traffic characteristics possibly favor time-aware cache policies (e.g. LRU).
 
 \section{Traffic-aware Cache Policies}\label{sec:policies}
 As traditional cache replacement positions may not be suitable in network scenarios, in this section we introduce network-aware cache policies.
@@ -235,7 +237,7 @@ Then, we present cache promotion policies aiming at maximizing cache performance
 \textit{Vanilla} LFU considers all cache hits with equal weight, which is not realistic in network communications because larger packets result in greater network efficiency compared to small ones.
 Thus, Weighted LFU (WLFU) leverages LFU by considering the packet size in its frequency counters.
 A possible implementation of WLFU is illustrated in Algorithm~\ref{algo:wlfu}.
-Note that as frequency counters are always increasing, periodically flushes (omitted in the pseudocode) are required.
+Note that as frequency counters are always increasing, periodic flushes (omitted in the pseudocode) are required.
 %\begin{algorithm}[t]
 %\caption{WLFU policy}
 %\label{algo:wlfu}
@@ -377,15 +379,14 @@ In classic MFU, frequent items are tracked for cache eviction.
 Hence, WMFU modifies MFU by considering the packet size in its frequency counters.
 Missed flows with higher counters are thus marked for cache promotion.
 
-\textbf{OWMFU}~---~Optimistic WMFU is the OWLFU counterparts presented in \S\ref{sec:evi}.
+\textbf{OWMFU}~---~Optimistic WMFU is the OWLFU counterpart presented in \S\ref{sec:evi}.
 OWMFU optimistically speculates that frequent hitters will continue hitting soon after.
-Similarly to WMFU, most frequent missed flows are selected for cache promotion.
+Similarly to WMFU, most frequently missed flows are selected for cache promotion.
 
 
 
 \section{Evaluating Cache Performance}\label{sec:cache_results}
-In this section, we present the simulation results for an HDP caching system.
-Thus, we discuss the viability of such a caching system.
+In this section, we present the simulation results for an HDP caching system and we discuss its viability.
 Finally, we discuss the limitations of our approach.
 
 \subsection{Experimental Setup}
@@ -422,14 +423,14 @@ Figure~\ref{fig:hit_ratio} presents the results for our experiments when no prom
 As already reported in~\cite{Kim:09}, \textit{vanilla} LFU performs poorly with real-world network traffic.
 Also, we confirmed the good performance of LRU-based policies with up-to-date data center traffic. 
 The random policy achieves a relatively good cache performance considering the small overhead for implementing it.
-Random policy hit ratio lags behind the classic LRU by no more than 10\%.
+The random policy hit ratio lags behind the classic LRU by no more than 10\%.
 
 All modified versions of LFU significantly improve the cache performance compared to the \textit{vanilla} LFU.
-WLFU observes a sharp increase in its hit ratio as the cache size increases.
-OLFU observes a steady performance approaching the random hit ratio.
+WLFU achieves a sharp increase in its hit ratio as the cache size increases.
+OLFU has a steady performance approaching the random hit ratio.
 Indeed, OLFU introduces a pseudo-temporal variable to the LFU policy because it speculates that the promoted cache entry will be referenced soon after. 
 Last, OWLFU performs best in almost all scenarios.
-This is nonetheless expected since it combines the strengths of OLFU and WLFU.
+This is expected since this policy combines the strengths of OLFU and WLFU.
 
 %TODO: Check and run OPT simulations.
 %TODO: Comment the SF effect.
@@ -458,34 +459,34 @@ Moreover, the results also suggest that there is no significant gain when LRU an
 
 Although LRU and LFU derivations present the best simulation results, these cache policies may be difficult to implement in high-performance programmable dataplanes.
 First, in terms of memory consumption, both replacement classes require $O(N)$ extra information to select cache victims.
-This is undesirable because memory is scarce in network switches and must be reserved for profitable applications.
-Second, both algorithms require sorting data either by frequency or time, a costly and non-scalable operation as it requires at least $O(N~log(N))$ comparisons with $O(log(N))$ time complexity.
-Moreover, such parallel sorting would require N-port read memory, which is not available in current programmable dataplanes.
-An alternative would be sorting the data in software, however, the increasing data rates of current programmable dataplanes make this infeasible.  
+This is undesirable because memory is scarce in network switches and should be reserved for more profitable applications.
+Second, both algorithms require sorting data either by frequency or time, a costly and non-scalable operation as it normally requires $O(N~log(N))$ comparisons with $O(log(N))$ time complexity.
+Moreover, such parallel sorting would require a N-port read memory, which is not available in current programmable dataplanes.
+An alternative would be sorting the data in software; however, the increasing data rates of current programmable dataplanes make this infeasible.  
 
 An alternative naive software approach for implementing LRU caches is using doubly-linked lists.
 This approach is also infeasible in current programmable dataplanes.
 The main reason is due to the feed-forward pipeline organization which prevents backpropagation of data from a stage $S_{i}$ to $S_{i-1}$.
 Singly-linked lists could, however, be used for implementing an LRU cache.
-The most recent element would be placed at the head of the list while other elements are moved towards the tail.
+The most recent element would be placed at the head of the list while other elements would moved towards the tail.
 If the most recent element is already in the list, the data moving stops at its position, otherwise, it continues down to the tail.
-Such implementation is possible in programmable dataplanes, however, it is still infeasible due to the limited number of pipeline stages (commonly fixed at 32 stages).
-Multiple parallel singly-linked lists are possible but the scalability is as well limited.
+Such an implementation is possible in programmable dataplanes, however, it is still infeasible due to the limited number of pipeline stages (commonly fixed at 32 stages).
+Multiple parallel singly-linked lists are possible but the scalability is also limited.
 
-Not surprisingly, the performance of random-based policies applied to caches with Zipfian access patterns approaches to classic (LRU) and novel (OWLFU) policies.
+Not surprisingly, the performance of random-based policies applied to caches with Zipf access patterns approaches to classic (LRU) and novel (OWLFU) policies.
 These results follow what has been reported in the literature~\cite{Gallo:2014}.
 The simulation results show the cache hit ratio based on a random replacement policy is less than 10\% lower than LRU and OWLFU.
 Moreover, implementing a random replacement policy in programmable dataplanes has no additional hardware cost as it may be implemented in software.
 
 Contrary to LRU and LFU, implementing cache promotion policies in the data plane is viable.
 MFU and its presented derivations can be considered as a subclass of the classic top-k hot items problem~\cite{Metwally:2005}.
-Detecting top-k hot items have been already demonstrated in P4~\cite{Sivaraman:17} and Domino~\cite{SivaramanDomino:2016} targeting current programmable dataplanes with sublinear memory consumption.
+Detecting top-k hot items has already been demonstrated in P4~\cite{Sivaraman:17} and Domino~\cite{SivaramanDomino:2016} targeting current programmable dataplanes with sublinear memory consumption.
 
 Although we are mainly interested in the data plane aspects of match table caching, the control plane component also plays an important role.
 Considering the constraints discussed in~\S\ref{sec:constraints}, the control plane ability in detecting and installing match table entries may expose a performance bottleneck, as reported by \citeauthor{Miao:2017} when designing a stateful load balancer~\cite{Miao:2017}.
-\citeauthor{Miao:2017} have found that the software overhead was related to the CPU load for hash calculations, not in the PCIe CPU-switch communication.
+\citeauthor{Miao:2017} found that the software overhead was related to the CPU load for hash calculations, not in the PCIe CPU-switch communication.
 However, a match table cache scheme has more stringent requirements in terms of match table update rate considering the observed flows lifetime.
-Thus, CPU-switch communication may still have a significant impact on performance for heterogeneous flow caching as the different HDP components are likely to have mismatched communication interfaces.
+Thus, CPU-switch communications may still have a significant impact on performance for heterogeneous flow caching as the different HDP components are likely to have mismatched communication interfaces.
 
 \subsection{Limitations}\label{sec:method:limitations}
 
@@ -504,8 +505,8 @@ Employing the caching strategy proposed in this work in other traffic scenarios 
 As a consequence, our methods and propositions may not be viable in different traffic distributions.
 
 The performance analysis in this paper has considered only a 2-level cache.
-However, an N-level cache can be generalized as an (N~$-$~1) independent 2-level caches.
-Thus, the conducted 2-level cache performance investigation is relevant for setting an upper bound hit ratio analysis, even though we agree that a full caching system may expose other limitations, such as multi-level control plane interaction.
+However, an N-level cache can be generalized as (N~$-$~1) independent 2-level caches.
+Thus, the conducted 2-level cache performance investigation is relevant for setting an upper bound hit ratio analysis, even though we believe that a full caching system may expose other limitations, such as multi-level control plane interaction.
 
 In our simulator, all table update metrics (communication, table insertion times, CPU load) are enveloped in a unified $SF$ metric.
 Although $SF$ attempts to mimic performance gaps, in real hardware it may not be realistic.
