@@ -19,34 +19,34 @@ As an example, an HDP could be made of a programmable ASIC for $PDD_1$, an  FPGA
 
 \begin{figure}[]
 	\centering
-	\input{arch_scheme.tex}
+	\includegraphics[width=0.7\textwidth]{scheme_top.pdf}
 	\caption{Reference caching system}
 	\label{fig:high_level_network}
 \end{figure}
 
-\begin{figure*}[]
-	\begin{adjustwidth}{-0.80cm}{}
-		\centering
-		\subfloat[Heavy hitter flows]{
-			\includegraphics[width=0.26\textwidth]{fig_cdf_pkt.pdf}
-			\label{fig:cdf_pkt}
-		}%\qquad
-		\subfloat[Size-weighted heavy hitter flows]{
-			\includegraphics[width=0.26\textwidth]{fig_cdf.pdf}
-			\label{fig:cdf}
-		}%\\
-		\subfloat[Flow duration]{
-			\includegraphics[width=0.26\textwidth]{fig_duration.pdf}
-			\label{fig:flow_duration}
-		}%\qquad
-		\subfloat[Average flow size]{
-			\includegraphics[width=0.26\textwidth]{fig_avg_flow_size.pdf}
-			\label{fig:flow_size}
-		}
-		\caption{CAIDA trace summary}
-		\label{fig:traces}
-	\end{adjustwidth}
-\end{figure*}
+%\begin{figure*}[]
+%	\begin{adjustwidth}{-0.80cm}{}
+%		\centering
+%		\subfloat[Heavy hitter flows]{
+%			\includegraphics[width=0.26\textwidth]{fig_cdf_pkt.pdf}
+%			\label{fig:cdf_pkt}
+%		}%\qquad
+%		\subfloat[Size-weighted heavy hitter flows]{
+%			\includegraphics[width=0.26\textwidth]{fig_cdf.pdf}
+%			\label{fig:cdf}
+%		}%\\
+%		\subfloat[Flow duration]{
+%			\includegraphics[width=0.26\textwidth]{fig_duration.pdf}
+%			\label{fig:flow_duration}
+%		}%\qquad
+%		\subfloat[Average flow size]{
+%			\includegraphics[width=0.26\textwidth]{fig_avg_flow_size.pdf}
+%			\label{fig:flow_size}
+%		}
+%		\caption{CAIDA trace summary}
+%		\label{fig:traces}
+%	\end{adjustwidth}
+%\end{figure*}
 
 
 To that end, we borrow from the cache hierarchy concept of computer systems.
