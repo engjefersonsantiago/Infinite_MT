@@ -10,11 +10,11 @@ Thanks to P4 and recent programmable dataplanes~\cite{Bosshart:13}, network admi
 However, current requirements of data center networks are such that even state-of-the-art programmable ASICs switches cannot solely meet them.
 For instance, 5G mobile communications imply multi-million active sessions ($>$\SI{5}{\mega\nothing}) at terabit rates, stringently low end-to-end latency ($<$\SI{1}{\milli\second}), and likely, P4-defined custom protocols.
 
-We recently suggested using heterogeneous programmable dataplanes (HDPs) to alleviate data center network switch bottlenecks~\cite{p4eu:18}.
+We recently suggested using \acfp{HDP} to alleviate data center network switch bottlenecks~\cite{p4eu:18}.
 Indeed, using complementary and distinct packet forwarding devices increases the overall switch processing capabilities.
 However, research regarding HDPs is still in its infancy with many open questions, such as heterogeneous compilers, the issue of mismatched processing capabilities among devices, and distributed match-tables management.
 
-In this work, we address the issue of distributed match-action table management in HDPs comprising two or more programmable dataplane devices (PDDs), as illustrated in Figure~\ref{fig:high_level_network}.
+In this work, we address the issue of distributed match-action table management in HDPs comprising two or more \acfp{PDD}, as illustrated in Figure~\ref{fig:high_level_network}.
 As an example, an HDP could be made of a programmable ASIC for $PDD_1$, an  FPGA for $PDD_2$, and a local CPU for $PDD_3$.
 
 \begin{figure}[]
