@@ -76,7 +76,7 @@ class Controller
             if (lookup_table.is_full())
             {
                 // Select candidate
-                if (PROMOTION_POLICY != PromotionPolicy::NONE)
+                if constexpr (PROMOTION_POLICY != PromotionPolicy::NONE)
                 {
                     five_tuple = l1_policy_.select_promotion_candidate();
                 }
@@ -136,15 +136,19 @@ class Controller
                 auto found = policy.stats_table().get_stats().find(five_tuple);
                 if (found == policy.stats_table().get_stats().end())
                 {
+#define DO_OUTPUT(X) 
                     if (!policy.stats_table().get_stats().insert({ five_tuple, size_or_timestamp }))
                     {
-                        std::cout << "Failed\n";
+                        DO_OUTPUT(std::cout << "Failed\n";)
                     } else
                     {
-                        std::cout << "Success\n";
+                        DO_OUTPUT(std::cout << "Success\n";)
                     }
+                    DO_OUTPUT(
                     std::cout << five_tuple << ", Hash: " << hash_value(five_tuple) << ", Size: " << policy.stats_table().get_stats().size() << '\n';
                     std::cout << five_tuple << "Look Size: " << lookup_table.data().size() << '\n';
+                    std::cout << std::flush;
+                    )
                 }
             }
 

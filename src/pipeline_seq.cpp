@@ -44,6 +44,7 @@ using controller_t = Controller<typename cache_l1_t::lookup_table_t, typename ca
 
 int main(int argc, char** argv)
 {
+    try {
 
     if (argc != 3) {
     // First parameter: PCAP
@@ -57,6 +58,11 @@ int main(int argc, char** argv)
     const std::string pcap_file { argv[1] };
     const std::string timestamp_file { argv[2] };
 
+    if (!std::ifstream(pcap_file + ".pre", std::ios::binary).is_open())
+        preparsePackets(pcap_file, timestamp_file, pcap_file + ".pre");
+    else
+        std::cout << "Using previously preparsed (.pre) file.  (Note: that file can be deleted, it will be recreated next time.)\n";
+    
     // Inter thread communication
     inter_thread_comm_t parse_to_l1_comm;
     inter_thread_comm_t l1_to_l2_comm;
@@ -65,7 +71,7 @@ int main(int argc, char** argv)
     inter_thread_digest_cpu l2_to_cpu_comm;
 
     // Parser
-    ParsePackets parse_pkts(pcap_file, timestamp_file);
+    ParsePackets parse_pkts(pcap_file+".pre");
 
     // Cache L1
     cache_l1_t cache_l1 (parse_to_l1_comm, l1_to_l2_comm, l1_to_cpu_comm);
@@ -97,7 +103,7 @@ int main(int argc, char** argv)
     LFU_policy_t lfu_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table(),base_cache_l1.pop_stats_table(), LFU_COUNTER_TYPE);
     OLFU_policy_t olfu_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table(),base_cache_l1.pop_stats_table(), LFU_COUNTER_TYPE);
     Random_policy_t random_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table(),base_cache_l1.pop_stats_table());
-    OPT_policy_t opt_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table(),base_cache_l1.pop_stats_table(),pcap_file);
+    OPT_policy_t opt_policy(base_cache_l1.lookup_table(),base_cache_l1.stats_table(),base_cache_l1.pop_stats_table(),pcap_file+".pre");
     if constexpr (L1_CACHE_POLICY == CacheType::OPT)
         opt_policy.build_five_tuple_history();
     //
@@ -127,5 +133,9 @@ int main(int argc, char** argv)
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = end - start;
     std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
-
+    
+    }
+    catch (std::ios::failure& e) {
+        std::cerr << "Exception: " << e.what() << std::endl;
+    }
 }

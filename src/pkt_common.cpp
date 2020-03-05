@@ -1,4 +1,3 @@
-#include <arpa/inet.h>
 #include "pkt_common.hpp"
 
 std::ostream& operator<<(std::ostream& os, const FiveTuple& five_tuple)
@@ -17,10 +16,10 @@ std::size_t hash_value(const FiveTuple& tuple)
 }
 
 // Helper functions
-tuple_pkt_size_pair_t create_five_tuple_from_packet (pcpp::Packet& parsedPacket)
+tuple_pkt_size_pair_t create_five_tuple_from_packet (const pcpp::Packet& parsedPacket)
 {
     // 5 tuple
-    FiveTuple five_tuple;
+    FiveTuple five_tuple{};
     size_t pkt_size = 0;
 
 
@@ -42,11 +41,13 @@ tuple_pkt_size_pair_t create_five_tuple_from_packet (pcpp::Packet& parsedPacket)
         }
 
         // Extract L3 fields to build the remaining of the 5 tuple
+        //NOTE: Construction of a pcpp::IPV4Address or IPV6Address (by getSrcIpAddress and getDstIpAddress) will call inet_ntop, which is slow, we thus access the header directly.
         if (parsedPacket.isPacketOfType(pcpp::IPv6))
         {
             auto ipv6_layer = parsedPacket.getLayerOfType<pcpp::IPv6Layer>();
-            five_tuple.src_addr = ipv6_layer->getSrcIpAddress().toString();
-            five_tuple.dst_addr = ipv6_layer->getDstIpAddress().toString();
+            auto ip_header = ipv6_layer->getIPv6Header();
+            five_tuple.src_addr = ip_header->ipSrc;
+            five_tuple.dst_addr = ip_header->ipDst;
             five_tuple.protocol = ipv6_layer->getIPv6Header()->nextHeader;
             // Because the IPv6 PayloadLength does not take into account the IPv6 header itself, we
             // add 40 bytes, the IPV6 header size, to measure the same amount of information over an IPv4 header.
@@ -54,8 +55,9 @@ tuple_pkt_size_pair_t create_five_tuple_from_packet (pcpp::Packet& parsedPacket)
         } else
         {
             auto ipv4_layer = parsedPacket.getLayerOfType<pcpp::IPv4Layer>();
-            five_tuple.src_addr = ipv4_layer->getSrcIpAddress().toString();
-            five_tuple.dst_addr = ipv4_layer->getDstIpAddress().toString();
+            auto ip_header = ipv4_layer->getIPv4Header();
+            five_tuple.src_addr = IpAddress::fromIPv4_netByteOrder(ip_header->ipSrc);
+            five_tuple.dst_addr = IpAddress::fromIPv4_netByteOrder(ip_header->ipDst);
             five_tuple.protocol = ipv4_layer->getIPv4Header()->protocol;
             pkt_size = htons(ipv4_layer->getIPv4Header()->totalLength);
         }

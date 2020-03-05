@@ -12,6 +12,11 @@
 #include <Packet.h>
 
 #include "pkt_common.hpp"
+#include "buffered_reader.hpp"
+
+
+void preparsePackets(const std::string& pcap_filename, const std::string& timestamp_filename, const std::string& output_filename);
+
 
 class ParsePackets {
     public: 
@@ -19,17 +24,15 @@ class ParsePackets {
 
     private:
         size_t num_packets_parsed = 0;
-        pcpp::PcapFileReaderDevice reader;
-        std::ifstream timestamp_reader;  
+        BufferedReader<> reader;
         // thread producer related members
 
     public:
 
         bool from_pcap_file(const bool run_forever, inter_thread_comm_t& thread_comm);
 
-        ParsePackets(const std::string& pcap_file_, const std::string& timestamp_file_) :
-                        reader(pcap_file_.c_str()),
-                        timestamp_reader(timestamp_file_, std::ios_base::in) {}
+        ParsePackets(const std::string& pcap_pre_file_) :
+                        reader(pcap_pre_file_, std::ios::binary) {}
 
 };
 

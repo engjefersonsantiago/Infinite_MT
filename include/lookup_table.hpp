@@ -47,10 +47,20 @@ class LookupTable {
         // No bound check for inserting...
         // Make sure the controller checks that
         auto insert (const FiveTuple& five_tuple, const Lookup_Value& value) {
-            if (find(five_tuple) == lookup_table_.end() && !is_full()) {
-                //std::cout << "Inserting: " << five_tuple << "Current occupancy: " << occupancy_ << '\n';
-                lookup_table_.insert({ five_tuple, value });
-                occupancy_++;
+            if (!is_full()) {
+                auto [it, has_been_inserted] = lookup_table_.try_emplace(five_tuple, value);
+                if (has_been_inserted) {
+                    //std::cout << "Inserting: " << five_tuple << "Current occupancy: " << occupancy_ << '\n';
+                    occupancy_++;
+                }
+                else {
+                    //std::cout << "Already in cache, unable to insert: " << five_tuple << "\n";
+                    //return false;
+                }
+            }
+            else {
+                //std::cout << "Cache full, unable to insert: " << five_tuple << "\n";
+                //return false;
             }
             //std::unique_lock lock(mutex_);
             //if (occupancy_ < LOOKUP_MEM_SIZE) {
@@ -64,11 +74,12 @@ class LookupTable {
         }
 
         auto remove (const FiveTuple& five_tuple) {
-            if (lookup_table_.find(five_tuple) != lookup_table_.end())
+            auto to_remove = lookup_table_.find(five_tuple);
+            if (to_remove != lookup_table_.end())
             {
                 //std::cout << "Removing: " << five_tuple << "Current occupancy: " << occupancy_ << '\n';;
                 occupancy_--;
-                lookup_table_.erase(five_tuple);
+                lookup_table_.erase(to_remove);
                 return true;
             } else
             {

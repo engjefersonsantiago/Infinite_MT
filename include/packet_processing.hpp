@@ -51,15 +51,15 @@ class PacketProcessing {
                 }
 
                 // Extract five tuple and packet size
-                tuple_size_pair_ = create_five_tuple_from_packet(packet_timestamp_.first);
+                tuple_size_pair_ = std::pair{packet_timestamp_.five_tuple, packet_timestamp_.pkt_size};
                 num_packets_++;
-                num_bytes_+=tuple_size_pair_.second;
+                num_bytes_+=packet_timestamp_.pkt_size;
                 debug(
                 std::cout << " Thread ID " << std::this_thread::get_id() << " extracted " << num_packets_ << " five tuples\n";
                 std::cout << tuple_size_pair_.first << '\n';
                 )
                 // Look table iterator: key + value
-                auto lookup_result = lookup_table_.find(tuple_size_pair_.first);
+                auto lookup_result = lookup_table_.find(packet_timestamp_.five_tuple);
                 auto match = lookup_result != lookup_table_.end();
 
                 // Is not held in the cache?
@@ -146,7 +146,7 @@ class PacketProcessing {
         Promo_Stats pop_stats_;
 
         // Add policy - for stats support
-        packet_timestamp_pair_t packet_timestamp_;
+        ParsedPacket packet_timestamp_; //TODO: Rename this?
         std::size_t num_packets_ = 0;
         std::size_t num_bytes_ = 0;
         std::size_t matched_packets_ = 0;
@@ -182,7 +182,7 @@ class CacheL1PacketProcessing final : public PacketProcessing <Lookup_Size, Look
                     
                 }
             } else {
-                if (PROMOTION_POLICY != PromotionPolicy::NONE) {
+                if constexpr (PROMOTION_POLICY != PromotionPolicy::NONE) {
                     this->pop_stats_.update_stats(this->tuple_size_pair_.first,
                                (counter_type == CounterType::BYTES)
                                ? this->tuple_size_pair_.second : 1ul);
@@ -205,10 +205,10 @@ class CacheL2PacketProcessing final : public PacketProcessing <Lookup_Size, Look
     public:
         using pkt_proc_base_t = PacketProcessing <Lookup_Size, Lookup_Value, Cache_Stats, Promo_Stats, Sleep_Time>;
 
-        virtual void punt_pkt_to_next_lvl (inter_thread_comm_t& punted_pkt) override {}
-        virtual void update_cache_stats(const bool match,
-                                        const CacheType cache_type,
-                                        const CounterType counter_type) override {}
+        virtual void punt_pkt_to_next_lvl ([[maybe_unused]] inter_thread_comm_t& punted_pkt) override {}
+        virtual void update_cache_stats([[maybe_unused]] const bool match,
+                                        [[maybe_unused]] const CacheType cache_type,
+                                        [[maybe_unused]] const CounterType counter_type) override {}
 
         // CTOR calls the base CTOR
         CacheL2PacketProcessing(inter_thread_comm_t& in_comm_pkt,

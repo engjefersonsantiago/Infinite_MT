@@ -1,14 +1,15 @@
-#include <random>
-#include <algorithm>
-
 #ifndef __POLICY__
 #define __POLICY__
 
+#include <random>
+#include <algorithm>
 
 #include "pkt_common.hpp"
 #include "controller.hpp"
 #include "lookup_table.hpp"
 #include "stats.hpp"
+#include "buffered_reader.hpp"
+#include "priority_deque/priority_deque.hpp"
 // Quels sont les composants communs a une politique de cache.
 
 // Base sur un input (Cache Stats) + Event (Cache Miss), identifie l'entree a ajouter
@@ -31,7 +32,7 @@ class Policer{
                     stats_table_{stats_table},
                     promo_stats_table_{promo_stats_table} {}
 
-        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t timestamp) =0;
+        virtual FiveTuple select_replacement_victim(const FiveTuple& five_tuple, size_t timestamp) =0;
 
         auto& stats_table () { return stats_table_; }
         const auto& lookup_table () const { return lookup_table_; }
@@ -84,7 +85,7 @@ class RandomPolicy final: public Policer<lookup_table_t,stats_table_t,promo_stat
                         policer_t(lookup_table, stats_table, promo_stats_table)
         {}
 
-        virtual FiveTuple select_replacement_victim(FiveTuple , size_t) override
+        virtual FiveTuple select_replacement_victim(const FiveTuple& , size_t) override
         {
             // From https://stackoverflow.com/questions/27024269/select-random-element-in-an-unordered-map
             const auto tuple = this->lookup_table_.indexed_iter(random_number_generation()).first;
@@ -106,7 +107,7 @@ class LRUPolicy final: public Policer<lookup_table_t,stats_table_t,promo_stats_t
                         policer_t(lookup_table, stats_table, promo_stats_table)
         {}
 
-        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t timestamp) override
+        virtual FiveTuple select_replacement_victim(const FiveTuple& five_tuple, size_t timestamp) override
         {
             // Get the least recently used entry.
             auto tuple_to_remove = this->stats_table_.get_stats().highest_order();
@@ -156,38 +157,44 @@ class OPTPolicy final : public Policer<lookup_table_t,stats_table_t,promo_stats_
         using policer_t =  Policer<lookup_table_t, stats_table_t,promo_stats_table_t>;
         using fivetuple_history_t = std::unordered_map<FiveTuple, std::pair<std::size_t, std::vector<std::size_t>>>;
 
+        struct ReplacementQueueElement {
+            std::size_t next_usage_time;
+            fivetuple_history_t::iterator fivetuple_history_entry;
+
+            ReplacementQueueElement(std::size_t n, const fivetuple_history_t::iterator& i) : next_usage_time{n}, fivetuple_history_entry{i} {}
+            bool operator< (const ReplacementQueueElement& other) const { return next_usage_time < other.next_usage_time; }
+        };
+
+        using replacement_queue_t = boost::container::priority_deque<ReplacementQueueElement>;
+
         OPTPolicy(const lookup_table_t& lookup_table,
                         stats_table_t& stats_table,
                         promo_stats_table_t& promo_stats_table,
-                         const std::string& file) :
+                         const std::string& file_name) :
                         policer_t(lookup_table, stats_table, promo_stats_table), 
-                        file_name{file}
+                        pcap_pre_file_name{file_name}
         {
              //build_five_tuple_history();
         }
 
-        void set_current_packet_timestamp(const size_t& timestamp){
-            current_packet_timestamp = timestamp;
-        }
-
         void build_five_tuple_history(){
-            pcpp::PcapFileReaderDevice reader(file_name.c_str());
+            BufferedReader<> reader(pcap_pre_file_name, std::ios::binary);
 
-            if (!reader.open())
+            if (!reader.getStream().is_open())
             {
                 std::cout << "Error opening the pcap file\n";
 
             }
 
+            five_tuple_history.reserve(2500000); // Only for a small load time optimization.
+
             std::size_t pkts = 0;
-            pcpp::RawPacket rawPacket;
-            while (reader.getNextPacket(rawPacket)) {
-                pcpp::Packet parsedPacket(&rawPacket);
-                // Create Five Tuple
-                const auto& [five_tuple, size] = create_five_tuple_from_packet(parsedPacket);
+            for (const ParsedPacket* parsedPacket; (parsedPacket = reader.peekAs<ParsedPacket*>()) != nullptr; reader += sizeof(ParsedPacket)) {
                 // Enqueue FiveTuple
-                five_tuple_history[five_tuple].first = 0;
-                five_tuple_history[five_tuple].second.push_back(++pkts);
+                auto& fivetuple_history_entry = five_tuple_history[parsedPacket->five_tuple];
+                if (fivetuple_history_entry.second.empty()) fivetuple_history_entry.second.reserve(5); // Only for a small load time optimization.  
+                fivetuple_history_entry.first = 0;
+                fivetuple_history_entry.second.push_back(++pkts);
             }
 
             std::cout << "------ Content of the five tuple history ------\n";
@@ -204,86 +211,59 @@ class OPTPolicy final : public Policer<lookup_table_t,stats_table_t,promo_stats_
 
         }
 
-        virtual FiveTuple select_replacement_victim(FiveTuple, size_t timestamp) override
+        virtual FiveTuple select_replacement_victim(const FiveTuple& five_tuple, size_t timestamp) override
         {
-            size_t distance_to_farthest_fivetuple {};
-            FiveTuple farthest_fivetuple{};
-            current_packet_timestamp = timestamp;
-            FiveTuple default_entry_removed {};
-            bool is_found {false};
-            size_t number_keys_found {};
-            // Remove any non-re referenced entry.
-            // Read the five-tuple key stored in the lookup table
-            for(const auto& key_val_tuple : this->lookup_table_)
-            {
-                const auto& [key, value] = key_val_tuple;
-                //default_entry_removed = key;
-                //std::cout << "Key Evaluated : " << key << "\n";
-                // When is the next reference to this key?
+            // Expects: five_tuple is not in cache; cache is full; calling this method is the only way to remove something from cache and five_tuple will be inserted in cache after the call.
 
-                auto history_it = five_tuple_history.find(key);
-                bool is_matched {false};
-                if (history_it != five_tuple_history.end())
-                {
-                    auto& [ini_idx, tuple_vec] = history_it->second;
-                    for (auto idx = ini_idx; idx < tuple_vec.size(); ++idx)
-                    {
-                        auto entry_to_remove = tuple_vec[idx];
-                        if (entry_to_remove < current_packet_timestamp)
-                        {
-                            continue;
-                            //history_it->second.erase(entry_to_remove);
-                        } else
-                        {
-                            ini_idx = idx;
-                            if((entry_to_remove - current_packet_timestamp) >= distance_to_farthest_fivetuple)
-                            {
-                                distance_to_farthest_fivetuple = entry_to_remove - current_packet_timestamp;
-                                farthest_fivetuple = key;
-                                is_found =  true;
-                            }
-                            number_keys_found++;
-                            is_matched = true;
-                            // Exit at the first reference.
-                            break;
-                        }
-                    }
-                }
-                // Key not found ! Can be removed !
-                if(!is_matched){
-                    default_entry_removed = key;
-                    debug(std::cout<< "Default Entry to be removed: " << default_entry_removed << "\n";)
-                }
+            auto find_next_usage = [timestamp](fivetuple_history_t::mapped_type& history) {
+                size_t never_seen_again = std::numeric_limits<size_t>::max();
+                while (history.first < history.second.size() && history.second[history.first] <= timestamp)
+                    history.first++;
+                return history.first < history.second.size()
+                    ? history.second[history.first]
+                    : never_seen_again;
+            };
+            auto push_next_usage_of = [this, &find_next_usage](const FiveTuple& key) {
+                auto it = five_tuple_history.find(key);
+                if (it == five_tuple_history.end())
+                    std::cout << "Error, key not found in history\n";
+                    
+                replacement_queue.emplace(find_next_usage(it->second), it);
+            };
+
+            // Fill queue on first call, the cache is full (as stated in Expects above).
+            if (replacement_queue.empty())
+                for (const auto& [key, value] : this->lookup_table_)
+                    push_next_usage_of(key);
+            else
+            {
+                // Update the next usages for current time.
+                typename replacement_queue_t::iterator bottom;
+                while ((bottom = replacement_queue_min_iterator())->next_usage_time <= timestamp)
+                    replacement_queue.update(bottom, {find_next_usage(bottom->fivetuple_history_entry->second), bottom->fivetuple_history_entry});
             }
-            if (is_found && number_keys_found > 1)
-            {
-                debug(
-                std::cout << "---------------------------\n";
-                std::cout << "Lookup table contents\n";
-                std::cout << "---------------------------\n";
-                for(const auto& [key, _] : this->lookup_table_)
-                {
-                    std::cout <<  key << '\n';
-                }
-                std::cout << "---------------------------\n";
-                std::cout << "Key to remove " << farthest_fivetuple << '\n';
-                std::cout << "---------------------------\n";
-                )
-                return farthest_fivetuple;
-
-            } else
-            {
-                debug(std::cout <<  "Return default entry \n";)
-                return default_entry_removed;
-            }
-
+            // The victim is the element used farthest in the future, thus the top of the queue.
+            const ReplacementQueueElement& top = replacement_queue.top();
+            if (top.next_usage_time <= timestamp)
+                std::cout << "Error, next usage is before current time\n";
+            const FiveTuple victim_fivetuple =  top.fivetuple_history_entry->first;
+            if (this->lookup_table_.find(victim_fivetuple) == this->lookup_table_.end())
+                std::cout << "Error, victim is not in cache\n";
+            replacement_queue.pop();
+            // Add the new five tuple.
+            push_next_usage_of(five_tuple);
+            return victim_fivetuple;
         }
 
     private:
-        size_t current_packet_timestamp;
-        fivetuple_history_t five_tuple_history;
-        const std::string file_name;
+        // priority_deque provides maximum() and minimum() methods returing values but not iterators.  update() requires an iterator.
+        typename replacement_queue_t::iterator replacement_queue_min_iterator() {
+            return replacement_queue.begin(); // see minimum()
+        }
 
+        fivetuple_history_t five_tuple_history;
+        const std::string pcap_pre_file_name;
+        replacement_queue_t replacement_queue;
 };
 
 template<typename lookup_table_t, typename  stats_table_t, typename promo_stats_table_t>
@@ -303,7 +283,7 @@ class LFUPolicy final: public Policer<lookup_table_t,stats_table_t,promo_stats_t
                         counter_type_(counter_type)
         {}
 
-        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t pkt_size) override
+        virtual FiveTuple select_replacement_victim(const FiveTuple& five_tuple, size_t pkt_size) override
         {
             // Get the least frequently used entry.
             auto tuple_to_remove = this->stats_table_.get_stats().highest_order();
@@ -360,7 +340,7 @@ class OLFUPolicy final: public Policer<lookup_table_t,stats_table_t,promo_stats_
                         counter_type_(counter_type)
         {}
 
-        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t pkt_size) override
+        virtual FiveTuple select_replacement_victim(const FiveTuple& five_tuple, size_t pkt_size) override
         {
             // Get the least frequently used entry.
             auto tuple_to_remove = this->stats_table_.get_stats().highest_order();
@@ -411,7 +391,7 @@ class NXUPolicy final: public Policer<lookup_table_t,stats_table_t,promo_stats_t
                         policer_t(lookup_table, stats_table, promo_stats_table)
         {}
 
-        virtual FiveTuple select_replacement_victim(FiveTuple five_tuple, size_t) override
+        virtual FiveTuple select_replacement_victim(const FiveTuple& five_tuple, size_t) override
         {
             // Search for a not recent used entry.
             FiveTuple selected;
