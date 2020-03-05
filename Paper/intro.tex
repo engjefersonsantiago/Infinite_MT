@@ -62,7 +62,7 @@ However, match-action caching is fairly different from CPU caches.
 First, temporal and spatial data locality is less predictable in network systems.
 Second, memory is scarce and the processing flexibility is limited in network switches, thus, complex cache policies may not be suitable.
 Third, due to dynamic traffic changes, a cache system needs to rapidly adapt to diversified workloads.
-As a consequence, traditional computer caching schemes may not be suitable in the context of heterogeneous match table caching systems. 
+As a consequence, traditional caching schemes may not be suitable in the context of heterogeneous match table caching systems. 
 
 %Thus, we propose a match-action cache policer split into the forwarding devices.
 %We use online traffic hitters to estimate which match-action entries are candidates to be promoted/evicted to/from another cache level.
@@ -79,7 +79,7 @@ The contributions of this work are as follows:
 	\item an open-source match-action cache policer for HDPs;
 	\item a real-world network traffic analysis to derive match-action caching premises~(\S\ref{sec:traffic});
 	\item an evaluation of cache policies in the context of programmable dataplanes~(\S\ref{sec:policies}); and
-	\item a model to estimate the performance and overhead of a match-action caching system in an HDP~(\S\ref{sec:cache_results}).
+	\item a model to estimate the performance and a feasibility study of a match-action caching system in an HDP~(\S\ref{sec:cache_results}).
 \end{itemize}
 
 

@@ -40,8 +40,8 @@ rects6 = ax1.bar(ind + 3.5*width, hr_random_owmfu, width,
 rects6 = ax1.bar(ind + width/2, hr_opt_owmfu, width,
                 label='OPT+OWMFU', edgecolor='black', color='purple',hatch="Xx")#, color='green')
 
-plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.20),
-          ncol=3, fancybox=True, prop={'size': 9} )
+plt.legend(loc='upper center', bbox_to_anchor=(1.2, 0.5),
+          ncol=1, fancybox=True, prop={'size': 9} )
 ax1.tick_params(axis ='x', which ='both')#, rotation = 45.0) 
 #plt.xticks(cache_size,cache_size)
 plt.grid(True, axis='both')
@@ -59,7 +59,7 @@ ax1.set_ylabel('Hit Ratio')
 ##Adjust label
 plt.gcf().subplots_adjust(bottom=0.15)
 
-plt.savefig("promo.pdf", bbox_inches = 'tight', pad_inches = 0.1)
+plt.savefig("promo.pdf", bbox_inches = 'tight', pad_inches = 0.0)
 plt.clf()
 #plt.show()
 
@@ -93,8 +93,8 @@ rects6 = ax1.bar(ind + 3.5*width, hr_random_owmfu, width,
 rects6 = ax1.bar(ind + width/2, hr_opt_owmfu, width,
                 label='OPT+OWMFU', edgecolor='black', color='purple',hatch="xx")#, color='green')
 
-plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.20),
-          ncol=3, fancybox=True, prop={'size': 9} )
+#plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.20),
+#          ncol=3, fancybox=True, prop={'size': 9} )
 ax1.tick_params(axis ='x', which ='both')#, rotation = 45.0) 
 #plt.xticks(cache_size,cache_size)
 plt.grid(True, axis='both')
@@ -112,5 +112,5 @@ ax1.set_ylabel('Size Weighted Hit Ratio')
 ##Adjust label
 plt.gcf().subplots_adjust(bottom=0.15)
 
-plt.savefig("promo_weighted.pdf", bbox_inches = 'tight', pad_inches = 0.1)
+plt.savefig("promo_weighted.pdf", bbox_inches = 'tight', pad_inches = 0.0)
 

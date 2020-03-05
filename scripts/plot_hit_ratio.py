@@ -26,7 +26,7 @@ ax1.plot(cache_size, hr_owlfu, c='black', marker='X',label='OWLFU')
 ax1.plot(cache_size, hr_lru, c='blue', marker='s', label='LRU')
 ax1.plot(cache_size, hr_random, c='green', marker='^', label='Random')
 
-plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15),ncol=4, fancybox=True, prop={'size': 9} )
+#plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15),ncol=4, fancybox=True, prop={'size': 9} )
 ax1.tick_params(axis ='x', which ='both', rotation = 45.0) 
 plt.xticks(cache_size,cache_size)
 plt.grid(True, axis='both')
@@ -43,7 +43,7 @@ ax1.set_xticklabels(cache_size)
 ##Adjust label
 plt.gcf().subplots_adjust(bottom=0.15)
 
-plt.savefig("hit_ratio_sf1.pdf", bbox_inches = 'tight', pad_inches = 0.1)
+plt.savefig("hit_ratio_sf1.pdf", bbox_inches = 'tight', pad_inches = 0.0)
 plt.clf()
 
 
@@ -68,7 +68,7 @@ ax1.plot(cache_size, hr_owlfu, c='black', marker='X',label='OWLFU')
 ax1.plot(cache_size, hr_lru, c='blue', marker='s', label='LRU')
 ax1.plot(cache_size, hr_random, c='green', marker='^', label='Random')
 
-plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15),ncol=4, fancybox=True, prop={'size': 9} )
+#plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15),ncol=4, fancybox=True, prop={'size': 9} )
 ax1.tick_params(axis ='x', which ='both', rotation = 45.0) 
 plt.xticks(cache_size,cache_size)
 plt.grid(True, axis='both')
@@ -83,7 +83,7 @@ ax1.set_xticklabels(cache_size)
 ##Adjust label
 plt.gcf().subplots_adjust(bottom=0.15)
 
-plt.savefig("weighted_hit_ratio_sf1.pdf", bbox_inches = 'tight', pad_inches = 0.1)
+plt.savefig("weighted_hit_ratio_sf1.pdf", bbox_inches = 'tight', pad_inches = 0.0)
 plt.clf()
 
 
@@ -124,7 +124,7 @@ ax1.set_xticklabels(cache_size)
 ##Adjust label
 plt.gcf().subplots_adjust(bottom=0.15)
 
-plt.savefig("hit_ratio_sf10.pdf", bbox_inches = 'tight', pad_inches = 0.1)
+plt.savefig("hit_ratio_sf10.pdf", bbox_inches = 'tight', pad_inches = 0.0)
 plt.clf()
 
 #Weighted
@@ -149,7 +149,7 @@ ax1.plot(cache_size, hr_owlfu, c='black', marker='X',label='OWLFU')
 ax1.plot(cache_size, hr_lru, c='blue', marker='s', label='LRU')
 ax1.plot(cache_size, hr_random, c='green', marker='^', label='Random')
 
-plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15),ncol=4, fancybox=True, prop={'size': 9} )
+#plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15),ncol=4, fancybox=True, prop={'size': 9} )
 ax1.tick_params(axis ='x', which ='both', rotation = 45.0) 
 plt.xticks(cache_size,cache_size)
 plt.grid(True, axis='both')
@@ -164,7 +164,7 @@ ax1.set_xticklabels(cache_size)
 ##Adjust label
 plt.gcf().subplots_adjust(bottom=0.15)
 
-plt.savefig("weighted_hit_ratio_sf10.pdf", bbox_inches = 'tight', pad_inches = 0.1)
+plt.savefig("weighted_hit_ratio_sf10.pdf", bbox_inches = 'tight', pad_inches = 0.0)
 plt.clf()
 
 #slowdown 100
@@ -188,7 +188,7 @@ ax1.plot(cache_size, hr_owlfu, c='black', marker='X',label='OWLFU')
 ax1.plot(cache_size, hr_lru, c='blue', marker='s', label='LRU')
 ax1.plot(cache_size, hr_random, c='green', marker='^', label='Random')
 
-plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15),ncol=4, fancybox=True, prop={'size': 9} )
+#plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15),ncol=4, fancybox=True, prop={'size': 9} )
 ax1.tick_params(axis ='x', which ='both', rotation = 45.0) 
 plt.xticks(cache_size,cache_size)
 plt.grid(True, axis='both')
@@ -205,7 +205,7 @@ ax1.set_xticklabels(cache_size)
 ##Adjust label
 plt.gcf().subplots_adjust(bottom=0.15)
 
-plt.savefig("hit_ratio_sf100.pdf", bbox_inches = 'tight', pad_inches = 0.1)
+plt.savefig("hit_ratio_sf100.pdf", bbox_inches = 'tight', pad_inches = 0.0)
 plt.clf()
 
 #Weighted
@@ -230,7 +230,7 @@ ax1.plot(cache_size, hr_owlfu, c='black', marker='X',label='OWLFU')
 ax1.plot(cache_size, hr_lru, c='blue', marker='s', label='LRU')
 ax1.plot(cache_size, hr_random, c='green', marker='^', label='Random')
 
-plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15),ncol=4, fancybox=True, prop={'size': 9} )
+#plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15),ncol=4, fancybox=True, prop={'size': 9} )
 ax1.tick_params(axis ='x', which ='both', rotation = 45.0) 
 plt.xticks(cache_size,cache_size)
 plt.grid(True, axis='both')
@@ -246,7 +246,7 @@ ax1.set_xticklabels(cache_size)
 ##Adjust label
 plt.gcf().subplots_adjust(bottom=0.15)
 
-plt.savefig("weighted_hit_ratio_sf100.pdf", bbox_inches = 'tight', pad_inches = 0.1)
+plt.savefig("weighted_hit_ratio_sf100.pdf", bbox_inches = 'tight', pad_inches = 0.0)
 plt.clf()
 #plt.show()
 

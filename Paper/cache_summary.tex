@@ -161,7 +161,7 @@ Finally, the match table update rate may sacrifice the reaction time of caching 
 
 \section{Learning from the Traffic}\label{sec:traffic}
 
-Network traffic has been observed to follow a Zipf distribution, with a few network flows accounting for most of the network traffic~\cite{Sarrar:2012, Jin:2017}.
+Network traffic has been observed to follow a Zipf distribution, with a few network flows accounting for most of the traffic~\cite{Sarrar:2012, Jin:2017}.
 
 In our study, we conducted experiments to determine the traffic characteristics of an up-to-date real-world data center trace.
 We replayed a CAIDA network trace extracted from an IXP in a New York city data center dated from January 2019~\cite{caida:19}.
@@ -340,27 +340,27 @@ Otherwise, OWLFU modifies OLFU by incrementing the current packet size to the vi
 \begin{figure*}[]
 	\centering
 	\subfloat[Hit Ratio. $SF=1\times$]{
-		\includegraphics[width=0.33\textwidth]{../scripts/hit_ratio_sf1.pdf}
+		\includegraphics[width=0.3\textwidth]{../scripts/hit_ratio_sf1.pdf}
 		\label{fig:hit_ratio_sf1}
 	}
 	\subfloat[Hit Ratio. $SF=10\times$]{
-		\includegraphics[width=0.33\textwidth]{../scripts/hit_ratio_sf10.pdf}
+		\includegraphics[width=0.3\textwidth]{../scripts/hit_ratio_sf10.pdf}
 		\label{fig:hit_ratio_sf10}
 	}
 	\subfloat[Hit Ratio. $SF=100\times$]{
-		\includegraphics[width=0.33\textwidth]{../scripts/hit_ratio_sf100.pdf}
+		\includegraphics[width=0.3\textwidth]{../scripts/hit_ratio_sf100.pdf}
 		\label{fig:hit_ratio_sf100}
-	}\\
+	}\qquad
 	\subfloat[Size Weighted Hit Ratio. $SF=1\times$]{
-		\includegraphics[width=0.33\textwidth]{../scripts/weighted_hit_ratio_sf1.pdf}
+		\includegraphics[width=0.3\textwidth]{../scripts/weighted_hit_ratio_sf1.pdf}
 		\label{fig:weighted_hit_ratio_sf1}
 	}
 	\subfloat[Size Weighted Hit Ratio. $SF=10\times$]{
-		\includegraphics[width=0.33\textwidth]{../scripts/weighted_hit_ratio_sf10.pdf}
+		\includegraphics[width=0.3\textwidth]{../scripts/weighted_hit_ratio_sf10.pdf}
 		\label{fig:weighted_hit_ratio_sf10}
 	}
 	\subfloat[Size Weighted Hit Ratio. $SF=100\times$]{
-		\includegraphics[width=0.33\textwidth]{../scripts/weighted_hit_ratio_sf100.pdf}
+		\includegraphics[width=0.3\textwidth]{../scripts/weighted_hit_ratio_sf100.pdf}
 		\label{fig:weighted_hit_ratio_sf100}
 	}
 	\caption{Cache performance evaluation when no promotion policy implemented}
@@ -402,6 +402,7 @@ To enable reproducibility, we open-sourced our codes\footnote{\url{https://githu
 
 
 \begin{table}[]
+\small {
 	\centering
 	\caption{Experimental Parameters}
 	\label{tab:setup}
@@ -409,55 +410,61 @@ To enable reproducibility, we open-sourced our codes\footnote{\url{https://githu
 		\toprule
 		\textbf{Parameter}       & \textbf{Value}   \\
 		\midrule
-		Eviction policy            & LRU, (O)(W)LFU, Random			    \\
+		Eviction policy            & OPT, LRU, (O)(W)LFU, Random			    \\
 		Promotion policy            & None, (O)WMFU			    \\
 		Cache Size              & 64 to \SI{8}{\kilo\nothing} entries  \\
 		Slowdown Factor         & 1$\times$, 10$\times$, 100$\times$        \\
 		\bottomrule
 	\end{tabular}
+}
 \end{table}
 
 \subsection{Simulation Results}
-Figure~\ref{fig:hit_ratio} presents the results for our experiments when no promotion policy is implemented.
-
-As already reported in~\cite{Kim:09}, \textit{vanilla} LFU performs poorly with real-world network traffic.
-Also, we confirmed the good performance of LRU-based policies with up-to-date data center traffic. 
-The random policy achieves a relatively good cache performance considering the small overhead for implementing it.
-The random policy hit ratio lags behind the classic LRU by no more than 10\%.
-
-All modified versions of LFU significantly improve the cache performance compared to the \textit{vanilla} LFU.
-WLFU achieves a sharp increase in its hit ratio as the cache size increases.
-OLFU has a steady performance approaching the random hit ratio.
-Indeed, OLFU introduces a pseudo-temporal variable to the LFU policy because it speculates that the promoted cache entry will be referenced soon after. 
-Last, OWLFU performs best in almost all scenarios.
-This is expected since this policy combines the strengths of OLFU and WLFU.
-
-%TODO: Check and run OPT simulations.
-%TODO: Comment the SF effect.
-Figure~\ref{fig:promo_fig} presents the impact of heuristic cache promotion. 
-We evaluated two cache promotion policies: WMFU and OWMFU.
-These policies were combined with three cache eviction policies: random, LRU, and OWLFU.
-We fixed the cache size to \SI{8}{\kilo\nothing} entries and we ran simulations with $SF=10\times$ and $SF=100\times$ because heuristic cache promotion is only applicable when $SF>1\times$.
-\begin{figure*}[]
+\begin{figure*}[t]
 	\centering
 	\subfloat[Hit Ratio.]{
-		\includegraphics[width=0.43\textwidth]{../scripts/promo.pdf}
+		\includegraphics[height=0.25\textwidth]{../scripts/promo.pdf}
 		\label{fig:promo}
-	}\qquad
+	}
 	\subfloat[Size Weighted Hit Ratio.]{
-		\includegraphics[width=0.43\textwidth]{../scripts/promo_weighted.pdf}
+		\includegraphics[height=0.25\textwidth]{../scripts/promo_weighted.pdf}
 		\label{fig:promo_weighted}
 	}
 	\caption{Cache performance evaluation when promotion policies are implemented}
 	\label{fig:promo_fig}
 \end{figure*}
 
-The simulation shows a noticeable increase (+10\%) in the cache hit ratio for when a random-based eviction policy is implemented.
+Figure~\ref{fig:hit_ratio} presents the results for our experiments when no promotion policy is implemented.
+To evaluate the efficiency of the proposed cache policies, we implemented the OPT algorithm~\cite{Belady:66} as a normalized upper-bound performance.
+
+As already reported in~\cite{Kim:09}, \textit{vanilla} LFU performs poorly with real-world network traffic.
+Also, we confirmed the good performance of LRU-based policies with up-to-date data center traffic.
+The random policy achieves a relatively good cache performance considering the small overhead for implementing it.
+The random policy hit ratio lags behind the classic LRU by no more than 10\%.
+
+All modified versions of LFU significantly improve the cache performance compared to \textit{vanilla} LFU.
+WLFU achieves a sharp increase in its hit ratio as the cache size increases.
+OLFU has a steady performance approaching the random hit ratio.
+Indeed, OLFU introduces a pseudo-temporal variable to the LFU policy because it speculates that the promoted cache entry will be referenced soon after. 
+Last, OWLFU performs best in almost all scenarios since this policy combines the strengths of OLFU and WLFU.
+
+As expected, the cache performance increases with the cache size for all policies.
+However, we observe that the OWLFU performance is very close (or superior) to OPT for when comparing the size weighted hit ratio.
+Indeed, Belady's OPT algorithm~\cite{Belady:66} does not take into consideration a ``data weight" when evicting; it evicts the entry which is furthest re-referenced in the future.
+
+%TODO: Check and run OPT simulations.
+%TODO: Comment the SF effect.
+Figure~\ref{fig:promo_fig} presents the impact of heuristic cache promotion. 
+We evaluated two cache promotion policies: WMFU and OWMFU.
+These policies were combined with four cache eviction policies: OPT, random, LRU, and OWLFU.
+We fixed the cache size to \SI{8}{\kilo\nothing} entries and we ran simulations with $SF=10\times$ and $SF=100\times$ because heuristic cache promotion is only applicable when $SF>1\times$.
+
+The simulation shows a noticeable increase (+10\%) in the size weighted hit ratio for when a random-based eviction policy is implemented.
 Moreover, the results also suggest that there is no significant gain when LRU and LFU derivations are used.
 
 \subsection{Discussions}
 
-Although LRU and LFU derivations present the best simulation results, these cache policies may be difficult to implement in high-performance programmable dataplanes.
+Although LRU and LFU derivations present simulation results approaching the theoretical maximum (OPT), these cache policies may be difficult to implement in high-performance programmable dataplanes.
 First, in terms of memory consumption, both replacement classes require $O(N)$ extra information to select cache victims.
 This is undesirable because memory is scarce in network switches and should be reserved for more profitable applications.
 Second, both algorithms require sorting data either by frequency or time, a costly and non-scalable operation as it normally requires $O(N~log(N))$ comparisons with $O(log(N))$ time complexity.
