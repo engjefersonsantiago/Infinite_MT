@@ -340,27 +340,27 @@ Otherwise, OWLFU modifies OLFU by incrementing the current packet size to the vi
 \begin{figure*}[]
 	\centering
 	\subfloat[Hit Ratio. $SF=1\times$]{
-		\includegraphics[width=0.3\textwidth]{../scripts/hit_ratio_sf1.pdf}
+		\includegraphics[width=0.31\textwidth]{../scripts/hit_ratio_sf1.pdf}
 		\label{fig:hit_ratio_sf1}
 	}
 	\subfloat[Hit Ratio. $SF=10\times$]{
-		\includegraphics[width=0.3\textwidth]{../scripts/hit_ratio_sf10.pdf}
+		\includegraphics[width=0.31\textwidth]{../scripts/hit_ratio_sf10.pdf}
 		\label{fig:hit_ratio_sf10}
 	}
 	\subfloat[Hit Ratio. $SF=100\times$]{
-		\includegraphics[width=0.3\textwidth]{../scripts/hit_ratio_sf100.pdf}
+		\includegraphics[width=0.31\textwidth]{../scripts/hit_ratio_sf100.pdf}
 		\label{fig:hit_ratio_sf100}
 	}\qquad
 	\subfloat[Size Weighted Hit Ratio. $SF=1\times$]{
-		\includegraphics[width=0.3\textwidth]{../scripts/weighted_hit_ratio_sf1.pdf}
+		\includegraphics[width=0.31\textwidth]{../scripts/weighted_hit_ratio_sf1.pdf}
 		\label{fig:weighted_hit_ratio_sf1}
 	}
 	\subfloat[Size Weighted Hit Ratio. $SF=10\times$]{
-		\includegraphics[width=0.3\textwidth]{../scripts/weighted_hit_ratio_sf10.pdf}
+		\includegraphics[width=0.31\textwidth]{../scripts/weighted_hit_ratio_sf10.pdf}
 		\label{fig:weighted_hit_ratio_sf10}
 	}
 	\subfloat[Size Weighted Hit Ratio. $SF=100\times$]{
-		\includegraphics[width=0.3\textwidth]{../scripts/weighted_hit_ratio_sf100.pdf}
+		\includegraphics[width=0.31\textwidth]{../scripts/weighted_hit_ratio_sf100.pdf}
 		\label{fig:weighted_hit_ratio_sf100}
 	}
 	\caption{Cache performance evaluation when no promotion policy implemented}
@@ -402,7 +402,7 @@ To enable reproducibility, we open-sourced our codes\footnote{\url{https://githu
 
 
 \begin{table}[]
-\small {
+%\small {
 	\centering
 	\caption{Experimental Parameters}
 	\label{tab:setup}
@@ -416,7 +416,7 @@ To enable reproducibility, we open-sourced our codes\footnote{\url{https://githu
 		Slowdown Factor         & 1$\times$, 10$\times$, 100$\times$        \\
 		\bottomrule
 	\end{tabular}
-}
+%}
 \end{table}
 
 \subsection{Simulation Results}
@@ -435,22 +435,28 @@ To enable reproducibility, we open-sourced our codes\footnote{\url{https://githu
 \end{figure*}
 
 Figure~\ref{fig:hit_ratio} presents the results for our experiments when no promotion policy is implemented.
-To evaluate the efficiency of the proposed cache policies, we implemented the OPT algorithm~\cite{Belady:66} as a normalized upper-bound performance.
+To evaluate the efficacy of the proposed cache policies, we implemented the OPT algorithm~\cite{Belady:66} as a normalized theoretical upper-bound performance.
 
 As already reported in~\cite{Kim:09}, \textit{vanilla} LFU performs poorly with real-world network traffic.
-Also, we confirmed the good performance of LRU-based policies with up-to-date data center traffic.
+Also, we confirmed the good performance of LRU-based policies with up-to-date data center traffic, approaching the OPT as the cache size increases.
 The random policy achieves a relatively good cache performance considering the small overhead for implementing it.
-The random policy hit ratio lags behind the classic LRU by no more than 10\%.
+Indeed, as the traffic follows a Zipf distribution, the likelihood of randomly evicting a heavy-hitter is minimal.
+The random policy hit ratio lags behind the classic LRU and the OPT by no more than 10\% and 15\%, respectively.
 
 All modified versions of LFU significantly improve the cache performance compared to \textit{vanilla} LFU.
 WLFU achieves a sharp increase in its hit ratio as the cache size increases.
 OLFU has a steady performance approaching the random hit ratio.
-Indeed, OLFU introduces a pseudo-temporal variable to the LFU policy because it speculates that the promoted cache entry will be referenced soon after. 
+Indeed, OLFU introduces a pseudo-temporal variable to the LFU policy because it speculates that the promoted cache entry will be re-referenced thereafter. 
 Last, OWLFU performs best in almost all scenarios since this policy combines the strengths of OLFU and WLFU.
 
 As expected, the cache performance increases with the cache size for all policies.
 However, we observe that the OWLFU performance is very close (or superior) to OPT for when comparing the size weighted hit ratio.
 Indeed, Belady's OPT algorithm~\cite{Belady:66} does not take into consideration a ``data weight" when evicting; it evicts the entry which is furthest re-referenced in the future.
+
+The $SF$ scalability experiments attempt to mimic for realistic caching scenarios by considering a slower cache reaction time.
+For more realistic scenarios, as shown in Figure~\ref{fig:hit_ratio_sf100} and Figure~\ref{fig:weighted_hit_ratio_sf100}, the performance of the OWLFU is very close to OPT.
+This is due to the fact that speculatively assumes that the just inserted entry may remain in cache.
+OPT makes no such assumption. As $SF$ increases, inserted entries there are not re-referenced may cause cache trashing due to the slower reaction time.
 
 %TODO: Check and run OPT simulations.
 %TODO: Comment the SF effect.
@@ -459,7 +465,7 @@ We evaluated two cache promotion policies: WMFU and OWMFU.
 These policies were combined with four cache eviction policies: OPT, random, LRU, and OWLFU.
 We fixed the cache size to \SI{8}{\kilo\nothing} entries and we ran simulations with $SF=10\times$ and $SF=100\times$ because heuristic cache promotion is only applicable when $SF>1\times$.
 
-The simulation shows a noticeable increase (+10\%) in the size weighted hit ratio for when a random-based eviction policy is implemented.
+Figure~\ref{fig:promo_weighted} shows a noticeable increase (>10\%) in the size weighted hit ratio for when a random-based eviction policy is implemented.
 Moreover, the results also suggest that there is no significant gain when LRU and LFU derivations are used.
 
 \subsection{Discussions}
@@ -518,5 +524,6 @@ Thus, the conducted 2-level cache performance investigation is relevant for sett
 In our simulator, all table update metrics (communication, table insertion times, CPU load) are enveloped in a unified $SF$ metric.
 Although $SF$ attempts to mimic performance gaps, in real hardware it may not be realistic.
 For example, our simulator considers a perfect EM table disregarding \textit{actual} hardware implementations in which a single table insertion may trigger many table modifications, which increases CPU load and communication overhead.
-Finally, our simulator does not support batching for either table insertion nor when gathering eviction/promotion policy counters.
+Also, our simulator does not support batching for either table insertion nor when gathering eviction/promotion policy counters.
+Finally, the OPT algorithm implemented in the simulator may not be \textit{the optimal} implementation in all tested scenarios as it does not consider packet sizes nor the $SF$ impact for evicting entries.
 
