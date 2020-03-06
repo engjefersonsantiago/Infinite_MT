@@ -16,7 +16,7 @@ std::size_t hash_value(const FiveTuple& tuple)
 }
 
 // Helper functions
-tuple_pkt_size_pair_t create_five_tuple_from_packet (const pcpp::Packet& parsedPacket)
+tuple_pkt_size_pair_t create_five_tuple_from_packet (/*const*/ pcpp::Packet& parsedPacket)
 {
     // 5 tuple
     FiveTuple five_tuple{};

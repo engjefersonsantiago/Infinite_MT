@@ -18,6 +18,8 @@
 #include <algorithm>
 
 #include <boost/circular_buffer.hpp>
+#include <arpa/inet.h>
+
 
 #ifndef __PKT_COMMON__
 #define __PKT_COMMON__
@@ -59,7 +61,7 @@ inline void printIpV6Part(std::ostream& os, uint64_t value, bool isLastPart) {
     }
 }
 
-inline uint64_t bytes_to_uint64(const UCHAR* bytes)
+inline uint64_t bytes_to_uint64(const uint8_t* bytes)
 {
     uint64_t result = 0;
     for (unsigned i = 0; i < 8; ++i)
@@ -78,8 +80,8 @@ struct IpAddress {
     IpAddress& operator=(const uint8_t (&ipAddress)[16]) {
         return *this = IpAddress{ bytes_to_uint64(ipAddress + 0), bytes_to_uint64(ipAddress + 8) };
     }
-    IpAddress& operator=(const pcpp::IPv6Address& ipAddress) {
-        return *this = ipAddress.toIn6Addr()->u.Byte;
+    IpAddress& operator=(/*const*/ pcpp::IPv6Address& ipAddress) {
+        return *this = ipAddress.toIn6Addr()->s6_addr;
     }
     IpAddress& operator=(const pcpp::IPv4Address& ipAddress) {
         return *this = fromIPv4_netByteOrder(ipAddress.toInt());
@@ -253,7 +255,7 @@ using inter_thread_digest_cpu = ThreadCommunication<tuple_pkt_size_pair_t, boost
 
 
 // Helper functions
-tuple_pkt_size_pair_t create_five_tuple_from_packet (const pcpp::Packet& parsedPacket);
+tuple_pkt_size_pair_t create_five_tuple_from_packet (/*const*/ pcpp::Packet& parsedPacket);
 std::unordered_set<FiveTuple> filter_unique_tuples_from_trace (const std::string& pcap_file);
 
 #endif // __PKT_COMMON__
