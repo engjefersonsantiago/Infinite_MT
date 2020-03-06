@@ -55,7 +55,7 @@ Then, we review the constraints of current programmable dataplanes.
 
 \subsection{Cache Replacement Algorithms}
 \textbf{OPT}~---~The optimal (OPT) cache replacement policy~\cite{Belady:66} is an oracle algorithm that relies on knowing the future traffic behavior.
-OPT uses this information to replace data that is further referenced in time.
+OPT uses this information to replace data that is furthest referenced in time.
 Due to that, OPT is not realistically implementable and it is commonly used to evaluate cache performance since it sets an upper performance bound for realistic caching systems.
 
 \textbf{Random}~---~Random or pseudo-random cache replacement policies use a stochastic random function to select a victim for eviction.
@@ -139,14 +139,14 @@ Single-chip homogeneous programmable dataplanes expose a clear trade-off on perf
 
 State-of-the-art PISA-based programmable ASIC switches process packets at multi-terabit rates.
 However, these switches have no more than a few hundreds of \SI{}{\mega\byte} of internal memory which is shared between lookup operations and user-defined stateful processing (e.g. metering, load-balancing).
-Moreover, as these devices need to guarantee a very low fixed processing latency, programmers are not allowed to express loops or recursion that cannot be unrolled throughout physical pipeline stages.
+Moreover, as these devices need to guarantee a very low and fixed processing latency, programmers are not allowed to express loops or recursion that cannot be unrolled throughout physical pipeline stages.
 Indeed, neither loops nor recursion are part of the P4 semantics.
 
 On current programmable dataplanes, forwarding rules are installed by an external x86-like host CPU as they do not yet support table updates in the data plane.
-Hence, there is no consensus w.r.t the maximum achieved match table update rate as many factors can influence it.
+Hence, no consensus has yet been reached w.r.t the maximum match table update rate as many factors can influence it.
 \citeauthor{Jin:2017} have reported an update rate in the order of \SI{10}{\kilo\update/\second}
 ~\cite{Jin:2017}.
-A first impacting factor is the host CPU load in which we have little control.
+A first impacting factor is the host CPU load in which we have little control of.
 The match type also contributes to the update rate.
 In our work, we are only interested in the exact match (EM) rule caching. 
 EM tables are typically implemented as Cuckoo hash tables~\cite{Kirsch:2009,Bosshart:14}.
@@ -164,7 +164,7 @@ Finally, the match table update rate may sacrifice the reaction time of caching 
 Network traffic has been observed to follow a Zipf distribution, with a few network flows accounting for most of the traffic~\cite{Sarrar:2012, Jin:2017}.
 
 In our study, we conducted experiments to determine the traffic characteristics of an up-to-date real-world data center trace.
-We replayed a CAIDA network trace extracted from an IXP in a New York city data center dated from January 2019~\cite{caida:19}.
+We replayed a CAIDA network trace extracted from an IXP in a New York City data center dated from January 2019~\cite{caida:19}.
 The analysed trace is 1 minute long monitoring $\sim$\SI{30}{\mega\nothing} packets in a full-duplex \SI{40}{\giga\bit/\second} Ethernet link connecting New York and S\~ao Paulo/Brazil.
 A similar analysis was done by~\citeauthor{Spang:19} to estimate the number of TCP/IP flows~\cite{Spang:19}.
 
@@ -270,7 +270,7 @@ Note that as frequency counters are always increasing, periodic flushes (omitted
 %\end{algorithm}
 
 \textbf{OLFU}~---~Optmistic LFU (OLFU) is a proposition to overcome the limitations of \textit{vanilla} LFU for flow caching.
-OLFU is an LFU derivation that gives a chance for a cache promotion candidate to remain in cache regardless of its \textit{actual} hit frequency.
+OLFU is an LFU derivation that gives a chance for a new entry to remain in cache regardless of its \textit{actual} hit frequency.
 In OLFU, the cache policer behaves as the LFU in case of a cache hit.
 Otherwise, instead of re-initializing the frequency counter, the new cache entry takes control of the victim's counter, as shown in Algorithm~\ref{algo:olfu} that omits the flushing logic.
 \begin{algorithm}[t]
@@ -380,7 +380,7 @@ Hence, WMFU modifies MFU by considering the packet size in its frequency counter
 Missed flows with higher counters are thus marked for cache promotion.
 
 \textbf{OWMFU}~---~Optimistic WMFU is the OWLFU counterpart presented in \S\ref{sec:evi}.
-OWMFU optimistically speculates that frequent hitters will continue hitting soon after.
+OWMFU optimistically speculates that frequent hitters will continue hitting thereafter.
 Similarly to WMFU, most frequently missed flows are selected for cache promotion.
 
 
@@ -438,7 +438,7 @@ Figure~\ref{fig:hit_ratio} presents the results for our experiments when no prom
 To evaluate the efficacy of the proposed cache policies, we implemented the OPT algorithm~\cite{Belady:66} as a normalized theoretical upper-bound performance.
 
 As already reported in~\cite{Kim:09}, \textit{vanilla} LFU performs poorly with real-world network traffic.
-Also, we confirmed the good performance of LRU-based policies with up-to-date data center traffic, approaching the OPT as the cache size increases.
+Also, we confirmed the good performance of LRU-based policies with up-to-date data center traffic which approaches to OPT as the cache size increases.
 The random policy achieves a relatively good cache performance considering the small overhead for implementing it.
 Indeed, as the traffic follows a Zipf distribution, the likelihood of randomly evicting a heavy-hitter is minimal.
 The random policy hit ratio lags behind the classic LRU and the OPT by no more than 10\% and 15\%, respectively.
@@ -450,13 +450,14 @@ Indeed, OLFU introduces a pseudo-temporal variable to the LFU policy because it 
 Last, OWLFU performs best in almost all scenarios since this policy combines the strengths of OLFU and WLFU.
 
 As expected, the cache performance increases with the cache size for all policies.
-However, we observe that the OWLFU performance is very close (or superior) to OPT for when comparing the size weighted hit ratio.
+However, we observe that the OWLFU performance approaches to OPT for when comparing the size weighted hit ratio.
 Indeed, Belady's OPT algorithm~\cite{Belady:66} does not take into consideration a ``data weight" when evicting; it evicts the entry which is furthest re-referenced in the future.
 
-The $SF$ scalability experiments attempt to mimic for realistic caching scenarios by considering a slower cache reaction time.
-For more realistic scenarios, as shown in Figure~\ref{fig:hit_ratio_sf100} and Figure~\ref{fig:weighted_hit_ratio_sf100}, the performance of the OWLFU is very close to OPT.
-This is due to the fact that speculatively assumes that the just inserted entry may remain in cache.
-OPT makes no such assumption. As $SF$ increases, inserted entries there are not re-referenced may cause cache trashing due to the slower reaction time.
+The $SF$ scalability experiments attempt to mimic more realistic caching scenarios by considering a slower cache reaction time.
+For more realistic scenarios, as shown in Figure~\ref{fig:hit_ratio_sf100} and Figure~\ref{fig:weighted_hit_ratio_sf100}, the performance of the OWLFU is very close (or superior) to OPT.
+This is due to the fact OPT does not take into account that entries in cache are updated at a later time by the controller when $SF>1$, and is thus not optimal as $SF$ increases.
+%This is due to the fact that OWLFU speculatively assumes that the just inserted entry will remain in cache while OPT makes no such assumption. 
+%In OPT, as $SF$ increases, inserted entries there are not re-referenced may cause cache trashing due to the slower reaction time which reduces the overall hit ratio.
 
 %TODO: Check and run OPT simulations.
 %TODO: Comment the SF effect.
@@ -465,7 +466,7 @@ We evaluated two cache promotion policies: WMFU and OWMFU.
 These policies were combined with four cache eviction policies: OPT, random, LRU, and OWLFU.
 We fixed the cache size to \SI{8}{\kilo\nothing} entries and we ran simulations with $SF=10\times$ and $SF=100\times$ because heuristic cache promotion is only applicable when $SF>1\times$.
 
-Figure~\ref{fig:promo_weighted} shows a noticeable increase (>10\%) in the size weighted hit ratio for when a random-based eviction policy is implemented.
+Figure~\ref{fig:promo_weighted} shows a noticeable increase (>10\%) in the size weighted hit ratio when a random-based eviction policy is implemented.
 Moreover, the results also suggest that there is no significant gain when LRU and LFU derivations are used.
 
 \subsection{Discussions}
@@ -517,9 +518,9 @@ This analysis showed that the traffic followed a Zipf distribution.
 Employing the caching strategy proposed in this work in other traffic scenarios has not yet been explored.
 As a consequence, our methods and propositions may not be viable in different traffic distributions.
 
-The performance analysis in this paper has considered only a 2-level cache.
-However, an N-level cache can be generalized as (N~$-$~1) independent 2-level caches.
-Thus, the conducted 2-level cache performance investigation is relevant for setting an upper bound hit ratio analysis, even though we believe that a full caching system may expose other limitations, such as multi-level control plane interaction.
+The performance analysis in this paper has considered only a two-level cache.
+However, an N-level cache can be generalized as (N~$-$~1) independent two-level caches.
+Thus, the conducted two-level cache performance investigation is relevant for setting an upper bound hit ratio analysis, even though we believe that a full caching system may expose other limitations, such as multi-level control plane interaction.
 
 In our simulator, all table update metrics (communication, table insertion times, CPU load) are enveloped in a unified $SF$ metric.
 Although $SF$ attempts to mimic performance gaps, in real hardware it may not be realistic.
