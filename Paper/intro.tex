@@ -3,7 +3,7 @@
 The Software-Defined Networking (SDN) paradigm has brought programmability to the once rigid network ecosystem.
 By allowing both control and data planes to evolve independently, SDN has opened new research avenues in networking, including data plane programming.
 Notably, the P4 language is a result of the SDN convergence~\cite{Bosshart:14}.
-P4 leverages OpenFlow by allowing network admins to program their network in a custom fashion.
+P4 allows to configure how packets are processed by a programmable data plane. 
 Thanks to P4 and recent programmable dataplanes, such as PISA~\cite{Bosshart:13}, network admins can now deploy custom protocols by simply reprogramming the network switches according to their evolving needs, without the need to deploy expensive new hardware. 
 
 
@@ -14,6 +14,7 @@ We recently suggested using heterogeneous programmable dataplanes (HDPs) to alle
 Indeed, using complementary and distinct packet forwarding devices increases the overall switch processing capabilities.
 However, research regarding HDPs is still in its infancy with many open questions, such as heterogeneous compilers, the issue of mismatched processing capabilities among devices, and distributed match-tables management.
 
+% Le flow est bon ici. S'en inspirer pour l'abstract.
 In this work, we address the issue of distributed match-action table management in HDPs comprising two or more programmable dataplane devices (PDDs), as illustrated in Figure~\ref{fig:high_level_network}.
 As an example, an HDP could be made of a programmable ASIC for $PDD_1$, an  FPGA for $PDD_2$, and a local CPU for $PDD_3$.
 
@@ -68,7 +69,7 @@ As a consequence, traditional caching schemes may not be suitable in the context
 %We use online traffic hitters to estimate which match-action entries are candidates to be promoted/evicted to/from another cache level.
 %We are inspired in previous works on flow caching \cite{casado:2008,Katta:2014,Pfaff:15} and on heuristic dataplane-based traffic hitters \cite{Sivaraman:17} aiming to maintain line-rate throughput and required cache update rate while minimizing the usage of scarce memory resources available in each device and reducing processing latency.
 
-To properly characterize the aforementioned issues, we evaluated the feasibility of such an HDP caching system by characterizing an up-to-date data center network traffic to understand its temporal locality.
+To properly characterize the aforementioned issues, we evaluated the feasibility of such an HDP caching system by characterizing an recent data center network traffic to understand its temporal locality.
 Following the traffic analysis, we conducted cache simulations to evaluate and compare realistic cache policies to be implemented in HDPs.
 Finally, we evaluated which cache policies are tailored for current programmable dataplanes.% and how they can be described in P4.
 

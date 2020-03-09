@@ -56,7 +56,7 @@ Then, we review the constraints of current programmable dataplanes.
 \subsection{Cache Replacement Algorithms}
 \textbf{OPT}~---~The optimal (OPT) cache replacement policy~\cite{Belady:66} is an oracle algorithm that relies on knowing the future traffic behavior.
 OPT uses this information to replace data that is furthest referenced in time.
-Due to that, OPT is not realistically implementable and it is commonly used to evaluate cache performance since it sets an upper performance bound for realistic caching systems.
+Due to that, OPT is not implementable and it is commonly used to evaluate cache performance since it sets an upper performance bound for caching systems.
 
 \textbf{Random}~---~Random or pseudo-random cache replacement policies use a stochastic random function to select a victim for eviction.
 The pseudo-random cache policy has been widely adopted in ARM-based processors.
@@ -142,7 +142,7 @@ However, these switches have no more than a few hundreds of \SI{}{\mega\byte} of
 Moreover, as these devices need to guarantee a very low and fixed processing latency, programmers are not allowed to express loops or recursion that cannot be unrolled throughout physical pipeline stages.
 Indeed, neither loops nor recursion are part of the P4 semantics.
 
-On current programmable dataplanes, forwarding rules are installed by an external x86-like host CPU as they do not yet support table updates in the data plane.
+On current programmable dataplanes, forwarding rules are installed by an external host CPU as they do not yet support table updates in the data plane.
 Hence, no consensus has yet been reached w.r.t the maximum match table update rate as many factors can influence it.
 \citeauthor{Jin:2017} have reported an update rate in the order of \SI{10}{\kilo\update/\second}
 ~\cite{Jin:2017}.
@@ -155,7 +155,7 @@ As the table load factor increases, several entries may be relocated which effec
 Finally, the key and action sizes also impact the update rate.
 
 The aforementioned constraints limit the feasibility of online cache policy algorithms.
-Both LRU and LFU require extra information to select cache victims which increase memory usage.
+Both LRU and LFU require to store extra information to select cache victims which increase memory usage.
 Also, these cache policies require sorting large volumes of data, which is difficult to implement (if possible) in programmable PISA switches.
 Finally, the match table update rate may sacrifice the reaction time of caching algorithms.
 
@@ -163,7 +163,7 @@ Finally, the match table update rate may sacrifice the reaction time of caching 
 
 Network traffic has been observed to follow a Zipf distribution, with a few network flows accounting for most of the traffic~\cite{Sarrar:2012, Jin:2017}.
 
-In our study, we conducted experiments to determine the traffic characteristics of an up-to-date real-world data center trace.
+In our study, we conducted experiments to determine the traffic characteristics of a recent real-world data center trace.
 We replayed a CAIDA network trace extracted from an IXP in a New York City data center dated from January 2019~\cite{caida:19}.
 The analysed trace is 1 minute long monitoring $\sim$\SI{30}{\mega\nothing} packets in a full-duplex \SI{40}{\giga\bit/\second} Ethernet link connecting New York and S\~ao Paulo/Brazil.
 A similar analysis was done by~\citeauthor{Spang:19} to estimate the number of TCP/IP flows~\cite{Spang:19}.
@@ -438,7 +438,7 @@ Figure~\ref{fig:hit_ratio} presents the results for our experiments when no prom
 To evaluate the efficacy of the proposed cache policies, we implemented the OPT algorithm~\cite{Belady:66} as a normalized theoretical upper-bound performance.
 
 As already reported in~\cite{Kim:09}, \textit{vanilla} LFU performs poorly with real-world network traffic.
-Also, we confirmed the good performance of LRU-based policies with up-to-date data center traffic which approaches to OPT as the cache size increases.
+Also, we confirmed the good performance of LRU-based policies with up-to-date data center traffic, which approaches to OPT as the cache size increases.
 The random policy achieves a relatively good cache performance considering the small overhead for implementing it.
 Indeed, as the traffic follows a Zipf distribution, the likelihood of randomly evicting a heavy-hitter is minimal.
 The random policy hit ratio lags behind the classic LRU and the OPT by no more than 10\% and 15\%, respectively.
@@ -485,6 +485,7 @@ Singly-linked lists could, however, be used for implementing an LRU cache.
 The most recent element would be placed at the head of the list while other elements would moved towards the tail.
 If the most recent element is already in the list, the data moving stops at its position, otherwise, it continues down to the tail.
 Such an implementation is possible in programmable dataplanes, however, it is still infeasible due to the limited number of pipeline stages (commonly fixed at 32 stages).
+% References? Ou supprimer le 32 etages
 Multiple parallel singly-linked lists are possible but the scalability is also limited.
 
 Not surprisingly, the performance of random-based policies applied to caches with Zipf access patterns approaches to classic (LRU) and novel (OWLFU) policies.
@@ -511,7 +512,7 @@ For example, let us consider a case where a low priority LPM rule is frequently 
 Using our method, this rule is moved to a higher cache level as expected.
 Now, a high priority rule belonging to the same prefix arriving at the HDP switch will match in the high cache level.
 However, a specific rule installed in a lower cache level for the same prefix will be shadowed, leading thus to a possibly wrong forwarding decision.   
-Such cache ambiguity is a known problem and it has been reported and addressed in earlier works~\cite{Degermark:1997, Katta:2014}.
+Such cache ambiguity is a known problem and it has been studied in earlier works~\cite{Degermark:1997, Katta:2014}.
 
 \textbf{Simulator Limits}~---~The eviction and promotion cache policies evaluated in this work were fine-tuned based on an actual real-world data center network trace.
 This analysis showed that the traffic followed a Zipf distribution.
@@ -522,7 +523,7 @@ The performance analysis in this paper has considered only a two-level cache.
 However, an N-level cache can be generalized as (N~$-$~1) independent two-level caches.
 Thus, the conducted two-level cache performance investigation is relevant for setting an upper bound hit ratio analysis, even though we believe that a full caching system may expose other limitations, such as multi-level control plane interaction.
 
-In our simulator, all table update metrics (communication, table insertion times, CPU load) are enveloped in a unified $SF$ metric.
+In our simulator, all table update metrics (communication, table insertion times, CPU load) are combined in a unified $SF$ metric.
 Although $SF$ attempts to mimic performance gaps, in real hardware it may not be realistic.
 For example, our simulator considers a perfect EM table disregarding \textit{actual} hardware implementations in which a single table insertion may trigger many table modifications, which increases CPU load and communication overhead.
 Also, our simulator does not support batching for either table insertion nor when gathering eviction/promotion policy counters.
