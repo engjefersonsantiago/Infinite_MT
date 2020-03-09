@@ -192,7 +192,7 @@ On average, small flows ($\sim$100 bytes) dominate the trace with 75\% of the fl
 	\label{algo:wlfu}
 	\SetInd{0.1em}{.9em}
 	\SetAlgoLined
-	\footnotesize
+	\scriptsize
 	\SetKwProg{procedure}{Procedure}{}{end}
 	\SetKwFunction{wlfuPolicy}{wlfuPolicy}
 	\SetKwFunction{findEntry}{findEntry}
@@ -278,7 +278,7 @@ Otherwise, instead of re-initializing the frequency counter, the new cache entry
 \label{algo:olfu}
 \SetInd{0.1em}{.9em}
 \SetAlgoLined
-\footnotesize
+\scriptsize
 \SetKwProg{procedure}{Procedure}{}{end}
 \SetKwFunction{olfuPolicy}{olfuPolicy}
 \SetKwFunction{findEntry}{findEntry}
@@ -311,7 +311,7 @@ Otherwise, OWLFU modifies OLFU by incrementing the current packet size to the vi
 \label{algo:owlfu}
 \SetInd{0.1em}{.9em}
 \SetAlgoLined
-\footnotesize
+\scriptsize
 \SetKwProg{procedure}{Procedure}{}{end}
 \SetKwFunction{owlfuPolicy}{owlfuPolicy}
 \SetKwFunction{findEntry}{findEntry}
@@ -340,27 +340,27 @@ Otherwise, OWLFU modifies OLFU by incrementing the current packet size to the vi
 \begin{figure*}[]
 	\centering
 	\subfloat[Hit Ratio. $SF=1\times$]{
-		\includegraphics[width=0.31\textwidth]{../scripts/hit_ratio_sf1.pdf}
+		\includegraphics[width=0.29\textwidth]{../scripts/hit_ratio_sf1.pdf}
 		\label{fig:hit_ratio_sf1}
 	}
 	\subfloat[Hit Ratio. $SF=10\times$]{
-		\includegraphics[width=0.31\textwidth]{../scripts/hit_ratio_sf10.pdf}
+		\includegraphics[width=0.29\textwidth]{../scripts/hit_ratio_sf10.pdf}
 		\label{fig:hit_ratio_sf10}
 	}
 	\subfloat[Hit Ratio. $SF=100\times$]{
-		\includegraphics[width=0.31\textwidth]{../scripts/hit_ratio_sf100.pdf}
+		\includegraphics[width=0.29\textwidth]{../scripts/hit_ratio_sf100.pdf}
 		\label{fig:hit_ratio_sf100}
 	}\qquad
 	\subfloat[Size Weighted Hit Ratio. $SF=1\times$]{
-		\includegraphics[width=0.31\textwidth]{../scripts/weighted_hit_ratio_sf1.pdf}
+		\includegraphics[width=0.29\textwidth]{../scripts/weighted_hit_ratio_sf1.pdf}
 		\label{fig:weighted_hit_ratio_sf1}
 	}
 	\subfloat[Size Weighted Hit Ratio. $SF=10\times$]{
-		\includegraphics[width=0.31\textwidth]{../scripts/weighted_hit_ratio_sf10.pdf}
+		\includegraphics[width=0.29\textwidth]{../scripts/weighted_hit_ratio_sf10.pdf}
 		\label{fig:weighted_hit_ratio_sf10}
 	}
 	\subfloat[Size Weighted Hit Ratio. $SF=100\times$]{
-		\includegraphics[width=0.31\textwidth]{../scripts/weighted_hit_ratio_sf100.pdf}
+		\includegraphics[width=0.29\textwidth]{../scripts/weighted_hit_ratio_sf100.pdf}
 		\label{fig:weighted_hit_ratio_sf100}
 	}
 	\caption{Cache performance evaluation when no promotion policy implemented}
@@ -401,10 +401,10 @@ The simulated traffic trace is the same as in~\S\ref{sec:traffic}.
 To enable reproducibility, we open-sourced our codes\footnote{\url{https://github.com/engjefersonsantiago/Infinite_MT}.}.
 
 
-\begin{table}[]
-%\small {
+\begin{table}[t]
+\small {
 	\centering
-	\caption{Experimental Parameters}
+	\caption{Experimental parameters}
 	\label{tab:setup}
 	\begin{tabular}{l|l}
 		\toprule
@@ -412,28 +412,26 @@ To enable reproducibility, we open-sourced our codes\footnote{\url{https://githu
 		\midrule
 		Eviction policy            & OPT, LRU, (O)(W)LFU, Random			    \\
 		Promotion policy            & None, (O)WMFU			    \\
-		Cache Size              & 64 to \SI{8}{\kilo\nothing} entries  \\
-		Slowdown Factor         & 1$\times$, 10$\times$, 100$\times$        \\
+		Cache size              & 64 to \SI{8}{\kilo\nothing} entries  \\
+		Slowdown factor         & 1$\times$, 10$\times$, 100$\times$        \\
 		\bottomrule
 	\end{tabular}
-%}
+}
 \end{table}
-
 \subsection{Simulation Results}
 \begin{figure*}[t]
 	\centering
 	\subfloat[Hit Ratio.]{
-		\includegraphics[height=0.25\textwidth]{../scripts/promo.pdf}
+		\includegraphics[height=0.225\textwidth]{../scripts/promo.pdf}
 		\label{fig:promo}
 	}
 	\subfloat[Size Weighted Hit Ratio.]{
-		\includegraphics[height=0.25\textwidth]{../scripts/promo_weighted.pdf}
+		\includegraphics[height=0.225\textwidth]{../scripts/promo_weighted.pdf}
 		\label{fig:promo_weighted}
 	}
 	\caption{Cache performance evaluation when promotion policies are implemented}
 	\label{fig:promo_fig}
 \end{figure*}
-
 Figure~\ref{fig:hit_ratio} presents the results for our experiments when no promotion policy is implemented.
 To evaluate the efficacy of the proposed cache policies, we implemented the OPT algorithm~\cite{Belady:66} as a normalized theoretical upper-bound performance.
 
@@ -484,7 +482,7 @@ The main reason is due to the feed-forward pipeline organization which prevents 
 Singly-linked lists could, however, be used for implementing an LRU cache.
 The most recent element would be placed at the head of the list while other elements would moved towards the tail.
 If the most recent element is already in the list, the data moving stops at its position, otherwise, it continues down to the tail.
-Such an implementation is possible in programmable dataplanes, however, it is still infeasible due to the limited number of pipeline stages (commonly fixed at 32 stages).
+Such an implementation is possible in programmable dataplanes, however, it is still infeasible due to the limited number of pipeline stages.% (commonly fixed at 32 stages).
 % References? Ou supprimer le 32 etages
 Multiple parallel singly-linked lists are possible but the scalability is also limited.
 
