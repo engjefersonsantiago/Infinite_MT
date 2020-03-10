@@ -327,6 +327,25 @@ In this section, we present the simulation results for an HDP caching system and
 Finally, we discuss the limitations of our approach.
 
 \subsection{Experimental Setup}
+
+\begin{table*}[!t]
+%\small {
+	\caption{Experimental parameters}
+	\label{tab:setup}
+	\centering
+	\begin{tabular}{l|l}
+		\toprule
+		\textbf{Parameter}       & \textbf{Value}   \\
+		\midrule
+		Eviction policy            & OPT, LRU, (O)(W)LFU, Random			    \\
+		Promotion policy            & None, (O)WMFU			    \\
+		Cache size              & 64 to \SI{8}{\kilo\nothing} entries  \\
+		Slowdown factor         & 1$\times$, 10$\times$, 100$\times$        \\
+		\bottomrule
+	\end{tabular}
+%}
+\end{table*}
+
 Table~\ref{tab:setup} presents the simulation parameters used to evaluate a two-level caching system as in Figure~\ref{fig:high_level_network}.
 We simulated the cache performance by emulating different cache policer slowdown factor ($SF$).
 Note, that for a two-level caching scheme, $SF$ also represents the cache policer reaction time.
@@ -338,23 +357,6 @@ The simulated traffic trace is the same as in~\S\ref{sec:traffic}.
 To enable reproducibility, we open-sourced our codes\footnote{\url{https://github.com/engjefersonsantiago/Infinite_MT}.}.
 
 
-\begin{table}[t]
-\small {
-	\centering
-	\caption{Experimental parameters}
-	\label{tab:setup}
-	\begin{tabular}{l|l}
-		\toprule
-		\textbf{Parameter}       & \textbf{Value}   \\
-		\midrule
-		Eviction policy            & OPT, LRU, (O)(W)LFU, Random			    \\
-		Promotion policy            & None, (O)WMFU			    \\
-		Cache size              & 64 to \SI{8}{\kilo\nothing} entries  \\
-		Slowdown factor         & 1$\times$, 10$\times$, 100$\times$        \\
-		\bottomrule
-	\end{tabular}
-}
-\end{table}
 \subsection{Simulation Results}
 
 Figure~\ref{fig:hit_ratio} presents the results for our experiments when no promotion policy is implemented.
