@@ -1,9 +1,13 @@
 The P4 language and modern programmable dataplanes have redrawn the networking landscape by allowing full data path programming in SDN environments.
-P4 offers an explicit imperative match-action-based programming model which is the main processing abstraction in programmable dataplanes.
+P4 offers an explicit imperative match-action-based programming model, which is the main processing abstraction in programmable dataplanes.
 However, modern programmable dataplanes lack the memory capacity to implement large match tables.
-Recent research has suggested mixing up different programmable dataplane devices to increase memory capacity.
+Recent research has suggested to use heterogeneous programmable dataplanes (HDPs) to increase the memory capacity. 
+Such an HDP is made of different programmable dataplane devices (PDDs).
+Each of these devices has its own memory capacity and processing capabilities, in a way that the most memory abundant device has the lowest performance and vice-versa.
+Hence, the bandwidth supported by an HDP is limited by the slowest PDD.
 
-This work presents a cache hierarchy scheme in heterogeneous programmable dataplanes to emulate a single ``virtually infinite" match table.
-Thus, we start our analysis by characterizing an up-to-date data center trace.
+To address this issue, this work presents a cache hierarchy scheme for HPDs that allows to implement large match tables, while supporting a high packet throughput. 
+We start our analysis by characterizing a recent data center trace.
 Then, following our observations, we derive the caching premises for match-action caching.
-Finally, we develop an open-source simulator to evaluate the viability of our proposed caching scheme.
+We develop an open-source simulator to evaluate different caching schemes.
+Finally, our simulations suggest that a two-level cache hierarchy that employs a replacement policy combining random eviction with heuristic promotion can achieve a hit ratio that approaches the theoretical maximum, with a relatively small cache and low implementation costs.

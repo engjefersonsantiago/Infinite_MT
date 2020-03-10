@@ -108,7 +108,7 @@
 \usepackage{etoolbox}
 \makeatletter
 \patchcmd\@combinedblfloats{\box\@outputbox}{\unvbox\@outputbox}{}{%
-  \errmessage{\noexpand\@combinedblfloats could not be patched}%
+  \errmessage{\noexpand\@combinedblfloats}%
 }%
 \makeatother
 
@@ -167,8 +167,8 @@
                 morecomment=[l][\color{magenta}]{\#}
 }
 
-\setlength{\belowcaptionskip}{4pt}
-\setlength{\abovecaptionskip}{4pt}
+\setlength{\belowcaptionskip}{0pt}
+\setlength{\abovecaptionskip}{0pt}
 
 \DeclareSIUnit{\bit}{b}
 \DeclareSIUnit{\byte}{B}
@@ -344,7 +344,8 @@
 
 \begin{acks}
 \ifthenelse{\equal{\Hidden}{No}}{
-	The authors thank the anonymous reviewers for their insightful comments. This work was supported by CNPq/Brazil, Mitacs/Canada, and Kaloom inc.
+	%The authors thank the anonymous reviewers for their insightful comments.
+	This work was supported by CNPq/Brazil, Mitacs/Canada, and Kaloom inc.
 }{
 The authors thank the anonymous reviewers for their insightful comments. This work is supported by the funding agency.
 }

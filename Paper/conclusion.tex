@@ -2,7 +2,9 @@
 
 P4 and the PISA architecture are bringing a new meaning to programmable networks as they promote data plane programming.
 Although current PISA-based programmable dataplanes offer high throughput, they lack memory resources for implementing P4 applications.
-Thus, recent research proposed heterogeneous dataplanes to confront the memory/performance trade-off.
+% Peut être remprendre cette phrase dans l'abstract? 
+Thus, recent research proposed heterogeneous dataplanes to balance the memory/performance trade-off.
+% Hein? Phrase semble weird en anglais. Peut etre que le problème c est moi!
 However, the problem heterogeneous match table caching has not yet been addressed.
 
 In this work, we presented a cache hierarchy for HDPs.
@@ -10,5 +12,5 @@ We analyzed real-world data center network traces to derive caching premises.
 Based on our observations, we proposed new traffic-aware cache eviction and promotion policies.
 These new policies, alongside classic ones, were evaluated in the context of HDPs.
 Simulation results show a size weighted hit ratio approaching 90\% when HDP-realistic cache policies (Random+WMFU) are used.
-Moreover, the theoretical OWLFU eviction policy outperforms other policies when no promotion policy is implemented.
+Moreover, the OWLFU eviction policy outperforms other policies and is very close to the theoretical optimal when no promotion policy is implemented.
 This may motivate future research on approximating OWLFU targeting data plane realization.

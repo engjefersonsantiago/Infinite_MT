@@ -6,6 +6,7 @@ cache_size = [ '64', '128', '256', '512', '1024', '2048', '4096', '8192']
 
 #Slowdown of 1
 
+hr_opt = [ 0.610938, 0.643702, 0.675125, 0.707086, 0.750004, 0.790483, 0.819532, 0.85307]
 hr_lfu = [ 0.140645, 0.146035, 0.156401, 0.177007, 0.205551, 0.255405, 0.314457, 0.378781]
 hr_wlfu = [ 0.139835, 0.159303,  0.179421, 0.210911, 0.261959, 0.324446, 0.418839, 0.503237]
 hr_olfu = [ 0.375785, 0.413346, 0.447922, 0.487938, 0.529442, 0.584318, 0.663253, 0.71744]
@@ -17,6 +18,7 @@ import matplotlib.pyplot as plt
 
 ax1 = host_subplot(111)
 
+ax1.plot(cache_size, hr_opt, c='purple', marker='*',label='OPT')
 ax1.plot(cache_size, hr_lfu, c='red', marker='o',label='LFU')
 ax1.plot(cache_size, hr_wlfu, c='cyan', marker='d',label='WLFU')
 ax1.plot(cache_size, hr_olfu, c='orange', marker='P',label='OLFU')
@@ -24,7 +26,7 @@ ax1.plot(cache_size, hr_owlfu, c='black', marker='X',label='OWLFU')
 ax1.plot(cache_size, hr_lru, c='blue', marker='s', label='LRU')
 ax1.plot(cache_size, hr_random, c='green', marker='^', label='Random')
 
-plt.legend(loc='upper left',ncol=2)
+#plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15),ncol=4, fancybox=True, prop={'size': 9} )
 ax1.tick_params(axis ='x', which ='both', rotation = 45.0) 
 plt.xticks(cache_size,cache_size)
 plt.grid(True, axis='both')
@@ -41,11 +43,12 @@ ax1.set_xticklabels(cache_size)
 ##Adjust label
 plt.gcf().subplots_adjust(bottom=0.15)
 
-plt.savefig("hit_ratio_sf1.pdf", bbox_inches = 'tight', pad_inches = 0.1)
+plt.savefig("hit_ratio_sf1.pdf", bbox_inches = 'tight', pad_inches = 0.0)
 plt.clf()
 
 
 #Weighted
+hr_opt = [ 0.812307, 0.848299, 0.877798, 0.900031, 0.920084, 0.945027, 0.959862, 0.973544]
 hr_lfu = [ 0.189246, 0.194584, 0.207132, 0.232799, 0.26084, 0.298957, 0.348925, 0.420497]
 hr_wlfu = [ 0.197753, 0.2299, 0.261048, 0.310832, 0.388137, 0.465832, 0.567007, 0.658162]
 hr_olfu = [ 0.542637, 0.600932, 0.651874, 0.709894, 0.763159, 0.819725, 0.875377, 0.909122]
@@ -57,6 +60,7 @@ import matplotlib.pyplot as plt
 
 ax1 = host_subplot(111)
 
+ax1.plot(cache_size, hr_opt, c='purple', marker='*',label='OPT')
 ax1.plot(cache_size, hr_lfu, c='red', marker='o',label='LFU')
 ax1.plot(cache_size, hr_wlfu, c='cyan', marker='d',label='WLFU')
 ax1.plot(cache_size, hr_olfu, c='orange', marker='P',label='OLFU')
@@ -64,7 +68,7 @@ ax1.plot(cache_size, hr_owlfu, c='black', marker='X',label='OWLFU')
 ax1.plot(cache_size, hr_lru, c='blue', marker='s', label='LRU')
 ax1.plot(cache_size, hr_random, c='green', marker='^', label='Random')
 
-plt.legend(loc='upper left',ncol=2)
+#plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15),ncol=4, fancybox=True, prop={'size': 9} )
 ax1.tick_params(axis ='x', which ='both', rotation = 45.0) 
 plt.xticks(cache_size,cache_size)
 plt.grid(True, axis='both')
@@ -79,12 +83,12 @@ ax1.set_xticklabels(cache_size)
 ##Adjust label
 plt.gcf().subplots_adjust(bottom=0.15)
 
-plt.savefig("weighted_hit_ratio_sf1.pdf", bbox_inches = 'tight', pad_inches = 0.1)
+plt.savefig("weighted_hit_ratio_sf1.pdf", bbox_inches = 'tight', pad_inches = 0.0)
 plt.clf()
 
 
 #Slowdown of 10
-
+hr_opt = [ 0.426549, 0.474906, 0.517881, 0.56068, 0.619302, 0.687211, 0.747119, 0.809603] 
 hr_lfu = [ 0.0500428, 0.0712384, 0.0883832,  0.111215, 0.142809, 0.197382, 0.263934, 0.343526]
 hr_wlfu = [ 0.0583096, 0.0796963, 0.107218, 0.152972, 0.212647, 0.294384, 0.39484, 0.49289]
 hr_olfu = [ 0.263294, 0.295123, 0.334427, 0.381698, 0.441084, 0.521256, 0.595733,  0.657677]
@@ -96,6 +100,7 @@ import matplotlib.pyplot as plt
 
 ax1 = host_subplot(111)
 
+ax1.plot(cache_size, hr_opt, c='purple', marker='*',label='OPT')
 ax1.plot(cache_size, hr_lfu, c='red', marker='o',label='LFU')
 ax1.plot(cache_size, hr_wlfu, c='cyan', marker='d',label='WLFU')
 ax1.plot(cache_size, hr_olfu, c='orange', marker='P',label='OLFU')
@@ -103,7 +108,7 @@ ax1.plot(cache_size, hr_owlfu, c='black', marker='X',label='OWLFU')
 ax1.plot(cache_size, hr_lru, c='blue', marker='s', label='LRU')
 ax1.plot(cache_size, hr_random, c='green', marker='^', label='Random')
 
-plt.legend(loc='upper left',ncol=2)
+plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15),ncol=4, fancybox=True, prop={'size': 9} )
 ax1.tick_params(axis ='x', which ='both', rotation = 45.0) 
 plt.xticks(cache_size,cache_size)
 plt.grid(True, axis='both')
@@ -119,10 +124,11 @@ ax1.set_xticklabels(cache_size)
 ##Adjust label
 plt.gcf().subplots_adjust(bottom=0.15)
 
-plt.savefig("hit_ratio_sf10.pdf", bbox_inches = 'tight', pad_inches = 0.1)
+plt.savefig("hit_ratio_sf10.pdf", bbox_inches = 'tight', pad_inches = 0.0)
 plt.clf()
 
 #Weighted
+hr_opt = [ 0.606644, 0.670186, 0.71799, 0.751876, 0.791664, 0.851747, 0.900137, 0.942562]
 hr_lfu = [ 0.0748705, 0.0849807, 0.108391, 0.137867, 0.173723, 0.234745, 0.30431, 0.383965]
 hr_wlfu = [ 0.090826, 0.123937, 0.169045, 0.241005, 0.326722, 0.428652, 0.538091, 0.64198]
 hr_olfu = [ 0.394782, 0.443141, 0.503044, 0.572061, 0.651147, 0.737899, 0.803485, 0.849709]
@@ -135,6 +141,7 @@ import matplotlib.pyplot as plt
 
 ax1 = host_subplot(111)
 
+ax1.plot(cache_size, hr_opt, c='purple', marker='*',label='OPT')
 ax1.plot(cache_size, hr_lfu, c='red', marker='o',label='LFU')
 ax1.plot(cache_size, hr_wlfu, c='cyan', marker='d',label='WLFU')
 ax1.plot(cache_size, hr_olfu, c='orange', marker='P',label='OLFU')
@@ -142,7 +149,7 @@ ax1.plot(cache_size, hr_owlfu, c='black', marker='X',label='OWLFU')
 ax1.plot(cache_size, hr_lru, c='blue', marker='s', label='LRU')
 ax1.plot(cache_size, hr_random, c='green', marker='^', label='Random')
 
-plt.legend(loc='upper left',ncol=2)
+#plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15),ncol=4, fancybox=True, prop={'size': 9} )
 ax1.tick_params(axis ='x', which ='both', rotation = 45.0) 
 plt.xticks(cache_size,cache_size)
 plt.grid(True, axis='both')
@@ -157,10 +164,11 @@ ax1.set_xticklabels(cache_size)
 ##Adjust label
 plt.gcf().subplots_adjust(bottom=0.15)
 
-plt.savefig("weighted_hit_ratio_sf10.pdf", bbox_inches = 'tight', pad_inches = 0.1)
+plt.savefig("weighted_hit_ratio_sf10.pdf", bbox_inches = 'tight', pad_inches = 0.0)
 plt.clf()
 
 #slowdown 100
+hr_opt = [ 0.242021, 0.27255, 0.300485, 0.339503, 0.431453, 0.548826, 0.644051, 0.711391]
 hr_lfu = [ 0.0404024, 0.0548628, 0.0705874, 0.108116, 0.159101, 0.228518, 0.312078, 0.395493]
 hr_wlfu = [0.0381802, 0.0584243, 0.0898663, 0.14739, 0.217505, 0.30227, 0.405013, 0.52219]
 hr_olfu =  [ 0.145086, 0.190393, 0.236304, 0.298946, 0.369033, 0.445534, 0.516992, 0.574646]
@@ -172,6 +180,7 @@ import matplotlib.pyplot as plt
 
 ax1 = host_subplot(111)
 
+ax1.plot(cache_size, hr_opt, c='purple', marker='*',label='OPT')
 ax1.plot(cache_size, hr_lfu, c='red', marker='o',label='LFU')
 ax1.plot(cache_size, hr_wlfu, c='cyan', marker='d',label='WLFU')
 ax1.plot(cache_size, hr_olfu, c='orange', marker='P',label='OLFU')
@@ -179,7 +188,7 @@ ax1.plot(cache_size, hr_owlfu, c='black', marker='X',label='OWLFU')
 ax1.plot(cache_size, hr_lru, c='blue', marker='s', label='LRU')
 ax1.plot(cache_size, hr_random, c='green', marker='^', label='Random')
 
-plt.legend(loc='upper left',ncol=2)
+#plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15),ncol=4, fancybox=True, prop={'size': 9} )
 ax1.tick_params(axis ='x', which ='both', rotation = 45.0) 
 plt.xticks(cache_size,cache_size)
 plt.grid(True, axis='both')
@@ -196,10 +205,11 @@ ax1.set_xticklabels(cache_size)
 ##Adjust label
 plt.gcf().subplots_adjust(bottom=0.15)
 
-plt.savefig("hit_ratio_sf100.pdf", bbox_inches = 'tight', pad_inches = 0.1)
+plt.savefig("hit_ratio_sf100.pdf", bbox_inches = 'tight', pad_inches = 0.0)
 plt.clf()
 
 #Weighted
+hr_opt = [ 0.350171, 0.390193, 0.416585, 0.449952, 0.54925, 0.691398, 0.801599, 0.865041]
 hr_lfu = [ 0.0387561, 0.0613918, 0.0828191, 0.135683, 0.202871, 0.291501, 0.384546, 0.474001]
 hr_wlfu = [ 0.0611505, 0.0944225, 0.14302, 0.232512, 0.327869, 0.434685, 0.546786, 0.68259]
 hr_olfu =  [ 0.207914, 0.278939, 0.348502, 0.438039, 0.531159, 0.618358, 0.689488, 0.737165]
@@ -212,6 +222,7 @@ import matplotlib.pyplot as plt
 
 ax1 = host_subplot(111)
 
+ax1.plot(cache_size, hr_opt, c='purple', marker='*',label='OPT')
 ax1.plot(cache_size, hr_lfu, c='red', marker='o',label='LFU')
 ax1.plot(cache_size, hr_wlfu, c='cyan', marker='d',label='WLFU')
 ax1.plot(cache_size, hr_olfu, c='orange', marker='P',label='OLFU')
@@ -219,7 +230,7 @@ ax1.plot(cache_size, hr_owlfu, c='black', marker='X',label='OWLFU')
 ax1.plot(cache_size, hr_lru, c='blue', marker='s', label='LRU')
 ax1.plot(cache_size, hr_random, c='green', marker='^', label='Random')
 
-plt.legend(loc='upper left',ncol=2)
+#plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15),ncol=4, fancybox=True, prop={'size': 9} )
 ax1.tick_params(axis ='x', which ='both', rotation = 45.0) 
 plt.xticks(cache_size,cache_size)
 plt.grid(True, axis='both')
@@ -235,7 +246,7 @@ ax1.set_xticklabels(cache_size)
 ##Adjust label
 plt.gcf().subplots_adjust(bottom=0.15)
 
-plt.savefig("weighted_hit_ratio_sf100.pdf", bbox_inches = 'tight', pad_inches = 0.1)
+plt.savefig("weighted_hit_ratio_sf100.pdf", bbox_inches = 'tight', pad_inches = 0.0)
 plt.clf()
 #plt.show()
 
