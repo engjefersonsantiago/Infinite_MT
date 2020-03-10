@@ -1,16 +1,13 @@
 The P4 language and modern programmable dataplanes have redrawn the networking landscape by allowing full data path programming in SDN environments.
 P4 offers an explicit imperative match-action-based programming model, which is the main processing abstraction in programmable dataplanes.
 However, modern programmable dataplanes lack the memory capacity to implement large match tables.
-% Faut-il préciser que l on considere ASIC + autres targets?
 Recent research has suggested to use heterogeneous programmable dataplanes (HDPs) to increase the memory capacity. 
 Such an HDP is made of different programmable dataplane devices (PDDs).
 Each of these devices has its own memory capacity and processing capabilities, in a way that the most memory abundant device has the lowest performance and vice-versa.
 Hence, the bandwidth supported by an HDP is limited by the slowest PDD.
-% Il faudrait clarifier que le devices avec le plus de mémoire est celui le plus lent.
 
 To address this issue, this work presents a cache hierarchy scheme for HPDs that allows to implement large match tables, while supporting a high packet throughput. 
 We start our analysis by characterizing a recent data center trace.
 Then, following our observations, we derive the caching premises for match-action caching.
 We develop an open-source simulator to evaluate different caching schemes.
-The simulations suggest that a two-level cache hierarchy that employs a random eviction \textit{and} a heuristic promotion policy achieves a high hit ratio approaching to the theoretical maximum with a relatively small cache size and little implementation cost.
-% Manque de resultats. Quellles sont les conclusions? 
+Finally, our simulations suggest that a two-level cache hierarchy that employs a replacement policy combining random eviction with heuristic promotion can achieve a hit ratio that approaches the theoretical maximum, with a relatively small cache and low implementation costs.
