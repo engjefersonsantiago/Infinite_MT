@@ -2,15 +2,15 @@
 
 The Software-Defined Networking (SDN) paradigm has brought programmability to the once rigid network ecosystem.
 By allowing both control and data planes to evolve independently, SDN has opened new research avenues in networking, including data plane programming.
-Notably, the P4 language is a result of the SDN convergence~\cite{Bosshart:14}.
+Notably, the P4 language is a result of the SDN convergence~\cite{Bosshart:2014}.
 P4 allows to configure how packets are processed by a programmable dataplane. 
-Thanks to P4 and recent programmable dataplanes, such as PISA~\cite{Bosshart:13}, network admins can now deploy custom protocols by simply reprogramming the network switches according to their evolving needs, without the need to deploy expensive new hardware. 
+Thanks to P4 and recent programmable dataplanes, such as PISA~\cite{Bosshart:2013}, network admins can now deploy custom protocols by simply reprogramming the network switches according to their evolving needs, without the need to deploy expensive new hardware. 
 
 
 However, current requirements of data center networks are such that even state-of-the-art programmable ASICs switches cannot solely meet them.
 For instance, 5G mobile communications imply multi-million active sessions ($>$\SI{5}{\mega\nothing}) at terabit rates, stringently low end-to-end latency ($<$\SI{1}{\milli\second}), and likely, P4-defined custom protocols.
 
-We recently suggested using \acfp{HDP} to alleviate data center network switch bottlenecks~\cite{p4eu:18}.
+We recently suggested using \acfp{HDP} to alleviate data center network switch bottlenecks~\cite{one_for_all}.
 Indeed, using complementary and distinct packet forwarding devices increases the overall switch processing capabilities.
 However, research regarding HDPs is still in its infancy with many open questions, such as heterogeneous compilers, the issue of mismatched processing capabilities among devices, and distributed match-tables management.
 

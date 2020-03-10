@@ -7,7 +7,7 @@ Since then, flow caching has been explored for both hardware and software soluti
 \citeauthor{Kim:09}~\cite{Kim:09} revisited cache policies in the context of IP networks.
 \citeauthor{Katta:2014}~\cite{Katta:2014,Katta:2016} addressed the issue of limited TCAM resources in hardware switches by proposing a hybrid hardware-software switch to exploit memory-abundant CPUs.
 The cache policy algorithm, however, is performed offline. 
-From the software side, the Open vSwitch (OVS) has employed flow caching since its inception \cite{Pfaff:15}.
+From the software side, the Open vSwitch (OVS) has employed flow caching since its inception \cite{Pfaff:2015}.
 In OVS, the flow cache is split into two levels, microflow and megaflow.
 The microflow caches at a fine granularity for long-lasting connections while the megaflow, at coarser granularity, takes care of short-lived flows.
 

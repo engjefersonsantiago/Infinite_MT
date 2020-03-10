@@ -125,7 +125,7 @@ Hence, no consensus has yet been reached w.r.t the maximum match table update ra
 A first impacting factor is the host CPU load in which we have little control of.
 The match type also contributes to the update rate.
 In our work, we are only interested in the exact match (EM) rule caching. 
-EM tables are typically implemented as Cuckoo hash tables~\cite{Kirsch:2009,Bosshart:14}.
+EM tables are typically implemented as Cuckoo hash tables~\cite{Kirsch:2009,Bosshart:2014}.
 Cuckoo hash tables recursively move entries across hash tables to solve hash collisions when inserting a new table entry.
 As the table load factor increases, several entries may be relocated which effectively decreases update rate.
 Finally, the key and action sizes also impact the update rate.
